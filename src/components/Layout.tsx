@@ -23,6 +23,11 @@ export default function Layout() {
                   Tenders
                 </NavLink>
               </li>
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/profiles">
+                  Company Profiles
+                </NavLink>
+              </li>
             </ul>
           </div>
         </div>
