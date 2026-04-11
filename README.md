@@ -1,50 +1,124 @@
-# React + TypeScript + Vite
+# ProcurePortal Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript web dashboard for browsing and filtering Canadian procurement tenders. Consumes the [ProcurePortal API](https://github.com/YOUR_USERNAME/Procurements_Analyzer_API).
 
-Currently, two official plugins are available:
+## Architecture
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```mermaid
+graph LR
+    subgraph Dashboard - React/Vite
+        A[TenderListPage] -->|search/filter| B[tenderApi.ts]
+        C[TenderDetailPage] -->|get by ID| B
+        B -->|fetch| D[.NET API :5009]
+    end
+    subgraph API Layer
+        D --> E[(PostgreSQL)]
+    end
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Features
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+- **Search** — keyword search across title, organization, and notice ID
+- **Filter** — by procurement category, notice type, open/closed status
+- **Sort** — clickable column headers (title, organization, published, closing date)
+- **Paginate** — server-side pagination with page controls
+- **Detail view** — full tender info, UNSPSC/GSIN badges, document download links
+- **CSV export** — download filtered results as a spreadsheet
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+## Tech Stack
+
+- **React 19** + **TypeScript 5.8**
+- **Vite 6** (dev server + build)
+- **Bootstrap 5.3** (styling)
+- **React Router 7** (client-side routing)
+
+## Project Structure
+
 ```
+src/
+├── main.tsx                  # App entry point
+├── App.tsx                   # Router setup
+├── api/
+│   └── tenderApi.ts          # API client (fetch wrapper)
+├── types/
+│   └── tender.ts             # TypeScript interfaces (matches API DTOs)
+├── pages/
+│   ├── TenderListPage.tsx    # Search + table + pagination + CSV export
+│   └── TenderDetailPage.tsx  # Full tender detail + documents
+├── components/
+│   ├── Layout.tsx            # Navbar + container shell
+│   ├── SearchBar.tsx         # Keyword, category, type filters
+│   ├── TenderTable.tsx       # Sortable results table
+│   └── Pagination.tsx        # Page controls
+```
+
+## Setup
+
+### Prerequisites
+
+- [Node.js 18+](https://nodejs.org/)
+- ProcurePortal API running at `http://localhost:5009`
+
+### Installation
+
+```bash
+git clone <repo-url>
+cd Procurements_Dashboard
+npm install
+```
+
+### Configuration
+
+The API URL defaults to `http://localhost:5009`. To override, create a `.env` file:
+
+```env
+VITE_API_URL=http://localhost:5009
+```
+
+### Development
+
+```bash
+npm run dev
+```
+
+Opens at `http://localhost:5173`.
+
+### Build
+
+```bash
+npm run build
+npm run preview
+```
+
+## Pages
+
+### Tender List (`/`)
+
+| Feature | Description |
+|---------|-------------|
+| Keyword search | Searches title, organization, notice ID |
+| Category dropdown | Populated from API (`/api/tenders/categories`) |
+| Notice type dropdown | Populated from API (`/api/tenders/notice-types`) |
+| Open only toggle | Filter to future closing dates only |
+| Sortable columns | Title, Organization, Published, Closing |
+| CSV export | Downloads current filtered results |
+| Pagination | Server-side, 20 per page |
+
+### Tender Detail (`/tenders/:id`)
+
+Displays full tender information including:
+- Organization, category, procurement method, selection criteria
+- Publication and closing dates
+- UNSPSC and GSIN commodity code badges
+- Links to original notice and external portal
+- Document list with download buttons
+
+## Roadmap
+
+- [x] Tender list with search, filter, sort, pagination
+- [x] Tender detail with documents
+- [x] CSV export
+- [ ] Lead matching dashboard (Phase 4)
+- [ ] Company profile management
+- [ ] Alert configuration UI
+- [ ] Dark mode
