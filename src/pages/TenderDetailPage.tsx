@@ -74,6 +74,13 @@ export default function TenderDetailPage() {
           )}
         </div>
         <div className="card-body">
+          {tender.description && (
+            <div className="mb-3">
+              <h6 className="fw-semibold">Description</h6>
+              <p className="mb-0" style={{ whiteSpace: "pre-wrap" }}>{tender.description}</p>
+            </div>
+          )}
+
           <div className="row g-3">
             <div className="col-md-6">
               <dl className="mb-0">
@@ -151,6 +158,40 @@ export default function TenderDetailPage() {
           </div>
         </div>
       </div>
+
+      {(tender.contactName || tender.contactEmail || tender.contactPhone) && (
+        <div className="card mb-4">
+          <div className="card-header">
+            <h5 className="card-title mb-0">Contact Information</h5>
+          </div>
+          <div className="card-body">
+            <dl className="mb-0 row">
+              {tender.contactName && (
+                <>
+                  <dt className="col-sm-3">Contact Name</dt>
+                  <dd className="col-sm-9">{tender.contactName}</dd>
+                </>
+              )}
+              {tender.contactEmail && (
+                <>
+                  <dt className="col-sm-3">Email</dt>
+                  <dd className="col-sm-9">
+                    <a href={`mailto:${tender.contactEmail}`}>{tender.contactEmail}</a>
+                  </dd>
+                </>
+              )}
+              {tender.contactPhone && (
+                <>
+                  <dt className="col-sm-3">Phone</dt>
+                  <dd className="col-sm-9">
+                    <a href={`tel:${tender.contactPhone}`}>{tender.contactPhone}</a>
+                  </dd>
+                </>
+              )}
+            </dl>
+          </div>
+        </div>
+      )}
 
       {tender.documents.length > 0 && (
         <div className="card">

@@ -27,6 +27,10 @@ export interface TenderDetailDto {
   noticeLink: string | null;
   externalLink: string | null;
   hasDocuments: boolean | null;
+  description: string | null;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
   documents: DocumentDto[];
 }
 
