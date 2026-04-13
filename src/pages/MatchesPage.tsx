@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   getMatches,
@@ -42,6 +42,19 @@ export default function MatchesPage() {
   const [filter, setFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -209,19 +222,9 @@ export default function MatchesPage() {
                   </td>
                   <td>
                     <div>
-                      {m.noticeLink ? (
-                        <a
-                          href={m.noticeLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {m.tenderTitle ?? m.noticeId ?? `#${m.tenderId}`}
-                        </a>
-                      ) : (
-                        <Link to={`/tenders/${m.tenderId}`}>
-                          {m.tenderTitle ?? m.noticeId ?? `#${m.tenderId}`}
-                        </Link>
-                      )}
+                      <Link to={`/tenders/${m.tenderId}`}>
+                        {m.tenderTitle ?? m.noticeId ?? `#${m.tenderId}`}
+                      </Link>
                     </div>
                     {m.matchReason && (
                       <small className="text-muted d-block mt-1" style={{ maxWidth: 400 }}>
@@ -248,29 +251,42 @@ export default function MatchesPage() {
                     </span>
                   </td>
                   <td>
-                    <div className="dropdown">
+                    <div
+                      className="dropdown"
+                      ref={openDropdown === m.id ? dropdownRef : undefined}
+                    >
                       <button
                         className="btn btn-sm btn-outline-secondary dropdown-toggle"
-                        data-bs-toggle="dropdown"
+                        onClick={() =>
+                          setOpenDropdown(openDropdown === m.id ? null : m.id)
+                        }
                       >
                         Set Status
                       </button>
-                      <ul className="dropdown-menu">
-                        {(
-                          ["new", "viewed", "saved", "dismissed"] as const
-                        ).map((s) => (
-                          <li key={s}>
-                            <button
-                              className={`dropdown-item ${
-                                m.status === s ? "active" : ""
-                              }`}
-                              onClick={() => handleStatusChange(m.id, s)}
-                            >
-                              {s.charAt(0).toUpperCase() + s.slice(1)}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
+                      {openDropdown === m.id && (
+                        <ul
+                          className="dropdown-menu show"
+                          style={{ display: "block" }}
+                        >
+                          {(
+                            ["new", "viewed", "saved", "dismissed"] as const
+                          ).map((s) => (
+                            <li key={s}>
+                              <button
+                                className={`dropdown-item ${
+                                  m.status === s ? "active" : ""
+                                }`}
+                                onClick={() => {
+                                  setOpenDropdown(null);
+                                  handleStatusChange(m.id, s);
+                                }}
+                              >
+                                {s.charAt(0).toUpperCase() + s.slice(1)}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   </td>
                 </tr>

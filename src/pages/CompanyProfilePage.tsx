@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   getAllProfiles,
   createProfile,
   updateProfile,
   deleteProfile,
   updatePreferences,
+  triggerMatch,
 } from "../api/companyApi";
 import type {
   CompanyProfileDto,
@@ -29,6 +30,9 @@ export default function CompanyProfilePage() {
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
+  const [matchingIds, setMatchingIds] = useState<Set<number>>(new Set());
+  const [matchMsg, setMatchMsg] = useState<Record<number, string>>({});
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Form state
   const [form, setForm] = useState({
@@ -56,6 +60,35 @@ export default function CompanyProfilePage() {
     loadProfiles();
   }, []);
 
+  // Auto-poll while any profile is pending/running
+  useEffect(() => {
+    const hasActive = profiles.some(
+      (p) =>
+        p.matchingStatus === "running" ||
+        p.matchingStatus === "pending_rematch" ||
+        p.matchingStatus === "pending_reset"
+    );
+    if (hasActive && !pollRef.current) {
+      pollRef.current = setInterval(async () => {
+        try {
+          const data = await getAllProfiles();
+          setProfiles(data);
+        } catch {
+          /* ignore poll errors */
+        }
+      }, 5000);
+    } else if (!hasActive && pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+  }, [profiles]);
+
   async function loadProfiles() {
     setLoading(true);
     setError(null);
@@ -67,6 +100,74 @@ export default function CompanyProfilePage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleTriggerMatch(companyId: number) {
+    setMatchingIds((prev) => new Set(prev).add(companyId));
+    setMatchMsg((prev) => ({ ...prev, [companyId]: "" }));
+    try {
+      const result = await triggerMatch(companyId);
+      if (result.started) {
+        setMatchMsg((prev) => ({ ...prev, [companyId]: "Matching queued" }));
+        await loadProfiles();
+      } else if (result.retryAfterSeconds) {
+        const h = Math.floor(result.retryAfterSeconds / 3600);
+        const m = Math.ceil((result.retryAfterSeconds % 3600) / 60);
+        setMatchMsg((prev) => ({
+          ...prev,
+          [companyId]: `Cooldown active — retry in ${h}h ${m}m`,
+        }));
+      } else {
+        setMatchMsg((prev) => ({ ...prev, [companyId]: result.message }));
+      }
+    } catch (err) {
+      setMatchMsg((prev) => ({
+        ...prev,
+        [companyId]: err instanceof Error ? err.message : "Failed",
+      }));
+    } finally {
+      setMatchingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(companyId);
+        return next;
+      });
+    }
+  }
+
+  function getStatusBadge(status: string) {
+    switch (status) {
+      case "running":
+      case "pending_rematch":
+      case "pending_reset":
+        return <span className="badge bg-warning text-dark">Matching...</span>;
+      case "completed":
+        return <span className="badge bg-success">Matched</span>;
+      case "failed":
+        return <span className="badge bg-danger">Failed</span>;
+      default:
+        return <span className="badge bg-light text-muted">Not matched</span>;
+    }
+  }
+
+  function getTimeAgo(dateStr: string | null): string {
+    if (!dateStr) return "Never matched";
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  }
+
+  function isMatchBusy(p: CompanyProfileDto): boolean {
+    return (
+      matchingIds.has(p.id) ||
+      p.matchingStatus === "running" ||
+      p.matchingStatus === "pending_rematch" ||
+      p.matchingStatus === "pending_reset"
+    );
   }
 
   function startCreate() {
@@ -489,8 +590,37 @@ export default function CompanyProfilePage() {
                       )}
                     </div>
                   )}
+
+                  {/* Matching status */}
+                  <div className="mt-2 d-flex align-items-center gap-2">
+                    {getStatusBadge(p.matchingStatus)}
+                    <small className="text-muted">
+                      {getTimeAgo(p.lastMatchedAt)}
+                    </small>
+                  </div>
+                  {matchMsg[p.id] && (
+                    <small className="text-info d-block mt-1">
+                      {matchMsg[p.id]}
+                    </small>
+                  )}
                 </div>
                 <div className="card-footer d-flex gap-2">
+                  <button
+                    className="btn btn-sm btn-outline-success"
+                    disabled={isMatchBusy(p)}
+                    onClick={() => handleTriggerMatch(p.id)}
+                  >
+                    {isMatchBusy(p) ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-1" />
+                        Matching...
+                      </>
+                    ) : p.lastMatchedAt ? (
+                      "Re-run Matching"
+                    ) : (
+                      "Run Matching"
+                    )}
+                  </button>
                   <button
                     className="btn btn-sm btn-outline-primary"
                     onClick={() => navigate(`/matches/${p.id}`)}

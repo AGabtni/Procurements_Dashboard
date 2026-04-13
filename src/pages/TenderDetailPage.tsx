@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getTenderById } from "../api/tenderApi";
 import type { TenderDetailDto } from "../types/tender";
 
@@ -14,6 +14,7 @@ function formatDate(iso: string | null) {
 
 export default function TenderDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [tender, setTender] = useState<TenderDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,9 +56,12 @@ export default function TenderDetailPage() {
 
   return (
     <>
-      <Link to="/" className="btn btn-outline-secondary btn-sm mb-3">
-        ← Back to list
-      </Link>
+      <button
+        className="btn btn-outline-secondary btn-sm mb-3"
+        onClick={() => navigate(-1)}
+      >
+        ← Back
+      </button>
 
       <div className="card mb-4">
         <div className="card-header d-flex justify-content-between align-items-start">

@@ -26,6 +26,12 @@ async function fetchVoid(url: string, init?: RequestInit): Promise<void> {
   }
 }
 
+export interface TriggerMatchResult {
+  started: boolean;
+  retryAfterSeconds?: number;
+  message: string;
+}
+
 // ── Profile CRUD ──
 
 export async function getAllProfiles(): Promise<CompanyProfileDto[]> {
@@ -121,4 +127,39 @@ export async function updateMatchStatus(
       body: JSON.stringify(request),
     }
   );
+}
+
+// ── Matching trigger ──
+
+export async function triggerMatch(
+  companyId: number
+): Promise<TriggerMatchResult> {
+  const res = await fetch(`${API_BASE}/api/company/${companyId}/match`, {
+    method: "POST",
+  });
+
+  let body: Record<string, unknown> = {};
+  try {
+    body = await res.json();
+  } catch {
+    // response may have empty body
+  }
+
+  if (res.status === 202) {
+    return { started: true, message: (body.message as string) ?? "Matching job queued" };
+  }
+  if (res.status === 429) {
+    const retryAfter = (body.retryAfterSeconds as number) ??
+      Number(res.headers.get("Retry-After") ?? "0");
+    return {
+      started: false,
+      retryAfterSeconds: retryAfter,
+      message: (body.message as string) ?? "Cooldown active",
+    };
+  }
+  if (res.status === 409) {
+    return { started: false, message: (body.message as string) ?? "Already in progress" };
+  }
+
+  throw new Error(`API error: ${res.status} ${res.statusText}`);
 }

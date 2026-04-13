@@ -13,6 +13,9 @@ export interface CompanyProfileDto {
   companySize: string | null;
   createdAt: string;
   updatedAt: string;
+  lastMatchedAt: string | null;
+  matchingStatus: string;
+  matchingStartedAt: string | null;
   preferences: CompanyPreferencesDto | null;
 }
 
