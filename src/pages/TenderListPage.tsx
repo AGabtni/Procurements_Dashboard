@@ -4,6 +4,7 @@ import type { TenderListDto, TenderSearchParams, PagedResult } from "../types/te
 import SearchBar from "../components/SearchBar";
 import TenderTable from "../components/TenderTable";
 import Pagination from "../components/Pagination";
+import { categoryLabel } from "../utils/categoryMap";
 
 const DEFAULT_PARAMS: TenderSearchParams = {
   page: 1,
@@ -84,7 +85,7 @@ export default function TenderListPage() {
       t.noticeId ?? "",
       `"${(t.title ?? "").replace(/"/g, '""')}"`,
       `"${(t.buyingOrganization ?? "").replace(/"/g, '""')}"`,
-      t.procurementCategory ?? "",
+      categoryLabel(t.procurementCategory),
       t.noticeType ?? "",
       t.publicationDate ? new Date(t.publicationDate).toLocaleDateString("en-CA") : "",
       t.closingDate ? new Date(t.closingDate).toLocaleDateString("en-CA") : "",

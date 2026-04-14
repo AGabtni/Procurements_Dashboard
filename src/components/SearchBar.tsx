@@ -1,4 +1,5 @@
 import type { TenderSearchParams } from "../types/tender";
+import { categoryLabel } from "../utils/categoryMap";
 
 interface Props {
   params: TenderSearchParams;
@@ -60,7 +61,7 @@ export default function SearchBar({
             <option value="">All</option>
             {categories.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {categoryLabel(c)}
               </option>
             ))}
           </select>

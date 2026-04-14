@@ -14,6 +14,7 @@ import type {
   CompanyPreferencesRequest,
 } from "../types/company";
 import { useNavigate } from "react-router-dom";
+import { CATEGORY_MAP } from "../utils/categoryMap";
 
 const PROVINCES = [
   "AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT",
@@ -30,6 +31,7 @@ export default function CompanyProfilePage() {
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
+  const [showCatDrop, setShowCatDrop] = useState(false);
   const [matchingIds, setMatchingIds] = useState<Set<number>>(new Set());
   const [matchMsg, setMatchMsg] = useState<Record<number, string>>({});
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -47,7 +49,7 @@ export default function CompanyProfilePage() {
 
   // Preferences form state
   const [prefsForm, setPrefsForm] = useState({
-    preferredProcCats: "",
+    preferredProcCats: [] as string[],
     preferredOrgs: "",
     preferredNtTypes: "",
     preferredProvinces: "",
@@ -184,7 +186,7 @@ export default function CompanyProfilePage() {
       companySize: "",
     });
     setPrefsForm({
-      preferredProcCats: "",
+      preferredProcCats: [],
       preferredOrgs: "",
       preferredNtTypes: "",
       preferredProvinces: "",
@@ -209,7 +211,7 @@ export default function CompanyProfilePage() {
     });
     const prefs = profile.preferences;
     setPrefsForm({
-      preferredProcCats: prefs?.preferredProcCats?.join(", ") ?? "",
+      preferredProcCats: prefs?.preferredProcCats ?? [],
       preferredOrgs: prefs?.preferredOrgs?.join(", ") ?? "",
       preferredNtTypes: prefs?.preferredNtTypes?.join(", ") ?? "",
       preferredProvinces: prefs?.preferredProvinces?.join(", ") ?? "",
@@ -278,7 +280,7 @@ export default function CompanyProfilePage() {
 
   function buildPrefsRequest(): CompanyPreferencesRequest {
     return {
-      preferredProcCats: splitCsv(prefsForm.preferredProcCats),
+      preferredProcCats: prefsForm.preferredProcCats.length ? prefsForm.preferredProcCats : undefined,
       preferredOrgs: splitCsv(prefsForm.preferredOrgs),
       preferredNtTypes: splitCsv(prefsForm.preferredNtTypes),
       preferredProvinces: splitCsv(prefsForm.preferredProvinces),
@@ -420,17 +422,40 @@ export default function CompanyProfilePage() {
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
                     <label className="form-label">Preferred Categories</label>
-                    <input
-                      className="form-control"
-                      value={prefsForm.preferredProcCats}
-                      onChange={(e) =>
-                        setPrefsForm({
-                          ...prefsForm,
-                          preferredProcCats: e.target.value,
-                        })
-                      }
-                      placeholder="Comma-separated"
-                    />
+                    <div className="dropdown">
+                      <button
+                        type="button"
+                        className="form-select text-start"
+                        onClick={() => setShowCatDrop(!showCatDrop)}
+                      >
+                        {prefsForm.preferredProcCats.length
+                          ? prefsForm.preferredProcCats.map((c) => CATEGORY_MAP[c] ?? c).join(", ")
+                          : "Select categories..."}
+                      </button>
+                      {showCatDrop && (
+                        <div className="dropdown-menu show w-100 p-2">
+                          {Object.entries(CATEGORY_MAP).map(([code, label]) => (
+                            <div className="form-check" key={code}>
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id={`cat-${code}`}
+                                checked={prefsForm.preferredProcCats.includes(code)}
+                                onChange={(e) => {
+                                  const next = e.target.checked
+                                    ? [...prefsForm.preferredProcCats, code]
+                                    : prefsForm.preferredProcCats.filter((c) => c !== code);
+                                  setPrefsForm({ ...prefsForm, preferredProcCats: next });
+                                }}
+                              />
+                              <label className="form-check-label" htmlFor={`cat-${code}`}>
+                                {label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Preferred Organizations</label>

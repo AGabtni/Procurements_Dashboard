@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getTenderById } from "../api/tenderApi";
 import type { TenderDetailDto } from "../types/tender";
+import { categoryLabel } from "../utils/categoryMap";
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
@@ -92,7 +93,7 @@ export default function TenderDetailPage() {
                 <dd>{tender.buyingOrganization ?? "—"}</dd>
 
                 <dt>Procurement Category</dt>
-                <dd>{tender.procurementCategory ?? "—"}</dd>
+                <dd>{categoryLabel(tender.procurementCategory)}</dd>
 
                 <dt>Procurement Method</dt>
                 <dd>{tender.procurementMethod ?? "—"}</dd>

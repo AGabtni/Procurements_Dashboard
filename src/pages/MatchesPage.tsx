@@ -7,6 +7,7 @@ import {
   getProfileById,
 } from "../api/companyApi";
 import type { CompanyMatchDto, MatchStatsDto } from "../types/company";
+import { categoryLabel } from "../utils/categoryMap";
 
 const STATUS_FILTERS = ["all", "new", "viewed", "saved", "dismissed"] as const;
 
@@ -236,7 +237,7 @@ export default function MatchesPage() {
                     <small>{m.buyingOrganization ?? "—"}</small>
                   </td>
                   <td>
-                    <small>{m.procurementCategory ?? "—"}</small>
+                    <small>{categoryLabel(m.procurementCategory)}</small>
                   </td>
                   <td>
                     <small>
