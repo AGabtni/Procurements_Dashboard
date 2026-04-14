@@ -15,6 +15,7 @@ import type {
 } from "../types/company";
 import { useNavigate } from "react-router-dom";
 import { CATEGORY_MAP } from "../utils/categoryMap";
+import TagInput from "../components/TagInput";
 
 const PROVINCES = [
   "AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT",
@@ -43,20 +44,20 @@ export default function CompanyProfilePage() {
     industry: "",
     province: "",
     servicesDescription: "",
-    keywords: "",
-    certifications: "",
+    keywords: [] as string[],
+    certifications: [] as string[],
     companySize: "",
     commodityTypes: [] as string[],
   });
 
   // Preferences form state
   const [prefsForm, setPrefsForm] = useState({
-    preferredOrgs: "",
-    preferredNtTypes: "",
-    preferredProvinces: "",
+    preferredOrgs: [] as string[],
+    preferredNtTypes: [] as string[],
+    preferredProvinces: [] as string[],
     minValue: "",
     maxValue: "",
-    excludeKeywords: "",
+    excludeKeywords: [] as string[],
   });
 
   useEffect(() => {
@@ -182,15 +183,15 @@ export default function CompanyProfilePage() {
       industry: "",
       province: "",
       servicesDescription: "",
-      keywords: "",
-      certifications: "",
+      keywords: [],
+      certifications: [],
       companySize: "",
       commodityTypes: [],
     });
     setPrefsForm({
-      preferredOrgs: "",
-      preferredNtTypes: "",
-      preferredProvinces: "",
+      preferredOrgs: [],
+      preferredNtTypes: [],
+      preferredProvinces: [],
       minValue: "",
       maxValue: "",
       excludeKeywords: "",
@@ -206,19 +207,19 @@ export default function CompanyProfilePage() {
       industry: profile.industry ?? "",
       province: profile.province ?? "",
       servicesDescription: profile.servicesDescription ?? "",
-      keywords: profile.keywords?.join(", ") ?? "",
-      certifications: profile.certifications?.join(", ") ?? "",
+      keywords: profile.keywords ?? [],
+      certifications: profile.certifications ?? [],
       companySize: profile.companySize ?? "",
       commodityTypes: profile.commodityTypes ?? [],
     });
     const prefs = profile.preferences;
     setPrefsForm({
-      preferredOrgs: prefs?.preferredOrgs?.join(", ") ?? "",
-      preferredNtTypes: prefs?.preferredNtTypes?.join(", ") ?? "",
-      preferredProvinces: prefs?.preferredProvinces?.join(", ") ?? "",
+      preferredOrgs: prefs?.preferredOrgs ?? [],
+      preferredNtTypes: prefs?.preferredNtTypes ?? [],
+      preferredProvinces: prefs?.preferredProvinces ?? [],
       minValue: prefs?.minValue?.toString() ?? "",
       maxValue: prefs?.maxValue?.toString() ?? "",
-      excludeKeywords: prefs?.excludeKeywords?.join(", ") ?? "",
+      excludeKeywords: prefs?.excludeKeywords ?? [],
     });
   }
 
@@ -248,8 +249,8 @@ export default function CompanyProfilePage() {
           industry: form.industry || undefined,
           province: form.province || undefined,
           servicesDescription: form.servicesDescription || undefined,
-          keywords: splitCsv(form.keywords),
-          certifications: splitCsv(form.certifications),
+          keywords: form.keywords.length ? form.keywords : undefined,
+          certifications: form.certifications.length ? form.certifications : undefined,
           companySize: form.companySize || undefined,
           commodityTypes: form.commodityTypes.length ? form.commodityTypes : undefined,
         };
@@ -263,8 +264,8 @@ export default function CompanyProfilePage() {
           industry: form.industry || undefined,
           province: form.province || undefined,
           servicesDescription: form.servicesDescription || undefined,
-          keywords: splitCsv(form.keywords),
-          certifications: splitCsv(form.certifications),
+          keywords: form.keywords.length ? form.keywords : undefined,
+          certifications: form.certifications.length ? form.certifications : undefined,
           companySize: form.companySize || undefined,
           commodityTypes: form.commodityTypes.length ? form.commodityTypes : undefined,
         };
@@ -286,12 +287,12 @@ export default function CompanyProfilePage() {
 
   function buildPrefsRequest(): CompanyPreferencesRequest {
     return {
-      preferredOrgs: splitCsv(prefsForm.preferredOrgs),
-      preferredNtTypes: splitCsv(prefsForm.preferredNtTypes),
-      preferredProvinces: splitCsv(prefsForm.preferredProvinces),
+      preferredOrgs: prefsForm.preferredOrgs.length ? prefsForm.preferredOrgs : undefined,
+      preferredNtTypes: prefsForm.preferredNtTypes.length ? prefsForm.preferredNtTypes : undefined,
+      preferredProvinces: prefsForm.preferredProvinces.length ? prefsForm.preferredProvinces : undefined,
       minValue: prefsForm.minValue ? Number(prefsForm.minValue) : undefined,
       maxValue: prefsForm.maxValue ? Number(prefsForm.maxValue) : undefined,
-      excludeKeywords: splitCsv(prefsForm.excludeKeywords),
+      excludeKeywords: prefsForm.excludeKeywords.length ? prefsForm.excludeKeywords : undefined,
     };
   }
 
@@ -394,22 +395,18 @@ export default function CompanyProfilePage() {
           <div className="row g-3 mb-3">
             <div className="col-md-6">
               <label className="form-label">Keywords</label>
-              <input
-                className="form-control"
+              <TagInput
                 value={form.keywords}
-                onChange={(e) => setForm({ ...form, keywords: e.target.value })}
-                placeholder="Comma-separated: cloud, security, consulting"
+                onChange={(tags) => setForm({ ...form, keywords: tags })}
+                placeholder="Type keyword and press Enter"
               />
             </div>
             <div className="col-md-6">
               <label className="form-label">Certifications</label>
-              <input
-                className="form-control"
+              <TagInput
                 value={form.certifications}
-                onChange={(e) =>
-                  setForm({ ...form, certifications: e.target.value })
-                }
-                placeholder="Comma-separated: ISO 9001, SOC 2"
+                onChange={(tags) => setForm({ ...form, certifications: tags })}
+                placeholder="Type certification and press Enter"
               />
             </div>
           </div>
@@ -476,46 +473,28 @@ export default function CompanyProfilePage() {
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
                     <label className="form-label">Preferred Organizations</label>
-                    <input
-                      className="form-control"
+                    <TagInput
                       value={prefsForm.preferredOrgs}
-                      onChange={(e) =>
-                        setPrefsForm({
-                          ...prefsForm,
-                          preferredOrgs: e.target.value,
-                        })
-                      }
-                      placeholder="Comma-separated"
+                      onChange={(tags) => setPrefsForm({ ...prefsForm, preferredOrgs: tags })}
+                      placeholder="Type organization and press Enter"
                     />
                   </div>
                 </div>
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
                     <label className="form-label">Preferred Notice Types</label>
-                    <input
-                      className="form-control"
+                    <TagInput
                       value={prefsForm.preferredNtTypes}
-                      onChange={(e) =>
-                        setPrefsForm({
-                          ...prefsForm,
-                          preferredNtTypes: e.target.value,
-                        })
-                      }
-                      placeholder="Comma-separated"
+                      onChange={(tags) => setPrefsForm({ ...prefsForm, preferredNtTypes: tags })}
+                      placeholder="Type notice type and press Enter"
                     />
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Preferred Provinces</label>
-                    <input
-                      className="form-control"
+                    <TagInput
                       value={prefsForm.preferredProvinces}
-                      onChange={(e) =>
-                        setPrefsForm({
-                          ...prefsForm,
-                          preferredProvinces: e.target.value,
-                        })
-                      }
-                      placeholder="Comma-separated: ON, BC, AB"
+                      onChange={(tags) => setPrefsForm({ ...prefsForm, preferredProvinces: tags })}
+                      placeholder="Type province and press Enter"
                     />
                   </div>
                 </div>
@@ -544,16 +523,10 @@ export default function CompanyProfilePage() {
                   </div>
                   <div className="col-md-4">
                     <label className="form-label">Exclude Keywords</label>
-                    <input
-                      className="form-control"
+                    <TagInput
                       value={prefsForm.excludeKeywords}
-                      onChange={(e) =>
-                        setPrefsForm({
-                          ...prefsForm,
-                          excludeKeywords: e.target.value,
-                        })
-                      }
-                      placeholder="Comma-separated"
+                      onChange={(tags) => setPrefsForm({ ...prefsForm, excludeKeywords: tags })}
+                      placeholder="Type keyword and press Enter"
                     />
                   </div>
                 </div>
