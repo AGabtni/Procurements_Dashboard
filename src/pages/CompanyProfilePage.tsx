@@ -16,12 +16,33 @@ import type {
 import { useNavigate } from "react-router-dom";
 import { CATEGORY_MAP } from "../utils/categoryMap";
 import TagInput from "../components/TagInput";
+import MultiSelectDropdown from "../components/MultiSelectDropdown";
+import type { DropdownOption } from "../components/MultiSelectDropdown";
 
 const PROVINCES = [
   "AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT",
 ];
 
 const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-500", "500+"];
+
+const COMMODITY_OPTIONS: DropdownOption[] = Object.entries(CATEGORY_MAP).map(
+  ([code, label]) => ({ value: code, label })
+);
+
+const PROVINCE_OPTIONS: DropdownOption[] = [
+  "AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT",
+].map((p) => ({ value: p, label: p }));
+
+const NOTICE_TYPE_OPTIONS: DropdownOption[] = [
+  "Advance Contract Award Notice",
+  "Not Applicable",
+  "Other",
+  "Request for Information",
+  "Request for Proposal",
+  "Request for Proposal (Construction)",
+  "Request for Standing Offer",
+  "RFP against Supply Arrangement",
+].map((t) => ({ value: t, label: t }));
 
 export default function CompanyProfilePage() {
   const navigate = useNavigate();
@@ -32,7 +53,6 @@ export default function CompanyProfilePage() {
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
-  const [showCatDrop, setShowCatDrop] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [matchingIds, setMatchingIds] = useState<Set<number>>(new Set());
   const [matchMsg, setMatchMsg] = useState<Record<number, string>>({});
@@ -416,40 +436,14 @@ export default function CompanyProfilePage() {
             <label className="form-label">
               Commodity Types <span className="text-danger fw-bold">*</span>
             </label>
-            <div className="dropdown">
-              <button
-                type="button"
-                className={`form-select text-start${submitted && form.commodityTypes.length === 0 ? " is-invalid" : ""}`}
-                onClick={() => setShowCatDrop(!showCatDrop)}
-              >
-                {form.commodityTypes.length
-                  ? form.commodityTypes.map((c) => CATEGORY_MAP[c] ?? c).join(", ")
-                  : "Select commodity types..."}
-              </button>
-              {showCatDrop && (
-                <div className="dropdown-menu show w-100 p-2">
-                  {Object.entries(CATEGORY_MAP).map(([code, label]) => (
-                    <div className="form-check" key={code}>
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id={`cat-${code}`}
-                        checked={form.commodityTypes.includes(code)}
-                        onChange={(e) => {
-                          const next = e.target.checked
-                            ? [...form.commodityTypes, code]
-                            : form.commodityTypes.filter((c) => c !== code);
-                          setForm({ ...form, commodityTypes: next });
-                        }}
-                      />
-                      <label className="form-check-label" htmlFor={`cat-${code}`}>
-                        {label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <MultiSelectDropdown
+              id="commodityTypes"
+              options={COMMODITY_OPTIONS}
+              value={form.commodityTypes}
+              onChange={(sel) => setForm({ ...form, commodityTypes: sel })}
+              placeholder="Select commodity types..."
+              className={submitted && form.commodityTypes.length === 0 ? "is-invalid" : ""}
+            />
             {submitted && form.commodityTypes.length === 0 && (
               <div className="text-danger small mt-1">Please select at least one commodity type.</div>
             )}
@@ -483,18 +477,22 @@ export default function CompanyProfilePage() {
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
                     <label className="form-label">Preferred Notice Types</label>
-                    <TagInput
+                    <MultiSelectDropdown
+                      id="prefNtTypes"
+                      options={NOTICE_TYPE_OPTIONS}
                       value={prefsForm.preferredNtTypes}
-                      onChange={(tags) => setPrefsForm({ ...prefsForm, preferredNtTypes: tags })}
-                      placeholder="Type notice type and press Enter"
+                      onChange={(sel) => setPrefsForm({ ...prefsForm, preferredNtTypes: sel })}
+                      placeholder="Select notice types..."
                     />
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Preferred Provinces</label>
-                    <TagInput
+                    <MultiSelectDropdown
+                      id="prefProvinces"
+                      options={PROVINCE_OPTIONS}
                       value={prefsForm.preferredProvinces}
-                      onChange={(tags) => setPrefsForm({ ...prefsForm, preferredProvinces: tags })}
-                      placeholder="Type province and press Enter"
+                      onChange={(sel) => setPrefsForm({ ...prefsForm, preferredProvinces: sel })}
+                      placeholder="Select provinces..."
                     />
                   </div>
                 </div>
