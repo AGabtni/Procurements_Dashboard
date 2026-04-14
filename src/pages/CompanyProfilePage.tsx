@@ -32,6 +32,7 @@ export default function CompanyProfilePage() {
   const [saving, setSaving] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
   const [showCatDrop, setShowCatDrop] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [matchingIds, setMatchingIds] = useState<Set<number>>(new Set());
   const [matchMsg, setMatchMsg] = useState<Record<number, string>>({});
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -45,11 +46,11 @@ export default function CompanyProfilePage() {
     keywords: "",
     certifications: "",
     companySize: "",
+    commodityTypes: [] as string[],
   });
 
   // Preferences form state
   const [prefsForm, setPrefsForm] = useState({
-    preferredProcCats: [] as string[],
     preferredOrgs: "",
     preferredNtTypes: "",
     preferredProvinces: "",
@@ -184,9 +185,9 @@ export default function CompanyProfilePage() {
       keywords: "",
       certifications: "",
       companySize: "",
+      commodityTypes: [],
     });
     setPrefsForm({
-      preferredProcCats: [],
       preferredOrgs: "",
       preferredNtTypes: "",
       preferredProvinces: "",
@@ -208,10 +209,10 @@ export default function CompanyProfilePage() {
       keywords: profile.keywords?.join(", ") ?? "",
       certifications: profile.certifications?.join(", ") ?? "",
       companySize: profile.companySize ?? "",
+      commodityTypes: profile.commodityTypes ?? [],
     });
     const prefs = profile.preferences;
     setPrefsForm({
-      preferredProcCats: prefs?.preferredProcCats ?? [],
       preferredOrgs: prefs?.preferredOrgs?.join(", ") ?? "",
       preferredNtTypes: prefs?.preferredNtTypes?.join(", ") ?? "",
       preferredProvinces: prefs?.preferredProvinces?.join(", ") ?? "",
@@ -236,6 +237,8 @@ export default function CompanyProfilePage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitted(true);
+    if (!form.companyName.trim() || form.commodityTypes.length === 0) return;
     setSaving(true);
     setError(null);
     try {
@@ -248,6 +251,7 @@ export default function CompanyProfilePage() {
           keywords: splitCsv(form.keywords),
           certifications: splitCsv(form.certifications),
           companySize: form.companySize || undefined,
+          commodityTypes: form.commodityTypes.length ? form.commodityTypes : undefined,
         };
         if (showPrefs) {
           req.preferences = buildPrefsRequest();
@@ -262,6 +266,7 @@ export default function CompanyProfilePage() {
           keywords: splitCsv(form.keywords),
           certifications: splitCsv(form.certifications),
           companySize: form.companySize || undefined,
+          commodityTypes: form.commodityTypes.length ? form.commodityTypes : undefined,
         };
         await updateProfile(editing.id, req);
         if (showPrefs) {
@@ -270,6 +275,7 @@ export default function CompanyProfilePage() {
       }
       setEditing(null);
       setCreating(false);
+      setSubmitted(false);
       await loadProfiles();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save profile");
@@ -280,7 +286,6 @@ export default function CompanyProfilePage() {
 
   function buildPrefsRequest(): CompanyPreferencesRequest {
     return {
-      preferredProcCats: prefsForm.preferredProcCats.length ? prefsForm.preferredProcCats : undefined,
       preferredOrgs: splitCsv(prefsForm.preferredOrgs),
       preferredNtTypes: splitCsv(prefsForm.preferredNtTypes),
       preferredProvinces: splitCsv(prefsForm.preferredProvinces),
@@ -318,13 +323,18 @@ export default function CompanyProfilePage() {
         <form onSubmit={handleSave}>
           <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label className="form-label">Company Name *</label>
+              <label className="form-label">
+                Company Name <span className="text-danger fw-bold">*</span>
+              </label>
               <input
-                className="form-control"
+                className={`form-control${submitted && !form.companyName.trim() ? " is-invalid" : ""}`}
                 required
                 value={form.companyName}
                 onChange={(e) => setForm({ ...form, companyName: e.target.value })}
               />
+              {submitted && !form.companyName.trim() && (
+                <div className="invalid-feedback">Company name is required.</div>
+              )}
             </div>
             <div className="col-md-3">
               <label className="form-label">Province</label>
@@ -404,6 +414,50 @@ export default function CompanyProfilePage() {
             </div>
           </div>
 
+          {/* Commodity Types (required) */}
+          <div className="mb-3">
+            <label className="form-label">
+              Commodity Types <span className="text-danger fw-bold">*</span>
+            </label>
+            <div className="dropdown">
+              <button
+                type="button"
+                className={`form-select text-start${submitted && form.commodityTypes.length === 0 ? " is-invalid" : ""}`}
+                onClick={() => setShowCatDrop(!showCatDrop)}
+              >
+                {form.commodityTypes.length
+                  ? form.commodityTypes.map((c) => CATEGORY_MAP[c] ?? c).join(", ")
+                  : "Select commodity types..."}
+              </button>
+              {showCatDrop && (
+                <div className="dropdown-menu show w-100 p-2">
+                  {Object.entries(CATEGORY_MAP).map(([code, label]) => (
+                    <div className="form-check" key={code}>
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id={`cat-${code}`}
+                        checked={form.commodityTypes.includes(code)}
+                        onChange={(e) => {
+                          const next = e.target.checked
+                            ? [...form.commodityTypes, code]
+                            : form.commodityTypes.filter((c) => c !== code);
+                          setForm({ ...form, commodityTypes: next });
+                        }}
+                      />
+                      <label className="form-check-label" htmlFor={`cat-${code}`}>
+                        {label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {submitted && form.commodityTypes.length === 0 && (
+              <div className="text-danger small mt-1">Please select at least one commodity type.</div>
+            )}
+          </div>
+
           {/* Preferences toggle */}
           <div className="mb-3">
             <button
@@ -420,43 +474,6 @@ export default function CompanyProfilePage() {
               <div className="card-body">
                 <h5 className="card-title">Matching Preferences</h5>
                 <div className="row g-3 mb-3">
-                  <div className="col-md-6">
-                    <label className="form-label">Preferred Categories</label>
-                    <div className="dropdown">
-                      <button
-                        type="button"
-                        className="form-select text-start"
-                        onClick={() => setShowCatDrop(!showCatDrop)}
-                      >
-                        {prefsForm.preferredProcCats.length
-                          ? prefsForm.preferredProcCats.map((c) => CATEGORY_MAP[c] ?? c).join(", ")
-                          : "Select categories..."}
-                      </button>
-                      {showCatDrop && (
-                        <div className="dropdown-menu show w-100 p-2">
-                          {Object.entries(CATEGORY_MAP).map(([code, label]) => (
-                            <div className="form-check" key={code}>
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                id={`cat-${code}`}
-                                checked={prefsForm.preferredProcCats.includes(code)}
-                                onChange={(e) => {
-                                  const next = e.target.checked
-                                    ? [...prefsForm.preferredProcCats, code]
-                                    : prefsForm.preferredProcCats.filter((c) => c !== code);
-                                  setPrefsForm({ ...prefsForm, preferredProcCats: next });
-                                }}
-                              />
-                              <label className="form-check-label" htmlFor={`cat-${code}`}>
-                                {label}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
                   <div className="col-md-6">
                     <label className="form-label">Preferred Organizations</label>
                     <input

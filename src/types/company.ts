@@ -16,12 +16,12 @@ export interface CompanyProfileDto {
   lastMatchedAt: string | null;
   matchingStatus: string;
   matchingStartedAt: string | null;
+  commodityTypes: string[];
   preferences: CompanyPreferencesDto | null;
 }
 
 export interface CompanyPreferencesDto {
   id: number;
-  preferredProcCats: string[] | null;
   preferredOrgs: string[] | null;
   preferredNtTypes: string[] | null;
   preferredProvinces: string[] | null;
@@ -68,6 +68,7 @@ export interface CreateCompanyProfileRequest {
   gsinCodes?: string[];
   certifications?: string[];
   companySize?: string;
+  commodityTypes?: string[];
   preferences?: CompanyPreferencesRequest;
 }
 
@@ -81,10 +82,10 @@ export interface UpdateCompanyProfileRequest {
   gsinCodes?: string[];
   certifications?: string[];
   companySize?: string;
+  commodityTypes?: string[];
 }
 
 export interface CompanyPreferencesRequest {
-  preferredProcCats?: string[];
   preferredOrgs?: string[];
   preferredNtTypes?: string[];
   preferredProvinces?: string[];
