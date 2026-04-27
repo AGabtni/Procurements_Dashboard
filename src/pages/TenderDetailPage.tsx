@@ -100,6 +100,20 @@ export default function TenderDetailPage() {
 
                 <dt>Selection Criteria</dt>
                 <dd>{tender.selectionCriteria ?? "—"}</dd>
+
+                {tender.regionOfDelivery && (
+                  <>
+                    <dt>Region of Delivery</dt>
+                    <dd>{tender.regionOfDelivery}</dd>
+                  </>
+                )}
+
+                {tender.regionOfOpportunity && (
+                  <>
+                    <dt>Region of Opportunity</dt>
+                    <dd>{tender.regionOfOpportunity}</dd>
+                  </>
+                )}
               </dl>
             </div>
             <div className="col-md-6">

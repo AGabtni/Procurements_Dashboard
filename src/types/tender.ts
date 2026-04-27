@@ -28,6 +28,8 @@ export interface TenderDetailDto {
   externalLink: string | null;
   hasDocuments: boolean | null;
   description: string | null;
+  regionOfDelivery: string | null;
+  regionOfOpportunity: string | null;
   contactName: string | null;
   contactEmail: string | null;
   contactPhone: string | null;

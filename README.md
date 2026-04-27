@@ -1,6 +1,6 @@
 # ProcurePortal Dashboard
 
-React + TypeScript web dashboard for browsing and filtering Canadian procurement tenders. Consumes the [ProcurePortal API](https://github.com/YOUR_USERNAME/Procurements_Analyzer_API).
+React + TypeScript web dashboard for browsing and filtering Canadian procurement tenders. Consumes the [ProcurePortal API](https://github.com/AGabtni/Procurements_Analyzer_API).
 
 ## Architecture
 
