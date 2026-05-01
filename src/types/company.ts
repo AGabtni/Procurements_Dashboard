@@ -17,6 +17,7 @@ export interface CompanyProfileDto {
   matchingStatus: string;
   matchingStartedAt: string | null;
   commodityTypes: string[];
+  autoKeywords: string[] | null;
   preferences: CompanyPreferencesDto | null;
 }
 

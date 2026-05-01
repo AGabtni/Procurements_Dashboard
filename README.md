@@ -108,9 +108,11 @@ npm run preview
 
 Displays full tender information including:
 - Organization, category, procurement method, selection criteria
+- Region of delivery and region of opportunity
 - Publication and closing dates
 - UNSPSC and GSIN commodity code badges
 - Links to original notice and external portal
+- Contact information (name, email, phone)
 - Document list with download buttons
 
 ## Roadmap
@@ -118,7 +120,8 @@ Displays full tender information including:
 - [x] Tender list with search, filter, sort, pagination
 - [x] Tender detail with documents
 - [x] CSV export
-- [ ] Lead matching dashboard (Phase 4)
-- [ ] Company profile management
+- [x] Company profile + preferences management
+- [x] Lead matching dashboard with scores and status
+- [x] Region of delivery/opportunity in tender detail
 - [ ] Alert configuration UI
 - [ ] Dark mode
