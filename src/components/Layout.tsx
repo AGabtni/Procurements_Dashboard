@@ -1,6 +1,15 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Layout() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate("/login");
+  }
+
   return (
     <>
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -23,11 +32,38 @@ export default function Layout() {
                   Tenders
                 </NavLink>
               </li>
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/profiles">
-                  Company Profiles
-                </NavLink>
-              </li>
+              {user && (
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/profiles">
+                    Company Profiles
+                  </NavLink>
+                </li>
+              )}
+            </ul>
+            <ul className="navbar-nav ms-auto">
+              {user ? (
+                <>
+                  <li className="nav-item">
+                    <span className="nav-link text-light">
+                      {user.fullName}
+                    </span>
+                  </li>
+                  <li className="nav-item">
+                    <button
+                      className="btn btn-outline-light btn-sm my-1"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/login">
+                    Login
+                  </NavLink>
+                </li>
+              )}
             </ul>
           </div>
         </div>

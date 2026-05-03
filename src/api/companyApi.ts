@@ -10,9 +10,29 @@ import type {
 } from "../types/company";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5009";
+const STORAGE_KEY = "procureportal_auth";
+
+function authHeaders(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const { token } = JSON.parse(raw);
+      if (token) return { Authorization: `Bearer ${token}` };
+    }
+  } catch { /* ignore */ }
+  return {};
+}
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, init);
+  const res = await fetch(url, {
+    ...init,
+    headers: { ...authHeaders(), ...init?.headers },
+  });
+  if (res.status === 401) {
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.href = "/login";
+    throw new Error("Session expired");
+  }
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
@@ -20,7 +40,15 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 async function fetchVoid(url: string, init?: RequestInit): Promise<void> {
-  const res = await fetch(url, init);
+  const res = await fetch(url, {
+    ...init,
+    headers: { ...authHeaders(), ...init?.headers },
+  });
+  if (res.status === 401) {
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.href = "/login";
+    throw new Error("Session expired");
+  }
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
@@ -136,6 +164,7 @@ export async function triggerMatch(
 ): Promise<TriggerMatchResult> {
   const res = await fetch(`${API_BASE}/api/company/${companyId}/match`, {
     method: "POST",
+    headers: { ...authHeaders() },
   });
 
   let body: Record<string, unknown> = {};
