@@ -2,6 +2,9 @@
 
 export interface CompanyProfileDto {
   id: number;
+  userId: number | null;
+  ownerName: string | null;
+  ownerEmail: string | null;
   companyName: string;
   industry: string | null;
   province: string | null;

@@ -34,8 +34,15 @@ export default function Layout() {
               </li>
               {user && (
                 <li className="nav-item">
-                  <NavLink className="nav-link" to="/profiles">
-                    Company Profiles
+                  <NavLink className="nav-link" to="/my-company">
+                    My Company
+                  </NavLink>
+                </li>
+              )}
+              {user && user.role === "admin" && (
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/admin/companies">
+                    All Companies
                   </NavLink>
                 </li>
               )}

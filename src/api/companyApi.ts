@@ -60,7 +60,91 @@ export interface TriggerMatchResult {
   message: string;
 }
 
-// ── Profile CRUD ──
+// ── My Profile (current user) ──
+
+export async function getMyProfile(): Promise<CompanyProfileDto | null> {
+  const res = await fetch(`${API_BASE}/api/company/me`, {
+    headers: { ...authHeaders() },
+  });
+  if (res.status === 404) return null;
+  if (res.status === 401) {
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.href = "/login";
+    throw new Error("Session expired");
+  }
+  if (!res.ok) throw new Error(`API error: ${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+export async function createMyProfile(
+  request: CreateCompanyProfileRequest
+): Promise<CompanyProfileDto> {
+  return fetchJson<CompanyProfileDto>(`${API_BASE}/api/company/me`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+}
+
+export async function updateMyProfile(
+  request: UpdateCompanyProfileRequest
+): Promise<CompanyProfileDto> {
+  return fetchJson<CompanyProfileDto>(`${API_BASE}/api/company/me`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+}
+
+export async function getMyPreferences(): Promise<CompanyPreferencesDto> {
+  return fetchJson<CompanyPreferencesDto>(`${API_BASE}/api/company/me/preferences`);
+}
+
+export async function updateMyPreferences(
+  request: CompanyPreferencesRequest
+): Promise<CompanyPreferencesDto> {
+  return fetchJson<CompanyPreferencesDto>(`${API_BASE}/api/company/me/preferences`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+}
+
+export async function getMyMatches(
+  status?: string,
+  limit?: number
+): Promise<CompanyMatchDto[]> {
+  const query = new URLSearchParams();
+  if (status) query.set("status", status);
+  if (limit) query.set("limit", String(limit));
+  return fetchJson<CompanyMatchDto[]>(`${API_BASE}/api/company/me/matches?${query}`);
+}
+
+export async function getMyMatchStats(): Promise<MatchStatsDto> {
+  return fetchJson<MatchStatsDto>(`${API_BASE}/api/company/me/matches/stats`);
+}
+
+export async function updateMyMatchStatus(
+  matchId: number,
+  request: UpdateMatchStatusRequest
+): Promise<void> {
+  return fetchVoid(`${API_BASE}/api/company/me/matches/${matchId}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+}
+
+export async function triggerMyMatch(): Promise<TriggerMatchResult> {
+  return handleTriggerResponse(
+    await fetch(`${API_BASE}/api/company/me/match`, {
+      method: "POST",
+      headers: { ...authHeaders() },
+    })
+  );
+}
+
+// ── Admin: All Profiles ──
 
 export async function getAllProfiles(): Promise<CompanyProfileDto[]> {
   return fetchJson<CompanyProfileDto[]>(`${API_BASE}/api/company`);
@@ -68,16 +152,6 @@ export async function getAllProfiles(): Promise<CompanyProfileDto[]> {
 
 export async function getProfileById(id: number): Promise<CompanyProfileDto> {
   return fetchJson<CompanyProfileDto>(`${API_BASE}/api/company/${id}`);
-}
-
-export async function createProfile(
-  request: CreateCompanyProfileRequest
-): Promise<CompanyProfileDto> {
-  return fetchJson<CompanyProfileDto>(`${API_BASE}/api/company`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(request),
-  });
 }
 
 export async function updateProfile(
@@ -90,12 +164,6 @@ export async function updateProfile(
     body: JSON.stringify(request),
   });
 }
-
-export async function deleteProfile(id: number): Promise<void> {
-  return fetchVoid(`${API_BASE}/api/company/${id}`, { method: "DELETE" });
-}
-
-// ── Preferences ──
 
 export async function getPreferences(
   companyId: number
@@ -118,8 +186,6 @@ export async function updatePreferences(
     }
   );
 }
-
-// ── Matches ──
 
 export async function getMatches(
   companyId: number,
@@ -157,15 +223,25 @@ export async function updateMatchStatus(
   );
 }
 
-// ── Matching trigger ──
-
 export async function triggerMatch(
   companyId: number
 ): Promise<TriggerMatchResult> {
-  const res = await fetch(`${API_BASE}/api/company/${companyId}/match`, {
-    method: "POST",
-    headers: { ...authHeaders() },
-  });
+  return handleTriggerResponse(
+    await fetch(`${API_BASE}/api/company/${companyId}/match`, {
+      method: "POST",
+      headers: { ...authHeaders() },
+    })
+  );
+}
+
+// ── Shared trigger response parser ──
+
+async function handleTriggerResponse(res: Response): Promise<TriggerMatchResult> {
+  if (res.status === 401) {
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.href = "/login";
+    throw new Error("Session expired");
+  }
 
   let body: Record<string, unknown> = {};
   try {

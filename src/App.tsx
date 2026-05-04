@@ -5,13 +5,20 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import TenderListPage from "./pages/TenderListPage";
 import TenderDetailPage from "./pages/TenderDetailPage";
-import CompanyProfilePage from "./pages/CompanyProfilePage";
-import MatchesPage from "./pages/MatchesPage";
+import MyCompanyPage from "./pages/MyCompanyPage";
+import AdminCompaniesPage from "./pages/AdminCompaniesPage";
 import type { ReactNode } from "react";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function RequireAdmin({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== "admin") return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -26,19 +33,19 @@ function App() {
             <Route index element={<TenderListPage />} />
             <Route path="/tenders/:id" element={<TenderDetailPage />} />
             <Route
-              path="/profiles"
+              path="/my-company"
               element={
                 <RequireAuth>
-                  <CompanyProfilePage />
+                  <MyCompanyPage />
                 </RequireAuth>
               }
             />
             <Route
-              path="/matches/:companyId"
+              path="/admin/companies"
               element={
-                <RequireAuth>
-                  <MatchesPage />
-                </RequireAuth>
+                <RequireAdmin>
+                  <AdminCompaniesPage />
+                </RequireAdmin>
               }
             />
           </Route>
