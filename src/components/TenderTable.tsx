@@ -27,7 +27,7 @@ export default function TenderTable({ tenders, params, onSort }: Props) {
   const headers: { label: string; field: string }[] = [
     { label: "Title", field: "title" },
     { label: "Organization", field: "organization" },
-    { label: "Type", field: "" },
+    { label: "Notice Type", field: "" },
     { label: "Published", field: "pub_date" },
     { label: "Closing", field: "closing_date" },
   ];
@@ -43,7 +43,8 @@ export default function TenderTable({ tenders, params, onSort }: Props) {
 
   return (
     <div className="table-responsive">
-      <table className="table table-hover align-middle">
+      <style>{`.tender-table th, .tender-table td { padding-right: 1.5rem; padding-top: 0.75rem; padding-bottom: 0.75rem; }`}</style>
+      <table className="table table-hover align-middle tender-table" style={{ tableLayout: "fixed", width: "100%" }}>
         <thead className="table-light">
           <tr>
             {headers.map((h) => (
@@ -52,34 +53,38 @@ export default function TenderTable({ tenders, params, onSort }: Props) {
                 role={h.field ? "button" : undefined}
                 onClick={h.field ? () => onSort(h.field) : undefined}
                 className={h.field ? "user-select-none" : ""}
+                style={
+                  h.label === "Title" ? { width: "40%" } :
+                  h.label === "Organization" ? { width: "25%" } :
+                  h.label === "Notice Type" ? { width: "10%" } :
+                  h.label === "Published" ? { width: "10%" } :
+                  h.label === "Closing" ? { width: "10%" } :
+                  undefined
+                }
               >
                 {h.label}
                 {h.field && <SortIcon field={h.field} params={params} />}
               </th>
             ))}
-            <th>Docs</th>
           </tr>
         </thead>
         <tbody>
           {tenders.map((t) => (
             <tr key={t.id}>
-              <td style={{ maxWidth: 350 }}>
+              <td className="text-truncate">
                 <Link
                   to={`/tenders/${t.id}`}
                   className="text-decoration-none fw-semibold"
                 >
                   {t.title ?? "Untitled"}
                 </Link>
-                {t.noticeId && (
-                  <div className="text-muted small">{t.noticeId}</div>
-                )}
               </td>
-              <td className="text-nowrap">
+              <td className="text-truncate">
                 {t.buyingOrganization ?? "—"}
               </td>
-              <td>
-                {t.noticeType && (
-                  <span className="badge bg-info text-dark">
+              <td style={{ overflow: "hidden" }}>
+                {t.noticeType && t.noticeType !== "Not Applicable" && (
+                  <span className="badge bg-info text-dark text-truncate d-inline-block" style={{ maxWidth: "100%" }}>
                     {t.noticeType}
                   </span>
                 )}
@@ -89,11 +94,6 @@ export default function TenderTable({ tenders, params, onSort }: Props) {
               </td>
               <td className="text-nowrap">
                 {formatDate(t.closingDate)}
-              </td>
-              <td>
-                {t.hasDocuments && (
-                  <span className="badge bg-success">Yes</span>
-                )}
               </td>
             </tr>
           ))}
