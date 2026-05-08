@@ -7,6 +7,8 @@ import TenderListPage from "./pages/TenderListPage";
 import TenderDetailPage from "./pages/TenderDetailPage";
 import MyCompanyPage from "./pages/MyCompanyPage";
 import AdminCompaniesPage from "./pages/AdminCompaniesPage";
+import SettingsPage from "./pages/SettingsPage";
+import ConfirmEmailPage from "./pages/ConfirmEmailPage";
 import type { ReactNode } from "react";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -29,6 +31,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/confirm-email" element={<ConfirmEmailPage />} />
           <Route element={<Layout />}>
             <Route index element={<TenderListPage />} />
             <Route path="/tenders/:id" element={<TenderDetailPage />} />
@@ -46,6 +49,14 @@ function App() {
                 <RequireAdmin>
                   <AdminCompaniesPage />
                 </RequireAdmin>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <RequireAuth>
+                  <SettingsPage />
+                </RequireAuth>
               }
             />
           </Route>

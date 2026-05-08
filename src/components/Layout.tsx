@@ -51,6 +51,11 @@ export default function Layout() {
               {user ? (
                 <>
                   <li className="nav-item">
+                    <NavLink className="nav-link" to="/settings">
+                      Settings
+                    </NavLink>
+                  </li>
+                  <li className="nav-item">
                     <span className="nav-link text-light">
                       {user.fullName}
                     </span>

@@ -14,6 +14,8 @@ export interface AuthResponse {
   email: string;
   fullName: string;
   role: string;
+  emailConfirmed: boolean;
+  notificationsEnabled: boolean;
 }
 
 export interface UserDto {
@@ -23,4 +25,17 @@ export interface UserDto {
   role: string;
   isActive: boolean;
   createdAt: string;
+  emailConfirmed: boolean;
+  notificationsEnabled: boolean;
+}
+
+export interface SettingsDto {
+  email: string;
+  emailConfirmed: boolean;
+  notificationsEnabled: boolean;
+}
+
+export interface UpdateSettingsRequest {
+  email?: string;
+  notificationsEnabled?: boolean;
 }

@@ -14,6 +14,8 @@ interface AuthState {
   email: string;
   fullName: string;
   role: string;
+  emailConfirmed: boolean;
+  notificationsEnabled: boolean;
 }
 
 interface AuthContextValue {
@@ -60,6 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: res.email,
       fullName: res.fullName,
       role: res.role,
+      emailConfirmed: res.emailConfirmed,
+      notificationsEnabled: res.notificationsEnabled,
     });
   }
 
