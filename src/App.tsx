@@ -7,6 +7,7 @@ import TenderListPage from "./pages/TenderListPage";
 import TenderDetailPage from "./pages/TenderDetailPage";
 import MyCompanyPage from "./pages/MyCompanyPage";
 import AdminCompaniesPage from "./pages/AdminCompaniesPage";
+import AdminPage from "./pages/AdminPage";
 import SettingsPage from "./pages/SettingsPage";
 import ConfirmEmailPage from "./pages/ConfirmEmailPage";
 import type { ReactNode } from "react";
@@ -41,6 +42,14 @@ function App() {
                 <RequireAuth>
                   <MyCompanyPage />
                 </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <RequireAdmin>
+                  <AdminPage />
+                </RequireAdmin>
               }
             />
             <Route

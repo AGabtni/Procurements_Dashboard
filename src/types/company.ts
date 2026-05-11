@@ -76,6 +76,10 @@ export interface CreateCompanyProfileRequest {
   preferences?: CompanyPreferencesRequest;
 }
 
+export interface AdminCreateCompanyRequest extends CreateCompanyProfileRequest {
+  userId?: number;
+}
+
 export interface UpdateCompanyProfileRequest {
   companyName?: string;
   industry?: string;

@@ -8,7 +8,9 @@ import {
   getMatchStats,
   updateMatchStatus,
   triggerMatch,
+  linkUserToProfile,
 } from "../api/companyApi";
+import { getUnlinkedUsers } from "../api/authApi";
 import type {
   CompanyProfileDto,
   CompanyMatchDto,
@@ -16,6 +18,7 @@ import type {
   UpdateCompanyProfileRequest,
   CompanyPreferencesRequest,
 } from "../types/company";
+import type { UserDto } from "../types/auth";
 import { CATEGORY_MAP } from "../utils/categoryMap";
 import TagInput from "../components/TagInput";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
@@ -70,6 +73,12 @@ export default function AdminCompaniesPage() {
   const [matchBusy, setMatchBusy] = useState<Set<number>>(new Set());
   const [matchMsg, setMatchMsg] = useState<Record<number, string>>({});
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Link user
+  const [showLinkUser, setShowLinkUser] = useState(false);
+  const [linkableUsers, setLinkableUsers] = useState<UserDto[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [linkBusy, setLinkBusy] = useState(false);
 
   useEffect(() => { loadProfiles(); }, []);
 
@@ -196,6 +205,46 @@ export default function AdminCompaniesPage() {
       setMatchMsg((prev) => ({ ...prev, [companyId]: err instanceof Error ? err.message : "Failed" }));
     } finally {
       setMatchBusy((prev) => { const n = new Set(prev); n.delete(companyId); return n; });
+    }
+  }
+
+  async function openLinkUser() {
+    setShowLinkUser(true);
+    setSelectedUserId(selectedProfile?.userId?.toString() ?? "");
+    try {
+      const users = await getUnlinkedUsers();
+      // Also include the currently linked user if any
+      if (selectedProfile?.userId && selectedProfile?.ownerName) {
+        const current: UserDto = {
+          id: selectedProfile.userId,
+          email: selectedProfile.ownerEmail ?? "",
+          fullName: selectedProfile.ownerName,
+          role: "", isActive: true, createdAt: "", emailConfirmed: false,
+          notificationsEnabled: false, companyId: selectedProfile.id,
+          companyName: selectedProfile.companyName,
+        };
+        setLinkableUsers([current, ...users]);
+      } else {
+        setLinkableUsers(users);
+      }
+    } catch {
+      setLinkableUsers([]);
+    }
+  }
+
+  async function handleLinkUser() {
+    if (!selectedProfile) return;
+    setLinkBusy(true);
+    setError(null);
+    try {
+      const userId = selectedUserId ? Number(selectedUserId) : null;
+      await linkUserToProfile(selectedProfile.id, userId);
+      setSelectedProfile(await getProfileById(selectedProfile.id));
+      setShowLinkUser(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to link user");
+    } finally {
+      setLinkBusy(false);
     }
   }
 
@@ -330,8 +379,48 @@ export default function AdminCompaniesPage() {
         </div>
       </div>
 
-      {selectedProfile.ownerName && (
-        <p className="text-muted">Owner: {selectedProfile.ownerName} ({selectedProfile.ownerEmail})</p>
+      {selectedProfile.ownerName ? (
+        <div className="d-flex align-items-center gap-2 mb-2">
+          <span className="text-muted">Owner: {selectedProfile.ownerName} ({selectedProfile.ownerEmail})</span>
+          <button className="btn btn-outline-secondary btn-sm" onClick={openLinkUser}>Change</button>
+        </div>
+      ) : (
+        <div className="d-flex align-items-center gap-2 mb-2">
+          <span className="text-muted">No owner linked</span>
+          <button className="btn btn-outline-primary btn-sm" onClick={openLinkUser}>Link User</button>
+        </div>
+      )}
+
+      {showLinkUser && (
+        <div className="card mb-3">
+          <div className="card-body">
+            <div className="row g-2 align-items-end">
+              <div className="col-md-6">
+                <label className="form-label">Assign User</label>
+                <select
+                  className="form-select"
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                >
+                  <option value="">— No user (unlink) —</option>
+                  {linkableUsers.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.fullName} ({u.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-md-6 d-flex gap-2">
+                <button className="btn btn-success btn-sm" onClick={handleLinkUser} disabled={linkBusy}>
+                  {linkBusy ? "Saving..." : "Save"}
+                </button>
+                <button className="btn btn-outline-secondary btn-sm" onClick={() => setShowLinkUser(false)}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {error && <div className="alert alert-danger py-2">{error}</div>}

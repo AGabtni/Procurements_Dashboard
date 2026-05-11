@@ -27,6 +27,8 @@ export interface UserDto {
   createdAt: string;
   emailConfirmed: boolean;
   notificationsEnabled: boolean;
+  companyId: number | null;
+  companyName: string | null;
 }
 
 export interface SettingsDto {

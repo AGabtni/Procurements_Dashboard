@@ -32,7 +32,7 @@ export default function Layout() {
                   Tenders
                 </NavLink>
               </li>
-              {user && (
+              {user && user.role !== "admin" && (
                 <li className="nav-item">
                   <NavLink className="nav-link" to="/my-company">
                     My Company
@@ -41,8 +41,8 @@ export default function Layout() {
               )}
               {user && user.role === "admin" && (
                 <li className="nav-item">
-                  <NavLink className="nav-link" to="/admin/companies">
-                    All Companies
+                  <NavLink className="nav-link" to="/admin">
+                    Admin
                   </NavLink>
                 </li>
               )}

@@ -24,6 +24,10 @@ graph LR
 - **Paginate** — server-side pagination with page controls
 - **Detail view** — full tender info, UNSPSC/GSIN badges, document download links
 - **CSV export** — download filtered results as a spreadsheet
+- **Authentication** — register, login, JWT-based session management
+- **Email confirmation** — verify email address with token-based flow
+- **Settings** — email confirmation status, notification opt-in/out toggle
+- **Company matching** — view matched tenders with scores and status management
 
 ## Tech Stack
 
@@ -36,19 +40,25 @@ graph LR
 
 ```
 src/
-├── main.tsx                  # App entry point
-├── App.tsx                   # Router setup
+├── main.tsx                  # App entry point (Bootstrap JS imported)
+├── App.tsx                   # Router setup (public + protected routes)
 ├── api/
-│   └── tenderApi.ts          # API client (fetch wrapper)
+│   ├── tenderApi.ts          # Tender API client (fetch wrapper)
+│   └── authApi.ts            # Auth API client (login, register, settings)
+├── context/
+│   └── AuthContext.tsx        # JWT auth state + protected route wrapper
 ├── types/
-│   └── tender.ts             # TypeScript interfaces (matches API DTOs)
+│   ├── tender.ts             # Tender TypeScript interfaces
+│   └── auth.ts               # Auth TypeScript interfaces
 ├── pages/
 │   ├── TenderListPage.tsx    # Search + table + pagination + CSV export
-│   └── TenderDetailPage.tsx  # Full tender detail + documents
+│   ├── TenderDetailPage.tsx  # Full tender detail + documents
+│   ├── SettingsPage.tsx      # Email confirmation + notification toggle
+│   └── ConfirmEmailPage.tsx  # Email confirmation landing page
 ├── components/
 │   ├── Layout.tsx            # Navbar + container shell
 │   ├── SearchBar.tsx         # Keyword, category, type filters
-│   ├── TenderTable.tsx       # Sortable results table
+│   ├── TenderTable.tsx       # Sortable results table (fixed layout)
 │   └── Pagination.tsx        # Page controls
 ```
 
@@ -123,5 +133,11 @@ Displays full tender information including:
 - [x] Company profile + preferences management
 - [x] Lead matching dashboard with scores and status
 - [x] Region of delivery/opportunity in tender detail
+- [x] User authentication (register, login, JWT sessions)
+- [x] Email confirmation flow (send link, confirm page)
+- [x] Settings page (email status, notification toggle)
+- [x] Bootstrap JS integration (dropdowns)
+- [x] Fixed table layout with optimized column widths
 - [ ] Alert configuration UI
+- [x] Role-based UI (admin vs user views)
 - [ ] Dark mode

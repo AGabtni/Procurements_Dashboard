@@ -7,6 +7,7 @@ import type {
   CompanyPreferencesRequest,
   CompanyPreferencesDto,
   UpdateMatchStatusRequest,
+  AdminCreateCompanyRequest,
 } from "../types/company";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5009";
@@ -148,6 +149,27 @@ export async function triggerMyMatch(): Promise<TriggerMatchResult> {
 
 export async function getAllProfiles(): Promise<CompanyProfileDto[]> {
   return fetchJson<CompanyProfileDto[]>(`${API_BASE}/api/company`);
+}
+
+export async function adminCreateProfile(
+  request: AdminCreateCompanyRequest
+): Promise<CompanyProfileDto> {
+  return fetchJson<CompanyProfileDto>(`${API_BASE}/api/company`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+}
+
+export async function linkUserToProfile(
+  companyId: number,
+  userId: number | null
+): Promise<CompanyProfileDto> {
+  return fetchJson<CompanyProfileDto>(`${API_BASE}/api/company/${companyId}/link-user`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
 }
 
 export async function getProfileById(id: number): Promise<CompanyProfileDto> {
