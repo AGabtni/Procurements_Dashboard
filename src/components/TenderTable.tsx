@@ -19,8 +19,11 @@ function SortIcon({
   field: string;
   params: TenderSearchParams;
 }) {
-  if (params.sortBy !== field) return null;
-  return <span className="ms-1">{params.sortDesc ? "▼" : "▲"}</span>;
+  const isActive = params.sortBy === field;
+  if (isActive) {
+    return <span className="ms-1">{params.sortDesc ? "▼" : "▲"}</span>;
+  }
+  return <span className="ms-1" style={{ opacity: 0.3 }}>⇅</span>;
 }
 
 export default function TenderTable({ tenders, params, onSort }: Props) {
@@ -53,14 +56,15 @@ export default function TenderTable({ tenders, params, onSort }: Props) {
                 role={h.field ? "button" : undefined}
                 onClick={h.field ? () => onSort(h.field) : undefined}
                 className={h.field ? "user-select-none" : ""}
-                style={
-                  h.label === "Title" ? { width: "40%" } :
+                style={{
+                  whiteSpace: "nowrap",
+                  ...(h.label === "Title" ? { width: "30%" } :
                   h.label === "Organization" ? { width: "25%" } :
                   h.label === "Notice Type" ? { width: "10%" } :
                   h.label === "Published" ? { width: "10%" } :
                   h.label === "Closing" ? { width: "10%" } :
-                  undefined
-                }
+                  {})
+                }}
               >
                 {h.label}
                 {h.field && <SortIcon field={h.field} params={params} />}

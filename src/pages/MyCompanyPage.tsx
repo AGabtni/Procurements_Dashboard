@@ -18,6 +18,7 @@ import type {
   CompanyPreferencesRequest,
 } from "../types/company";
 import { CATEGORY_MAP } from "../utils/categoryMap";
+import MatchesTable from "../components/MatchesTable";
 import TagInput from "../components/TagInput";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import type { DropdownOption } from "../components/MultiSelectDropdown";
@@ -741,66 +742,7 @@ export default function MyCompanyPage() {
           ) : matches.length === 0 ? (
             <p className="text-muted">No matches found. Try running matching first.</p>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Score</th>
-                    <th>Tender</th>
-                    <th>Organization</th>
-                    <th>Category</th>
-                    <th>Closing</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {matches.map((m) => (
-                    <tr key={m.id}>
-                      <td>
-                        <span className={`badge ${m.matchScore >= 70 ? "bg-success" : m.matchScore >= 55 ? "bg-warning text-dark" : "bg-secondary"}`}>
-                          {m.matchScore}
-                        </span>
-                      </td>
-                      <td>
-                        <a href={`/tenders/${m.tenderId}`}>{m.tenderTitle ?? m.noticeId}</a>
-                        {m.matchReason && <div className="text-muted small">{m.matchReason}</div>}
-                      </td>
-                      <td className="small">{m.buyingOrganization ?? "—"}</td>
-                      <td>{m.procurementCategory ?? "—"}</td>
-                      <td className="small">
-                        {m.closingDate ? new Date(m.closingDate).toLocaleDateString() : "—"}
-                      </td>
-                      <td>
-                        <span className={`badge ${
-                          m.status === "new" ? "bg-primary" :
-                          m.status === "saved" ? "bg-success" :
-                          m.status === "viewed" ? "bg-info" : "bg-secondary"
-                        }`}>
-                          {m.status}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="dropdown">
-                          <button className="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                            Set
-                          </button>
-                          <ul className="dropdown-menu">
-                            {(["new", "viewed", "saved", "dismissed"] as const).map((s) => (
-                              <li key={s}>
-                                <button className="dropdown-item" onClick={() => handleStatusChange(m.id, s)}>
-                                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <MatchesTable matches={matches} onStatusChange={handleStatusChange} />
           )}
         </div>
       )}

@@ -6,7 +6,6 @@ import RegisterPage from "./pages/RegisterPage";
 import TenderListPage from "./pages/TenderListPage";
 import TenderDetailPage from "./pages/TenderDetailPage";
 import MyCompanyPage from "./pages/MyCompanyPage";
-import AdminCompaniesPage from "./pages/AdminCompaniesPage";
 import AdminPage from "./pages/AdminPage";
 import SettingsPage from "./pages/SettingsPage";
 import ConfirmEmailPage from "./pages/ConfirmEmailPage";
@@ -49,14 +48,6 @@ function App() {
               element={
                 <RequireAdmin>
                   <AdminPage />
-                </RequireAdmin>
-              }
-            />
-            <Route
-              path="/admin/companies"
-              element={
-                <RequireAdmin>
-                  <AdminCompaniesPage />
                 </RequireAdmin>
               }
             />

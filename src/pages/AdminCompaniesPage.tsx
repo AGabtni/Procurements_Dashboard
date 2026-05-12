@@ -9,6 +9,7 @@ import {
   updateMatchStatus,
   triggerMatch,
   linkUserToProfile,
+  adminCreateProfile,
 } from "../api/companyApi";
 import { getUnlinkedUsers } from "../api/authApi";
 import type {
@@ -17,10 +18,12 @@ import type {
   MatchStatsDto,
   UpdateCompanyProfileRequest,
   CompanyPreferencesRequest,
+  AdminCreateCompanyRequest,
 } from "../types/company";
 import type { UserDto } from "../types/auth";
 import { CATEGORY_MAP } from "../utils/categoryMap";
 import TagInput from "../components/TagInput";
+import MatchesTable from "../components/MatchesTable";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import type { DropdownOption } from "../components/MultiSelectDropdown";
 
@@ -74,6 +77,12 @@ export default function AdminCompaniesPage() {
   const [matchMsg, setMatchMsg] = useState<Record<number, string>>({});
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Create profile
+  const [showCreate, setShowCreate] = useState(false);
+  const [createUnlinkedUsers, setCreateUnlinkedUsers] = useState<UserDto[]>([]);
+  const [createForm, setCreateForm] = useState({ companyName: "", userId: "" });
+  const [creating, setCreating] = useState(false);
+
   // Link user
   const [showLinkUser, setShowLinkUser] = useState(false);
   const [linkableUsers, setLinkableUsers] = useState<UserDto[]>([]);
@@ -81,6 +90,36 @@ export default function AdminCompaniesPage() {
   const [linkBusy, setLinkBusy] = useState(false);
 
   useEffect(() => { loadProfiles(); }, []);
+
+  async function openCreateForm() {
+    setShowCreate(true);
+    setCreateForm({ companyName: "", userId: "" });
+    try {
+      setCreateUnlinkedUsers(await getUnlinkedUsers());
+    } catch {
+      setCreateUnlinkedUsers([]);
+    }
+  }
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!createForm.companyName.trim()) return;
+    setCreating(true);
+    setError(null);
+    try {
+      const req: AdminCreateCompanyRequest = {
+        companyName: createForm.companyName.trim(),
+        userId: createForm.userId ? Number(createForm.userId) : undefined,
+      };
+      await adminCreateProfile(req);
+      setShowCreate(false);
+      await loadProfiles();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create profile");
+    } finally {
+      setCreating(false);
+    }
+  }
 
   useEffect(() => {
     const hasActive = profiles.some(
@@ -167,7 +206,7 @@ export default function AdminCompaniesPage() {
         companySize: form.companySize || undefined,
         commodityTypes: form.commodityTypes.length ? form.commodityTypes : undefined,
       };
-      const updated = await updateProfile(selectedProfile.id, req);
+      await updateProfile(selectedProfile.id, req);
       if (showPrefs) {
         await updatePreferences(selectedProfile.id, buildPrefsRequest());
       }
@@ -302,8 +341,56 @@ export default function AdminCompaniesPage() {
   if (view === "list") {
     return (
       <div>
-        <h2 className="mb-3">All Companies</h2>
         {error && <div className="alert alert-danger py-2">{error}</div>}
+
+        <div className="d-flex justify-content-end mb-3">
+          <button className="btn btn-primary btn-sm" onClick={openCreateForm}>
+            + Create Profile
+          </button>
+        </div>
+
+        {showCreate && (
+          <div className="card mb-3">
+            <div className="card-body">
+              <h6>Create Company Profile</h6>
+              <form onSubmit={handleCreate} className="row g-2 align-items-end">
+                <div className="col-md-4">
+                  <label className="form-label">Company Name <span className="text-danger">*</span></label>
+                  <input
+                    className="form-control"
+                    required
+                    value={createForm.companyName}
+                    onChange={(e) => setCreateForm({ ...createForm, companyName: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Link to User (optional)</label>
+                  <select
+                    className="form-select"
+                    value={createForm.userId}
+                    onChange={(e) => setCreateForm({ ...createForm, userId: e.target.value })}
+                  >
+                    <option value="">— No user (standalone) —</option>
+                    {createUnlinkedUsers.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.fullName} ({u.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-md-4 d-flex gap-2">
+                  <button className="btn btn-success btn-sm" type="submit" disabled={creating}>
+                    {creating ? "Creating..." : "Create"}
+                  </button>
+                  <button className="btn btn-outline-secondary btn-sm" type="button" onClick={() => setShowCreate(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {profiles.length === 0 ? (
           <p className="text-muted">No company profiles yet.</p>
         ) : (
@@ -606,36 +693,7 @@ export default function AdminCompaniesPage() {
           ) : matches.length === 0 ? (
             <p className="text-muted">No matches found.</p>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead><tr><th>Score</th><th>Tender</th><th>Organization</th><th>Category</th><th>Closing</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody>
-                  {matches.map((m) => (
-                    <tr key={m.id}>
-                      <td><span className={`badge ${m.matchScore >= 70 ? "bg-success" : m.matchScore >= 55 ? "bg-warning text-dark" : "bg-secondary"}`}>{m.matchScore}</span></td>
-                      <td>
-                        <a href={`/tenders/${m.tenderId}`}>{m.tenderTitle ?? m.noticeId}</a>
-                        {m.matchReason && <div className="text-muted small">{m.matchReason}</div>}
-                      </td>
-                      <td className="small">{m.buyingOrganization ?? "—"}</td>
-                      <td>{m.procurementCategory ?? "—"}</td>
-                      <td className="small">{m.closingDate ? new Date(m.closingDate).toLocaleDateString() : "—"}</td>
-                      <td><span className={`badge ${m.status === "new" ? "bg-primary" : m.status === "saved" ? "bg-success" : m.status === "viewed" ? "bg-info" : "bg-secondary"}`}>{m.status}</span></td>
-                      <td>
-                        <div className="dropdown">
-                          <button className="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">Set</button>
-                          <ul className="dropdown-menu">
-                            {(["new","viewed","saved","dismissed"] as const).map((s) => (
-                              <li key={s}><button className="dropdown-item" onClick={() => handleStatusChange(m.id, s)}>{s.charAt(0).toUpperCase() + s.slice(1)}</button></li>
-                            ))}
-                          </ul>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <MatchesTable matches={matches} showReason onStatusChange={handleStatusChange} />
           )}
         </div>
       )}
