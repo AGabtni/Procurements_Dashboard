@@ -13,6 +13,11 @@ function formatDate(iso: string | null) {
   });
 }
 
+function fullUrl(link: string): string {
+  if (link.startsWith("http://") || link.startsWith("https://")) return link;
+  return `https://canadabuys.canada.ca${link.startsWith("/") ? "" : "/"}${link}`;
+}
+
 export default function TenderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -156,7 +161,7 @@ export default function TenderDetailPage() {
           <div className="mt-3 d-flex gap-2">
             {tender.noticeLink && (
               <a
-                href={tender.noticeLink}
+                href={fullUrl(tender.noticeLink)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-primary btn-sm"
@@ -166,7 +171,7 @@ export default function TenderDetailPage() {
             )}
             {tender.externalLink && (
               <a
-                href={tender.externalLink}
+                href={fullUrl(tender.externalLink)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-outline-primary btn-sm"
@@ -240,7 +245,7 @@ export default function TenderDetailPage() {
                 </div>
                 {doc.url && (
                   <a
-                    href={doc.url}
+                    href={fullUrl(doc.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-outline-primary btn-sm"
