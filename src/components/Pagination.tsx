@@ -19,9 +19,9 @@ export default function Pagination({
   for (let i = start; i <= end; i++) pages.push(i);
 
   return (
-    <div className="d-flex justify-content-between align-items-center mt-3">
-      <span className="text-muted small">
-        {totalCount} tender{totalCount !== 1 && "s"} found
+    <div className="pp-pagination mt-3">
+      <span style={{ color: "var(--pp-text-muted)", fontSize: ".85rem" }}>
+        {totalCount.toLocaleString()} tender{totalCount !== 1 && "s"} found
       </span>
       <nav>
         <ul className="pagination pagination-sm mb-0">

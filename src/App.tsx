@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import Layout from "./components/Layout";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import DashboardPage from "./pages/DashboardPage";
 import TenderListPage from "./pages/TenderListPage";
 import TenderDetailPage from "./pages/TenderDetailPage";
 import MyCompanyPage from "./pages/MyCompanyPage";
@@ -33,7 +34,8 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/confirm-email" element={<ConfirmEmailPage />} />
           <Route element={<Layout />}>
-            <Route index element={<TenderListPage />} />
+            <Route index element={<DashboardPage />} />
+            <Route path="/tenders" element={<TenderListPage />} />
             <Route path="/tenders/:id" element={<TenderDetailPage />} />
             <Route
               path="/my-company"

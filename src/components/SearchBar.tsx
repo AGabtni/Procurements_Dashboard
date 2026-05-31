@@ -32,7 +32,7 @@ export default function SearchBar({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card card-body mb-4">
+    <form onSubmit={handleSubmit} className="pp-search-bar">
       <div className="row g-3 align-items-end">
         <div className="col-md-4">
           <label htmlFor="keyword" className="form-label">
@@ -43,7 +43,7 @@ export default function SearchBar({
             name="keyword"
             type="text"
             className="form-control"
-            placeholder="Title, organization, or notice ID"
+            placeholder="Title, organization, or notice ID…"
             defaultValue={params.keyword ?? ""}
           />
         </div>
@@ -95,19 +95,19 @@ export default function SearchBar({
               className="form-check-input"
               defaultChecked={params.openOnly !== false}
             />
-            <label htmlFor="openOnly" className="form-check-label">
+            <label htmlFor="openOnly" className="form-check-label" style={{ fontSize: ".9rem" }}>
               Open only
             </label>
           </div>
         </div>
 
         <div className="col-md-2 d-flex gap-2">
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="pp-btn pp-btn-primary">
             Search
           </button>
           <button
             type="button"
-            className="btn btn-outline-secondary"
+            className="pp-btn pp-btn-ghost"
             onClick={handleReset}
           >
             Reset

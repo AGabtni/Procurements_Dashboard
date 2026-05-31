@@ -104,15 +104,24 @@ export default function TenderListPage() {
 
   return (
     <>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="mb-0">Procurement Tenders</h2>
-        <button
-          className="btn btn-outline-success btn-sm"
-          onClick={handleExportCsv}
-          disabled={!result?.items.length}
-        >
-          Export CSV
-        </button>
+      <div className="pp-page-header">
+        <div>
+          <h2>Procurement Tenders</h2>
+          {result && (
+            <span style={{ fontSize: ".85rem", color: "var(--pp-text-muted)" }}>
+              {result.totalCount.toLocaleString()} tenders available
+            </span>
+          )}
+        </div>
+        <div className="header-actions">
+          <button
+            className="pp-btn pp-btn-ghost pp-btn-sm"
+            onClick={handleExportCsv}
+            disabled={!result?.items.length}
+          >
+            ↓ Export CSV
+          </button>
+        </div>
       </div>
 
       <SearchBar
@@ -129,10 +138,8 @@ export default function TenderListPage() {
       )}
 
       {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+        <div className="pp-loader">
+          <div className="pp-spinner" />
         </div>
       ) : (
         result && (

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getTenderById } from "../api/tenderApi";
 import type { TenderDetailDto } from "../types/tender";
 import { categoryLabel } from "../utils/categoryMap";
+import { recordView } from "../utils/recentlyViewed";
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
@@ -29,7 +30,10 @@ export default function TenderDetailPage() {
     if (!id) return;
     setLoading(true);
     getTenderById(Number(id))
-      .then(setTender)
+      .then((t) => {
+        setTender(t);
+        recordView(t.id);
+      })
       .catch((err) =>
         setError(err instanceof Error ? err.message : "Failed to load tender")
       )
@@ -38,10 +42,8 @@ export default function TenderDetailPage() {
 
   if (loading) {
     return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="pp-loader">
+        <div className="pp-spinner" />
       </div>
     );
   }
@@ -60,83 +62,172 @@ export default function TenderDetailPage() {
     );
   }
 
+  const daysLeft = tender.closingDate
+    ? Math.ceil((new Date(tender.closingDate).getTime() - Date.now()) / 86400000)
+    : null;
+
   return (
-    <>
+    <div className="pp-animate-in">
       <button
-        className="btn btn-outline-secondary btn-sm mb-3"
+        className="pp-btn pp-btn-ghost pp-btn-sm mb-3"
         onClick={() => navigate(-1)}
       >
         ← Back
       </button>
 
-      <div className="card mb-4">
-        <div className="card-header d-flex justify-content-between align-items-start">
-          <div>
-            <h4 className="card-title mb-1">{tender.title}</h4>
+      {/* Header */}
+      <div className="pp-detail-header">
+        <div className="d-flex justify-content-between align-items-start gap-3">
+          <div style={{ minWidth: 0 }}>
+            <h2>{tender.title}</h2>
             {tender.noticeId && (
-              <span className="text-muted">{tender.noticeId}</span>
+              <span style={{ fontSize: ".85rem", color: "var(--pp-text-muted)" }}>
+                {tender.noticeId}
+              </span>
             )}
           </div>
-          {tender.noticeType && (
-            <span className="badge bg-info text-dark fs-6">
-              {tender.noticeType}
-            </span>
+          <div className="d-flex gap-2 flex-shrink-0">
+            {tender.noticeType && (
+              <span className="pp-badge pp-badge-teal">{tender.noticeType}</span>
+            )}
+            {daysLeft !== null && daysLeft >= 0 && daysLeft <= 7 && (
+              <span className={`pp-badge ${daysLeft <= 3 ? "pp-badge-red pp-closing-soon" : "pp-badge-amber"}`}>
+                {daysLeft === 0 ? "Closes today" : daysLeft === 1 ? "Tomorrow" : `${daysLeft}d left`}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="pp-detail-meta">
+          <div className="pp-detail-meta-item">
+            <span className="icon">🏢</span>
+            {tender.buyingOrganization ?? "—"}
+          </div>
+          <div className="pp-detail-meta-item">
+            <span className="icon">📂</span>
+            {categoryLabel(tender.procurementCategory)}
+          </div>
+          <div className="pp-detail-meta-item">
+            <span className="icon">📅</span>
+            Published {formatDate(tender.publicationDate)}
+          </div>
+          <div className="pp-detail-meta-item">
+            <span className="icon">⏰</span>
+            Closing {formatDate(tender.closingDate)}
+          </div>
+        </div>
+        <div className="mt-3 d-flex gap-2">
+          {tender.noticeLink && (
+            <a
+              href={fullUrl(tender.noticeLink)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pp-btn pp-btn-primary pp-btn-sm"
+            >
+              View Original Notice →
+            </a>
+          )}
+          {tender.externalLink && (
+            <a
+              href={fullUrl(tender.externalLink)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pp-btn pp-btn-ghost pp-btn-sm"
+            >
+              External Link
+            </a>
           )}
         </div>
-        <div className="card-body">
+      </div>
+
+      <div className="row g-4">
+        {/* Main Column */}
+        <div className="col-lg-8">
+          {/* Description */}
           {tender.description && (
-            <div className="mb-3">
-              <h6 className="fw-semibold">Description</h6>
-              <p className="mb-0" style={{ whiteSpace: "pre-wrap" }}>{tender.description}</p>
+            <div className="pp-detail-section pp-animate-in">
+              <div className="pp-detail-section-header">
+                📝 Description
+              </div>
+              <div className="pp-detail-section-body">
+                <p style={{ whiteSpace: "pre-wrap", margin: 0, lineHeight: 1.7, color: "var(--pp-text-secondary)" }}>
+                  {tender.description}
+                </p>
+              </div>
             </div>
           )}
 
-          <div className="row g-3">
-            <div className="col-md-6">
-              <dl className="mb-0">
-                <dt>Buying Organization</dt>
-                <dd>{tender.buyingOrganization ?? "—"}</dd>
+          {/* Documents */}
+          {tender.documents.length > 0 && (
+            <div className="pp-detail-section pp-animate-in">
+              <div className="pp-detail-section-header">
+                📎 Documents
+                <span className="pp-badge pp-badge-blue ms-2">{tender.documents.length}</span>
+              </div>
+              <div style={{ padding: 0 }}>
+                {tender.documents.map((doc) => (
+                  <div key={doc.id} className="pp-doc-item">
+                    <div className="d-flex align-items-center">
+                      <div className="doc-icon">📄</div>
+                      <div>
+                        <span style={{ fontWeight: 600, fontSize: ".9rem" }}>{doc.title ?? "Untitled"}</span>
+                        {doc.type && (
+                          <span className="pp-badge pp-badge-gray ms-2">{doc.type}</span>
+                        )}
+                        {doc.language && (
+                          <span className="pp-badge pp-badge-gray ms-1">{doc.language}</span>
+                        )}
+                      </div>
+                    </div>
+                    {doc.url && (
+                      <a
+                        href={fullUrl(doc.url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="pp-btn pp-btn-ghost pp-btn-sm"
+                      >
+                        Download
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
-                <dt>Procurement Category</dt>
-                <dd>{categoryLabel(tender.procurementCategory)}</dd>
+        {/* Sidebar */}
+        <div className="col-lg-4">
+          {/* Details */}
+          <div className="pp-detail-section pp-animate-in">
+            <div className="pp-detail-section-header">ℹ️ Details</div>
+            <div className="pp-detail-section-body">
+              <dl style={{ fontSize: ".9rem" }} className="mb-0">
+                <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Procurement Method</dt>
+                <dd className="mb-3">{tender.procurementMethod ?? "—"}</dd>
 
-                <dt>Procurement Method</dt>
-                <dd>{tender.procurementMethod ?? "—"}</dd>
-
-                <dt>Selection Criteria</dt>
-                <dd>{tender.selectionCriteria ?? "—"}</dd>
+                <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Selection Criteria</dt>
+                <dd className="mb-3">{tender.selectionCriteria ?? "—"}</dd>
 
                 {tender.regionOfDelivery && (
                   <>
-                    <dt>Region of Delivery</dt>
-                    <dd>{tender.regionOfDelivery}</dd>
+                    <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Region of Delivery</dt>
+                    <dd className="mb-3">{tender.regionOfDelivery}</dd>
                   </>
                 )}
 
                 {tender.regionOfOpportunity && (
                   <>
-                    <dt>Region of Opportunity</dt>
-                    <dd>{tender.regionOfOpportunity}</dd>
+                    <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Region of Opportunity</dt>
+                    <dd className="mb-3">{tender.regionOfOpportunity}</dd>
                   </>
                 )}
-              </dl>
-            </div>
-            <div className="col-md-6">
-              <dl className="mb-0">
-                <dt>Publication Date</dt>
-                <dd>{formatDate(tender.publicationDate)}</dd>
-
-                <dt>Closing Date</dt>
-                <dd>{formatDate(tender.closingDate)}</dd>
 
                 {tender.unspsc && tender.unspsc.length > 0 && (
                   <>
-                    <dt>UNSPSC Codes</dt>
-                    <dd>
+                    <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>UNSPSC Codes</dt>
+                    <dd className="mb-3 d-flex flex-wrap gap-1">
                       {tender.unspsc.map((code) => (
-                        <span key={code} className="badge bg-secondary me-1">
-                          {code}
-                        </span>
+                        <span key={code} className="pp-badge pp-badge-gray">{code}</span>
                       ))}
                     </dd>
                   </>
@@ -144,12 +235,10 @@ export default function TenderDetailPage() {
 
                 {tender.gsin && tender.gsin.length > 0 && (
                   <>
-                    <dt>GSIN Codes</dt>
-                    <dd>
+                    <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>GSIN Codes</dt>
+                    <dd className="mb-0 d-flex flex-wrap gap-1">
                       {tender.gsin.map((code) => (
-                        <span key={code} className="badge bg-secondary me-1">
-                          {code}
-                        </span>
+                        <span key={code} className="pp-badge pp-badge-gray">{code}</span>
                       ))}
                     </dd>
                   </>
@@ -158,106 +247,40 @@ export default function TenderDetailPage() {
             </div>
           </div>
 
-          <div className="mt-3 d-flex gap-2">
-            {tender.noticeLink && (
-              <a
-                href={fullUrl(tender.noticeLink)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary btn-sm"
-              >
-                View Original Notice
-              </a>
-            )}
-            {tender.externalLink && (
-              <a
-                href={fullUrl(tender.externalLink)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-outline-primary btn-sm"
-              >
-                External Link
-              </a>
-            )}
-          </div>
+          {/* Contact */}
+          {(tender.contactName || tender.contactEmail || tender.contactPhone) && (
+            <div className="pp-detail-section pp-animate-in">
+              <div className="pp-detail-section-header">📞 Contact</div>
+              <div className="pp-detail-section-body">
+                <dl style={{ fontSize: ".9rem" }} className="mb-0">
+                  {tender.contactName && (
+                    <>
+                      <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Name</dt>
+                      <dd className="mb-2">{tender.contactName}</dd>
+                    </>
+                  )}
+                  {tender.contactEmail && (
+                    <>
+                      <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Email</dt>
+                      <dd className="mb-2">
+                        <a href={`mailto:${tender.contactEmail}`}>{tender.contactEmail}</a>
+                      </dd>
+                    </>
+                  )}
+                  {tender.contactPhone && (
+                    <>
+                      <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Phone</dt>
+                      <dd className="mb-0">
+                        <a href={`tel:${tender.contactPhone}`}>{tender.contactPhone}</a>
+                      </dd>
+                    </>
+                  )}
+                </dl>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {(tender.contactName || tender.contactEmail || tender.contactPhone) && (
-        <div className="card mb-4">
-          <div className="card-header">
-            <h5 className="card-title mb-0">Contact Information</h5>
-          </div>
-          <div className="card-body">
-            <dl className="mb-0 row">
-              {tender.contactName && (
-                <>
-                  <dt className="col-sm-3">Contact Name</dt>
-                  <dd className="col-sm-9">{tender.contactName}</dd>
-                </>
-              )}
-              {tender.contactEmail && (
-                <>
-                  <dt className="col-sm-3">Email</dt>
-                  <dd className="col-sm-9">
-                    <a href={`mailto:${tender.contactEmail}`}>{tender.contactEmail}</a>
-                  </dd>
-                </>
-              )}
-              {tender.contactPhone && (
-                <>
-                  <dt className="col-sm-3">Phone</dt>
-                  <dd className="col-sm-9">
-                    <a href={`tel:${tender.contactPhone}`}>{tender.contactPhone}</a>
-                  </dd>
-                </>
-              )}
-            </dl>
-          </div>
-        </div>
-      )}
-
-      {tender.documents.length > 0 && (
-        <div className="card">
-          <div className="card-header">
-            <h5 className="card-title mb-0">
-              Documents ({tender.documents.length})
-            </h5>
-          </div>
-          <ul className="list-group list-group-flush">
-            {tender.documents.map((doc) => (
-              <li
-                key={doc.id}
-                className="list-group-item d-flex justify-content-between align-items-center"
-              >
-                <div>
-                  <span className="fw-semibold">{doc.title ?? "Untitled"}</span>
-                  {doc.type && (
-                    <span className="badge bg-light text-dark ms-2">
-                      {doc.type}
-                    </span>
-                  )}
-                  {doc.language && (
-                    <span className="badge bg-light text-dark ms-1">
-                      {doc.language}
-                    </span>
-                  )}
-                </div>
-                {doc.url && (
-                  <a
-                    href={fullUrl(doc.url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-outline-primary btn-sm"
-                  >
-                    Download
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </>
+    </div>
   );
 }

@@ -286,13 +286,13 @@ export default function MyCompanyPage() {
       case "running":
       case "pending_rematch":
       case "pending_reset":
-        return <span className="badge bg-warning text-dark">Matching...</span>;
+        return <span className="pp-badge pp-badge-amber">⟳ Matching...</span>;
       case "completed":
-        return <span className="badge bg-success">Matched</span>;
+        return <span className="pp-badge pp-badge-green">✓ Matched</span>;
       case "failed":
-        return <span className="badge bg-danger">Failed</span>;
+        return <span className="pp-badge pp-badge-red">✕ Failed</span>;
       default:
-        return <span className="badge bg-light text-muted">Not matched</span>;
+        return <span className="pp-badge pp-badge-gray">Not matched</span>;
     }
   }
 
@@ -314,8 +314,8 @@ export default function MyCompanyPage() {
 
   if (loading) {
     return (
-      <div className="text-center py-5">
-        <div className="spinner-border" role="status" />
+      <div className="pp-loader">
+        <div className="pp-spinner" />
       </div>
     );
   }
@@ -323,10 +323,11 @@ export default function MyCompanyPage() {
   if (!profile) {
     if (!editing) {
       return (
-        <div className="text-center py-5">
-          <h3 className="mb-3">Set Up Your Company Profile</h3>
-          <p className="text-muted mb-4">Create your company profile to start matching with government tenders.</p>
-          <button className="btn btn-primary" onClick={() => setEditing(true)}>
+        <div className="pp-empty-state" style={{ paddingTop: "5rem" }}>
+          <div className="empty-icon">◈</div>
+          <h3>Set Up Your Company Profile</h3>
+          <p>Create your company profile to start matching with government tenders.</p>
+          <button className="pp-btn pp-btn-primary mt-3" onClick={() => setEditing(true)}>
             Create Profile
           </button>
         </div>
@@ -436,20 +437,22 @@ export default function MyCompanyPage() {
   }
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>{profile.companyName || "My Company"}</h2>
-        <div className="d-flex gap-2 align-items-center">
-          {getStatusBadge(profile.matchingStatus)}
-          <span className="text-muted small">
+    <div className="pp-animate-in">
+      <div className="pp-page-header">
+        <div>
+          <h2>{profile.companyName || "My Company"}</h2>
+          <span style={{ fontSize: ".85rem", color: "var(--pp-text-muted)" }}>
             Last matched: {getTimeAgo(profile.lastMatchedAt)}
           </span>
+        </div>
+        <div className="header-actions">
+          {getStatusBadge(profile.matchingStatus)}
           <button
-            className="btn btn-outline-primary btn-sm"
+            className="pp-btn pp-btn-primary pp-btn-sm"
             onClick={handleTrigger}
             disabled={matchBusy || isMatchActive}
           >
-            {matchBusy || isMatchActive ? "Matching..." : "Run Matching"}
+            {matchBusy || isMatchActive ? "⟳ Matching..." : "🎯 Run Matching"}
           </button>
         </div>
       </div>
@@ -458,41 +461,37 @@ export default function MyCompanyPage() {
       {error && <div className="alert alert-danger py-2">{error}</div>}
 
       {/* Tabs */}
-      <ul className="nav nav-tabs mb-3">
-        <li className="nav-item">
-          <button
-            className={`nav-link ${tab === "profile" ? "active" : ""}`}
-            onClick={() => setTab("profile")}
-          >
-            Company Profile
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${tab === "matches" ? "active" : ""}`}
-            onClick={() => setTab("matches")}
-          >
-            Matches
-            {stats && stats.newCount > 0 && (
-              <span className="badge bg-primary ms-2">{stats.newCount}</span>
-            )}
-          </button>
-        </li>
-      </ul>
+      <div className="pp-tabs">
+        <button
+          className={`pp-tab ${tab === "profile" ? "active" : ""}`}
+          onClick={() => setTab("profile")}
+        >
+          Company Profile
+        </button>
+        <button
+          className={`pp-tab ${tab === "matches" ? "active" : ""}`}
+          onClick={() => setTab("matches")}
+        >
+          Matches
+          {stats && stats.newCount > 0 && (
+            <span className="tab-count">{stats.newCount}</span>
+          )}
+        </button>
+      </div>
 
       {/* Profile Tab */}
       {tab === "profile" && !editing && (
         <div>
           <div className="d-flex justify-content-end mb-3">
-            <button className="btn btn-primary btn-sm" onClick={startEdit}>
-              Edit Profile
+            <button className="pp-btn pp-btn-primary pp-btn-sm" onClick={startEdit}>
+              ✎ Edit Profile
             </button>
           </div>
           <div className="row g-3">
             <div className="col-md-6">
-              <div className="card">
-                <div className="card-body">
-                  <h6 className="card-subtitle text-muted mb-2">Company Details</h6>
+              <div className="pp-card">
+                <div className="pp-card-body">
+                  <h6 style={{ color: "var(--pp-text-muted)", fontSize: ".8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: ".75rem" }}>Company Details</h6>
                   <p><strong>Name:</strong> {profile.companyName}</p>
                   <p><strong>Industry:</strong> {profile.industry || "—"}</p>
                   <p><strong>Province:</strong> {profile.province || "—"}</p>
@@ -506,19 +505,19 @@ export default function MyCompanyPage() {
               </div>
             </div>
             <div className="col-md-6">
-              <div className="card">
-                <div className="card-body">
-                  <h6 className="card-subtitle text-muted mb-2">Services & Keywords</h6>
+              <div className="pp-card">
+                <div className="pp-card-body">
+                  <h6 style={{ color: "var(--pp-text-muted)", fontSize: ".8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: ".75rem" }}>Services & Keywords</h6>
                   <p><strong>Description:</strong></p>
-                  <p className="text-muted">{profile.servicesDescription || "—"}</p>
+                  <p style={{ color: "var(--pp-text-secondary)" }}>{profile.servicesDescription || "—"}</p>
                   <p><strong>Keywords:</strong></p>
                   <div>
                     {profile.keywords?.length ? (
                       profile.keywords.map((k) => (
-                        <span key={k} className="badge bg-primary bg-opacity-10 text-primary me-1 mb-1">{k}</span>
+                        <span key={k} className="pp-badge pp-badge-blue me-1 mb-1">{k}</span>
                       ))
                     ) : (
-                      <span className="text-muted">None</span>
+                      <span style={{ color: "var(--pp-text-muted)" }}>None</span>
                     )}
                   </div>
                   {profile.autoKeywords && profile.autoKeywords.length > 0 && (
@@ -526,7 +525,7 @@ export default function MyCompanyPage() {
                       <p className="mt-2"><strong>Auto Keywords:</strong></p>
                       <div>
                         {profile.autoKeywords.map((k) => (
-                          <span key={k} className="badge bg-info bg-opacity-10 text-info me-1 mb-1">{k}</span>
+                          <span key={k} className="pp-badge pp-badge-teal me-1 mb-1">{k}</span>
                         ))}
                       </div>
                     </>
@@ -535,10 +534,10 @@ export default function MyCompanyPage() {
                   <div>
                     {profile.certifications?.length ? (
                       profile.certifications.map((c) => (
-                        <span key={c} className="badge bg-secondary me-1 mb-1">{c}</span>
+                        <span key={c} className="pp-badge pp-badge-gray me-1 mb-1">{c}</span>
                       ))
                     ) : (
-                      <span className="text-muted">None</span>
+                      <span style={{ color: "var(--pp-text-muted)" }}>None</span>
                     )}
                   </div>
                 </div>
@@ -546,9 +545,9 @@ export default function MyCompanyPage() {
             </div>
           </div>
           {profile.preferences && (
-            <div className="card mt-3">
-              <div className="card-body">
-                <h6 className="card-subtitle text-muted mb-2">Matching Preferences</h6>
+            <div className="pp-card mt-3">
+              <div className="pp-card-body">
+                <h6 style={{ color: "var(--pp-text-muted)", fontSize: ".8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: ".75rem" }}>Matching Preferences</h6>
                 <div className="row">
                   <div className="col-md-4">
                     <p><strong>Preferred Provinces:</strong>{" "}
@@ -640,14 +639,14 @@ export default function MyCompanyPage() {
           </div>
 
           <div className="mb-3">
-            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setShowPrefs(!showPrefs)}>
+            <button type="button" className="pp-btn pp-btn-ghost pp-btn-sm" onClick={() => setShowPrefs(!showPrefs)}>
               {showPrefs ? "▼ Hide" : "▶ Show"} Matching Preferences
             </button>
           </div>
 
           {showPrefs && (
-            <div className="card mb-3">
-              <div className="card-body">
+            <div className="pp-card mb-3">
+              <div className="pp-card-body">
                 <h5 className="card-title">Matching Preferences</h5>
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
@@ -684,10 +683,10 @@ export default function MyCompanyPage() {
           )}
 
           <div className="d-flex gap-2">
-            <button type="submit" className="btn btn-primary" disabled={saving}>
+            <button type="submit" className="pp-btn pp-btn-primary" disabled={saving}>
               {saving ? "Saving..." : "Save Profile"}
             </button>
-            <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)}>
+            <button type="button" className="pp-btn pp-btn-ghost" onClick={() => setEditing(false)}>
               Cancel
             </button>
           </div>
@@ -698,28 +697,27 @@ export default function MyCompanyPage() {
       {tab === "matches" && (
         <div>
           {stats && (
-            <div className="row g-3 mb-3">
+            <div className="row g-3 mb-4">
               {[
-                { label: "Total", value: stats.totalMatches, bg: "light" },
-                { label: "New", value: stats.newCount, bg: "primary" },
-                { label: "Saved", value: stats.savedCount, bg: "success" },
-                { label: "Viewed", value: stats.viewedCount, bg: "info" },
-                { label: "Avg Score", value: stats.averageScore, bg: "warning" },
-                { label: "High Score", value: stats.highScoreCount, bg: "danger" },
-              ].map(({ label, value, bg }) => (
-                <div key={label} className="col-md-2">
-                  <div className={`card text-center border-${bg}`}>
-                    <div className="card-body py-2">
-                      <div className="fw-bold fs-5">{value}</div>
-                      <small className="text-muted">{label}</small>
-                    </div>
+                { label: "Total", value: stats.totalMatches, icon: "📊", color: "blue" },
+                { label: "New", value: stats.newCount, icon: "✨", color: "green" },
+                { label: "Saved", value: stats.savedCount, icon: "⭐", color: "amber" },
+                { label: "Viewed", value: stats.viewedCount, icon: "👁", color: "teal" },
+                { label: "Avg Score", value: stats.averageScore, icon: "📈", color: "blue" },
+                { label: "High Score", value: stats.highScoreCount, icon: "🎯", color: "green" },
+              ].map(({ label, value, icon, color }) => (
+                <div key={label} className="col-md-2 pp-animate-in">
+                  <div className="pp-stat-card" style={{ flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+                    <div className={`pp-stat-icon ${color}`} style={{ width: 40, height: 40, fontSize: "1.1rem" }}>{icon}</div>
+                    <div className="pp-stat-value" style={{ fontSize: "1.4rem" }}>{value}</div>
+                    <div className="pp-stat-label">{label}</div>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
-          <div className="btn-group mb-3">
+          <div className="d-flex gap-1 mb-3">
             {[
               { label: "All", value: "" },
               { label: "New", value: "new" },
@@ -729,7 +727,7 @@ export default function MyCompanyPage() {
             ].map(({ label, value }) => (
               <button
                 key={value}
-                className={`btn btn-sm ${statusFilter === value ? "btn-primary" : "btn-outline-primary"}`}
+                className={`pp-btn pp-btn-sm ${statusFilter === value ? "pp-btn-primary" : "pp-btn-ghost"}`}
                 onClick={() => setStatusFilter(value)}
               >
                 {label}
@@ -738,7 +736,7 @@ export default function MyCompanyPage() {
           </div>
 
           {matchesLoading ? (
-            <div className="text-center py-3"><div className="spinner-border spinner-border-sm" /></div>
+            <div className="pp-loader"><div className="pp-spinner" /></div>
           ) : matches.length === 0 ? (
             <p className="text-muted">No matches found. Try running matching first.</p>
           ) : (

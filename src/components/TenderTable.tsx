@@ -12,6 +12,12 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleDateString("en-CA");
 }
 
+function daysUntil(dateStr: string | null): number | null {
+  if (!dateStr) return null;
+  const diff = new Date(dateStr).getTime() - Date.now();
+  return Math.ceil(diff / 86400000);
+}
+
 function SortIcon({
   field,
   params,
@@ -30,39 +36,37 @@ export default function TenderTable({ tenders, params, onSort }: Props) {
   const headers: { label: string; field: string }[] = [
     { label: "Title", field: "title" },
     { label: "Organization", field: "organization" },
-    { label: "Notice Type", field: "" },
+    { label: "Type", field: "notice_type" },
     { label: "Published", field: "pub_date" },
     { label: "Closing", field: "closing_date" },
   ];
 
   if (tenders.length === 0) {
     return (
-      <div className="text-center text-muted py-5">
-        <p className="fs-5">No tenders found.</p>
-        <p>Try adjusting your search filters.</p>
+      <div className="pp-empty-state">
+        <div className="empty-icon">🔍</div>
+        <h3>No tenders found</h3>
+        <p>Try adjusting your search filters or broadening your criteria.</p>
       </div>
     );
   }
 
   return (
-    <div className="table-responsive">
-      <style>{`.tender-table th, .tender-table td { padding-right: 1.5rem; padding-top: 0.75rem; padding-bottom: 0.75rem; }`}</style>
-      <table className="table table-hover align-middle tender-table" style={{ tableLayout: "fixed", width: "100%" }}>
-        <thead className="table-light">
+    <div className="pp-table-wrap">
+      <table className="pp-table" style={{ tableLayout: "fixed", width: "100%" }}>
+        <thead>
           <tr>
             {headers.map((h) => (
               <th
                 key={h.label}
                 role={h.field ? "button" : undefined}
                 onClick={h.field ? () => onSort(h.field) : undefined}
-                className={h.field ? "user-select-none" : ""}
                 style={{
-                  whiteSpace: "nowrap",
-                  ...(h.label === "Title" ? { width: "30%" } :
-                  h.label === "Organization" ? { width: "25%" } :
-                  h.label === "Notice Type" ? { width: "10%" } :
-                  h.label === "Published" ? { width: "10%" } :
-                  h.label === "Closing" ? { width: "10%" } :
+                  ...(h.label === "Title" ? { width: "32%" } :
+                  h.label === "Organization" ? { width: "24%" } :
+                  h.label === "Type" ? { width: "12%" } :
+                  h.label === "Published" ? { width: "11%" } :
+                  h.label === "Closing" ? { width: "14%" } :
                   {})
                 }}
               >
@@ -73,34 +77,50 @@ export default function TenderTable({ tenders, params, onSort }: Props) {
           </tr>
         </thead>
         <tbody>
-          {tenders.map((t) => (
-            <tr key={t.id}>
-              <td className="text-truncate">
-                <Link
-                  to={`/tenders/${t.id}`}
-                  className="text-decoration-none fw-semibold"
-                >
-                  {t.title ?? "Untitled"}
-                </Link>
-              </td>
-              <td className="text-truncate">
-                {t.buyingOrganization ?? "—"}
-              </td>
-              <td style={{ overflow: "hidden" }}>
-                {t.noticeType && t.noticeType !== "Not Applicable" && (
-                  <span className="badge bg-info text-dark text-truncate d-inline-block" style={{ maxWidth: "100%" }}>
-                    {t.noticeType}
-                  </span>
-                )}
-              </td>
-              <td className="text-nowrap">
-                {formatDate(t.publicationDate)}
-              </td>
-              <td className="text-nowrap">
-                {formatDate(t.closingDate)}
-              </td>
-            </tr>
-          ))}
+          {tenders.map((t) => {
+            const days = daysUntil(t.closingDate);
+            const isUrgent = days !== null && days >= 0 && days <= 3;
+            return (
+              <tr key={t.id}>
+                <td className="text-truncate">
+                  <Link
+                    to={`/tenders/${t.id}`}
+                    className="tender-title-link"
+                  >
+                    {t.title ?? "Untitled"}
+                  </Link>
+                </td>
+                <td className="text-truncate" style={{ color: "var(--pp-text-secondary)", fontSize: ".88rem" }} title={t.buyingOrganization ?? undefined}>
+                  {t.buyingOrganization ?? "—"}
+                </td>
+                <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                  {t.noticeType && t.noticeType !== "Not Applicable" && (
+                    <span className="pp-badge pp-badge-teal" style={{ maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "inline-block" }} title={t.noticeType}>
+                      {t.noticeType}
+                    </span>
+                  )}
+                </td>
+                <td className="text-nowrap" style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
+                  {formatDate(t.publicationDate)}
+                </td>
+                <td className="text-nowrap">
+                  {isUrgent ? (
+                    <span className="pp-badge pp-badge-red pp-closing-soon">
+                      {days === 0 ? "Today" : days === 1 ? "Tomorrow" : `${days}d left`}
+                    </span>
+                  ) : days !== null && days >= 0 && days <= 7 ? (
+                    <span className="pp-badge pp-badge-amber">
+                      {`${days}d left`}
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
+                      {formatDate(t.closingDate)}
+                    </span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   getMatches,
@@ -7,9 +7,31 @@ import {
   getProfileById,
 } from "../api/companyApi";
 import type { CompanyMatchDto, MatchStatsDto } from "../types/company";
-import MatchesTable from "../components/MatchesTable";
+import { categoryLabel } from "../utils/categoryMap";
 
 const STATUS_FILTERS = ["all", "new", "viewed", "saved", "dismissed"] as const;
+
+function scoreBadge(score: number) {
+  if (score >= 80) return "bg-success";
+  if (score >= 60) return "bg-warning text-dark";
+  if (score >= 40) return "bg-info text-dark";
+  return "bg-secondary";
+}
+
+function statusBadge(status: string) {
+  switch (status) {
+    case "new":
+      return "bg-primary";
+    case "viewed":
+      return "bg-info text-dark";
+    case "saved":
+      return "bg-success";
+    case "dismissed":
+      return "bg-secondary";
+    default:
+      return "bg-light text-dark";
+  }
+}
 
 export default function MatchesPage() {
   const { companyId } = useParams<{ companyId: string }>();
@@ -21,6 +43,21 @@ export default function MatchesPage() {
   const [filter, setFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [sortCol, setSortCol] = useState<"matchScore" | "matchedAt" | "closingDate">("matchedAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -58,6 +95,25 @@ export default function MatchesPage() {
       );
     }
   }
+
+  function toggleSort(col: "matchScore" | "matchedAt" | "closingDate") {
+    if (sortCol === col) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortCol(col); setSortDir("desc"); }
+  }
+
+  const sortedMatches = [...matches].sort((a, b) => {
+    let cmp: number;
+    if (sortCol === "matchScore") cmp = a.matchScore - b.matchScore;
+    else {
+      const aVal = sortCol === "matchedAt" ? a.matchedAt : (a.closingDate ?? "");
+      const bVal = sortCol === "matchedAt" ? b.matchedAt : (b.closingDate ?? "");
+      cmp = aVal.localeCompare(bVal);
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
+  const sortIcon = (col: "matchScore" | "matchedAt" | "closingDate") =>
+    sortCol === col ? (sortDir === "asc" ? " ▲" : " ▼") : "";
 
   if (isNaN(id)) {
     return <div className="alert alert-danger">Invalid company ID</div>;
@@ -165,7 +221,105 @@ export default function MatchesPage() {
           <p>Run the matching engine to generate matches for this profile.</p>
         </div>
       ) : (
-        <MatchesTable matches={matches} onStatusChange={handleStatusChange} />
+        <div className="table-responsive">
+          <table className="table table-hover align-middle">
+            <thead className="table-dark">
+              <tr>
+                <th role="button" onClick={() => toggleSort("matchScore")} style={{cursor:"pointer"}}>Score{sortIcon("matchScore")}</th>
+                <th>Tender</th>
+                <th>Organization</th>
+                <th>Category</th>
+                <th role="button" onClick={() => toggleSort("matchedAt")} style={{cursor:"pointer"}}>Matched{sortIcon("matchedAt")}</th>
+                <th role="button" onClick={() => toggleSort("closingDate")} style={{cursor:"pointer"}}>Closing{sortIcon("closingDate")}</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedMatches.map((m) => (
+                <tr key={m.id}>
+                  <td>
+                    <span className={`badge ${scoreBadge(m.matchScore)} fs-6`}>
+                      {m.matchScore}
+                    </span>
+                  </td>
+                  <td>
+                    <div>
+                      <Link to={`/tenders/${m.tenderId}`}>
+                        {m.tenderTitle ?? m.noticeId ?? `#${m.tenderId}`}
+                      </Link>
+                    </div>
+                    {m.matchReason && (
+                      <small className="text-muted d-block mt-1" style={{ maxWidth: 400 }}>
+                        {m.matchReason}
+                      </small>
+                    )}
+                  </td>
+                  <td>
+                    <small>{m.buyingOrganization ?? "—"}</small>
+                  </td>
+                  <td>
+                    <small>{categoryLabel(m.procurementCategory)}</small>
+                  </td>
+                  <td>
+                    <small>{new Date(m.matchedAt).toLocaleDateString()}</small>
+                  </td>
+                  <td>
+                    <small>
+                      {m.closingDate
+                        ? new Date(m.closingDate).toLocaleDateString()
+                        : "—"}
+                    </small>
+                  </td>
+                  <td>
+                    <span className={`badge ${statusBadge(m.status)}`}>
+                      {m.status}
+                    </span>
+                  </td>
+                  <td>
+                    <div
+                      className="dropdown"
+                      ref={openDropdown === m.id ? dropdownRef : undefined}
+                    >
+                      <button
+                        className="btn btn-sm btn-outline-secondary dropdown-toggle"
+                        onClick={() =>
+                          setOpenDropdown(openDropdown === m.id ? null : m.id)
+                        }
+                      >
+                        Set Status
+                      </button>
+                      {openDropdown === m.id && (
+                        <ul
+                          className="dropdown-menu show"
+                          style={{ display: "block" }}
+                        >
+                          {(
+                            ["new", "viewed", "saved", "dismissed"] as const
+                          ).map((s) => (
+                            <li key={s}>
+                              <button
+                                className={`dropdown-item ${
+                                  m.status === s ? "active" : ""
+                                }`}
+                                onClick={() => {
+                                  setOpenDropdown(null);
+                                  handleStatusChange(m.id, s);
+                                }}
+                              >
+                                {s.charAt(0).toUpperCase() + s.slice(1)}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

@@ -8,21 +8,27 @@ interface Props {
   onStatusChange: (matchId: number, status: "new" | "viewed" | "saved" | "dismissed") => void;
 }
 
-type SortCol = "matchScore" | "matchedAt" | "closingDate";
+type SortCol = "matchScore" | "matchedAt" | "closingDate" | "organization";
 
-function scoreBadge(score: number) {
-  if (score >= 70) return "bg-success";
-  if (score >= 55) return "bg-warning text-dark";
-  return "bg-secondary";
-}
-
-function statusBadge(status: string) {
-  switch (status) {
-    case "new": return "bg-primary";
-    case "saved": return "bg-success";
-    case "viewed": return "bg-info";
-    default: return "bg-secondary";
-  }
+function ScoreRing({ score }: { score: number }) {
+  const r = 18;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (score / 100) * circ;
+  const cls = score >= 70 ? "high" : score >= 55 ? "mid" : "low";
+  return (
+    <div className="pp-score-ring">
+      <svg viewBox="0 0 44 44">
+        <circle className="ring-bg" cx="22" cy="22" r={r} />
+        <circle
+          className={`ring-fill ${cls}`}
+          cx="22" cy="22" r={r}
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <span className="ring-value">{score}</span>
+    </div>
+  );
 }
 
 export default function MatchesTable({ matches, showReason, onStatusChange }: Props) {
@@ -42,7 +48,12 @@ export default function MatchesTable({ matches, showReason, onStatusChange }: Pr
   const sorted = [...matches].sort((a, b) => {
     let cmp: number;
     if (sortCol === "matchScore") cmp = a.matchScore - b.matchScore;
-    else {
+    else if (sortCol === "organization")
+      cmp = (a.buyingOrganization ?? "").trim().localeCompare(
+        (b.buyingOrganization ?? "").trim(),
+        "en",
+        { sensitivity: "base" }
+      ); else {
       const aVal = sortCol === "matchedAt" ? a.matchedAt : (a.closingDate ?? "");
       const bVal = sortCol === "matchedAt" ? b.matchedAt : (b.closingDate ?? "");
       cmp = aVal.localeCompare(bVal);
@@ -50,49 +61,75 @@ export default function MatchesTable({ matches, showReason, onStatusChange }: Pr
     return sortDir === "asc" ? cmp : -cmp;
   });
 
+  if (matches.length === 0) {
+    return (
+      <div className="pp-empty-state">
+        <div className="empty-icon">🎯</div>
+        <h3>No matches yet</h3>
+        <p>Run matching to discover tenders that fit your company profile.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="table-responsive">
-      <table className="table table-hover">
+    <div className="pp-table-wrap">
+      <table className="pp-table">
         <thead>
           <tr>
-            <th role="button" onClick={() => toggleSort("matchScore")} style={{ cursor: "pointer", whiteSpace: "nowrap" }}>
+            <th role="button" onClick={() => toggleSort("matchScore")} style={{ width: "70px" }}>
               Score{sortIcon("matchScore")}
             </th>
             <th style={{ width: "35%" }}>Tender</th>
-            <th style={{ width: "20%" }}>Organization</th>
+            <th role="button" onClick={() => toggleSort("organization")} style={{ width: "18%" }}>
+              Organization{sortIcon("organization")}
+            </th>
             <th style={{ width: "10%" }}>Category</th>
-            <th role="button" onClick={() => toggleSort("matchedAt")} style={{ cursor: "pointer", whiteSpace: "nowrap" }}>
+            <th role="button" onClick={() => toggleSort("matchedAt")}>
               Matched{sortIcon("matchedAt")}
             </th>
-            <th role="button" onClick={() => toggleSort("closingDate")} style={{ cursor: "pointer", whiteSpace: "nowrap" }}>
+            <th role="button" onClick={() => toggleSort("closingDate")}>
               Closing{sortIcon("closingDate")}
             </th>
             <th>Status</th>
-            <th>Actions</th>
+            <th style={{ width: "70px" }}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {sorted.map((m) => (
             <tr key={m.id}>
               <td>
-                <span className={`badge ${scoreBadge(m.matchScore)}`}>{m.matchScore}</span>
+                <ScoreRing score={m.matchScore} />
               </td>
               <td>
-                <a href={`/tenders/${m.tenderId}`}>{m.tenderTitle ?? m.noticeId ?? `#${m.tenderId}`}</a>
+                <a href={`/tenders/${m.tenderId}`} className="tender-title-link">
+                  {m.tenderTitle ?? m.noticeId ?? `#${m.tenderId}`}
+                </a>
                 {showReason && m.matchReason && (
-                  <div className="text-muted small">{m.matchReason}</div>
+                  <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)", marginTop: ".2rem" }}>
+                    {m.matchReason}
+                  </div>
                 )}
               </td>
-              <td className="small">{m.buyingOrganization ?? "—"}</td>
-              <td className="small">{categoryLabel(m.procurementCategory)}</td>
-              <td className="small">{new Date(m.matchedAt).toLocaleDateString()}</td>
-              <td className="small">{m.closingDate ? new Date(m.closingDate).toLocaleDateString() : "—"}</td>
+              <td style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
+                {m.buyingOrganization ?? "—"}
+              </td>
               <td>
-                <span className={`badge ${statusBadge(m.status)}`}>{m.status}</span>
+                <span className="pp-badge pp-badge-blue">{categoryLabel(m.procurementCategory)}</span>
+              </td>
+              <td style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
+                {new Date(m.matchedAt).toLocaleDateString()}
+              </td>
+              <td style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
+                {m.closingDate ? new Date(m.closingDate).toLocaleDateString() : "—"}
+              </td>
+              <td>
+                <span className={`pp-match-status ${m.status}`}>{m.status}</span>
               </td>
               <td>
                 <div className="dropdown">
-                  <button className="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">Set</button>
+                  <button className="pp-btn pp-btn-ghost pp-btn-sm" data-bs-toggle="dropdown">
+                    ⋯
+                  </button>
                   <ul className="dropdown-menu">
                     {(["new", "viewed", "saved", "dismissed"] as const).map((s) => (
                       <li key={s}>
