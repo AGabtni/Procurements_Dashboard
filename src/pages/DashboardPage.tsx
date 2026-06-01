@@ -187,17 +187,15 @@ export default function DashboardPage() {
       {/* Stats Bar */}
       <div className="pp-stats-bar pp-animate-in">
         <span className="pp-stats-bar-item">
-          <span className="stat-num blue">{newToday}</span> new today
+          <span className="stat-num blue">{newToday}</span> New today
         </span>
-        <span className="pp-stats-bar-sep">|</span>
         <span className="pp-stats-bar-item">
-          <span className="stat-num amber">{closingThisWeek}</span> closing this week
+          <span className="stat-num amber">{closingThisWeek}</span> Closing this week
         </span>
         {user && stats && stats.newCount > 0 && (
           <>
-            <span className="pp-stats-bar-sep">|</span>
             <span className="pp-stats-bar-item">
-              <span className="stat-num green">{stats.newCount}</span> recently matched
+              <span className="stat-num green">{stats.newCount}</span> Recently matched
             </span>
           </>
         )}

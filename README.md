@@ -138,6 +138,8 @@ Displays full tender information including:
 - [x] Settings page (email status, notification toggle)
 - [x] Bootstrap JS integration (dropdowns)
 - [x] Fixed table layout with optimized column widths
+- [x] Dashboard layout revamp (stats bar, matches/closing side-by-side, recently viewed)
+- [ ] Properly format tender descriptions (markdown/newline rendering in detail view)
 - [ ] Alert configuration UI
 - [x] Role-based UI (admin vs user views)
 - [ ] Dark mode
