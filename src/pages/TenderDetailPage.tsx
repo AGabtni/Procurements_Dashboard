@@ -5,6 +5,8 @@ import type { TenderDetailDto } from "../types/tender";
 import { categoryLabel } from "../utils/categoryMap";
 import { recordView } from "../utils/recentlyViewed";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5009";
+
 function formatDate(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-CA", {
@@ -16,6 +18,9 @@ function formatDate(iso: string | null) {
 
 function fullUrl(link: string): string {
   if (link.startsWith("http://") || link.startsWith("https://")) return link;
+  if (link.startsWith("/api/") || link.startsWith("api/")) {
+    return `${API_BASE}${link.startsWith("/") ? "" : "/"}${link}`;
+  }
   return `https://canadabuys.canada.ca${link.startsWith("/") ? "" : "/"}${link}`;
 }
 
