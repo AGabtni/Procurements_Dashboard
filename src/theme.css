@@ -899,6 +899,36 @@ a:hover {
   user-select: none;
 }
 
+/* ── Nudge banner (logged-in, no profile) ── */
+.pp-nudge-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(37,99,235,.1) 0%, rgba(8,145,178,.1) 100%);
+  border: 1px solid rgba(37,99,235,.3);
+  border-radius: var(--pp-radius-lg);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.pp-nudge-banner > div {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+}
+
+.pp-nudge-banner strong {
+  color: var(--pp-text);
+  font-size: .95rem;
+}
+
+.pp-nudge-banner span {
+  color: var(--pp-text-secondary);
+  font-size: .85rem;
+}
+
 /* ── Truncated title (list rows) ── */
 .pp-truncate-title {
   font-weight: 600;

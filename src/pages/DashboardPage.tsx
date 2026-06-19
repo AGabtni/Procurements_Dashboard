@@ -173,12 +173,12 @@ export default function DashboardPage() {
             : "Browse thousands of public tenders from across Canada. Sign in to get personalized matches."}
         </p>
         {!user && (
-          <div className="mt-3 d-flex gap-2">
-            <Link to="/login" className="pp-btn pp-btn-primary">
-              Sign In
+          <div className="mt-3 d-flex gap-2 flex-wrap">
+            <Link to="/register" className="pp-btn pp-btn-primary">
+              Get Started Free
             </Link>
-            <Link to="/register" className="pp-btn" style={{ color: "#94a3b8", border: "1px solid rgba(255,255,255,.2)" }}>
-              Create Account
+            <Link to="/login" className="pp-btn" style={{ color: "rgba(255,255,255,.85)", border: "1px solid rgba(255,255,255,.25)", background: "rgba(255,255,255,.06)" }}>
+              Sign In
             </Link>
           </div>
         )}
@@ -201,10 +201,77 @@ export default function DashboardPage() {
         )}
       </div>
 
+      {/* No-profile nudge — only for logged-in users who haven't set up a profile yet */}
+      {user && !profile && (
+        <div className="pp-nudge-banner pp-animate-in">
+          <div>
+            <strong>🎯 Get personalized tender matches</strong>
+            <span>Create your company profile and our AI will surface relevant opportunities automatically, every 6 hours.</span>
+          </div>
+          <Link to="/my-company" className="pp-btn pp-btn-primary pp-btn-sm" style={{ whiteSpace: "nowrap" }}>
+            Set up profile →
+          </Link>
+        </div>
+      )}
+
       {/* Matches + Closing Soon — side by side */}
       <div className="row g-4 mb-4">
         {/* Recent Matches / CTA (left) */}
         <div className="col-lg-6">
+          {!user ? (
+            /* Blurred whole-card teaser for unauthenticated users */
+            <div style={{ position: "relative", borderRadius: "var(--pp-radius-lg)", overflow: "hidden" }}>
+              {/* Blurred card underneath */}
+              <div style={{ filter: "blur(5px)", userSelect: "none", pointerEvents: "none" }}>
+                <div className="pp-card h-100">
+                  <div className="pp-card-header">
+                    <span>🎯 Recent Matches</span>
+                  </div>
+                  <div className="pp-card-body p-0">
+                    {[
+                      { score: 82, title: "Software Development Services", org: "Public Services and Procurement Canada" },
+                      { score: 71, title: "IT Consulting & Advisory Services", org: "Treasury Board of Canada Secretariat" },
+                      { score: 65, title: "Cloud Infrastructure Management", org: "Department of National Defence" },
+                      { score: 78, title: "Professional Engineering Services", org: "Infrastructure Canada" },
+                      { score: 60, title: "Network Security & Cybersecurity Audit", org: "Shared Services Canada" },
+                    ].map((row, i) => (
+                      <div key={i} className="pp-doc-item">
+                        <div className="d-flex align-items-center gap-3" style={{ minWidth: 0 }}>
+                          <ScoreRing score={row.score} />
+                          <div style={{ minWidth: 0 }}>
+                            <div className="pp-truncate-title">{row.title}</div>
+                            <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)" }}>{row.org}</div>
+                          </div>
+                        </div>
+                        <span className="pp-match-status new">new</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* Lock overlay — covers the full card */}
+              <div style={{
+                position: "absolute", inset: 0,
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                background: "rgba(15,23,42,.55)",
+                gap: ".6rem", padding: "1.25rem",
+                borderRadius: "var(--pp-radius-lg)",
+              }}>
+                <span style={{ fontSize: "1.875rem" }}>🔒</span>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: "1.15rem", color: "#f1f5f9", textAlign: "center" }}>
+                  Unlock personalized matches
+                </p>
+                <p style={{ margin: 0, fontSize: ".88rem", color: "#f1f5f9", textAlign: "center", maxWidth: 260 }}>
+                  Stop manually searching. Get the right tenders delivered to you automatically.
+                </p>
+                <div className="d-flex gap-2 mt-1">
+                  <Link to="/register" className="pp-btn pp-btn-primary pp-btn-sm" style={{ fontSize: "1rem", padding: ".45rem 1rem" }}>Get Started Free</Link>
+                  <Link to="/login" className="pp-btn pp-btn-ghost pp-btn-sm" style={{ color: "#f1f5f9", border: "1px solid rgba(255,255,255,.4)", fontSize: "1rem", padding: ".45rem 1rem" }}>Sign In</Link>
+                </div>
+              </div>
+            </div>
+          ) : (
           <div className="pp-card h-100 pp-animate-in">
             <div className="pp-card-header">
               <span>🎯 Recent Matches</span>
@@ -215,16 +282,7 @@ export default function DashboardPage() {
               )}
             </div>
             <div className="pp-card-body p-0">
-              {!user ? (
-                <div className="pp-empty-state" style={{ padding: "2rem 1.5rem" }}>
-                  <div className="empty-icon">🔐</div>
-                  <h3>Sign in for personalized matches</h3>
-                  <p>Create a company profile and we'll match you with relevant procurement opportunities.</p>
-                  <Link to="/login" className="pp-btn pp-btn-primary pp-btn-sm mt-2">
-                    Sign in
-                  </Link>
-                </div>
-              ) : !profile ? (
+              {!profile ? (
                 <div className="pp-empty-state" style={{ padding: "2rem 1.5rem" }}>
                   <div className="empty-icon">🏢</div>
                   <h3>Set up your company profile</h3>
@@ -267,6 +325,7 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
+          )} {/* end !user ternary */}
         </div>
 
         {/* Closing Soon (right) */}

@@ -91,8 +91,9 @@ export default function MyCompanyPage() {
 
   const loadProfile = useCallback(async () => {
     try {
-      const data = await getMyProfile();
+      const [data, s] = await Promise.all([getMyProfile(), getMyMatchStats().catch(() => null)]);
       setProfile(data);
+      if (s) setStats(s);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load profile");
     } finally {
