@@ -52,6 +52,14 @@ export interface PagedResult<T> {
   totalPages: number;
 }
 
+/** Aggregate stats returned by GET /api/tenders/stats.
+ *  All fields optional — new stats can be added on the API side without breaking this client. */
+export interface TenderStatsDto {
+  newToday?: number;
+  closingThisWeek?: number;
+  // future: openCount, newThisWeek, closingToday, ...
+}
+
 export interface TenderSearchParams {
   keyword?: string;
   category?: string;

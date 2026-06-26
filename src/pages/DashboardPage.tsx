@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { searchTenders, getTenderById } from "../api/tenderApi";
+import { searchTenders, getTenderById, getTenderStats } from "../api/tenderApi";
 import {
   getMyProfile,
   getMyMatches,
@@ -83,14 +83,18 @@ export default function DashboardPage() {
         } catch { /* no profile yet */ }
       }
 
-      // Fetch closing soon (open tenders, soonest deadline first)
-      const closingRes = await searchTenders({
-        pageSize: 50,
-        sortBy: "closing_date",
-        sortDesc: false,
-        openOnly: true,
-      });
-      // Count closing within 7 days
+      // Fetch closing-soon card rows + accurate stats from DB in parallel
+      const [closingRes, tenderStats] = await Promise.all([
+        searchTenders({
+          pageSize: 50,
+          sortBy: "closing_date",
+          sortDesc: false,
+          openOnly: true,
+        }),
+        getTenderStats(),
+      ]);
+
+      // Card rows: tenders closing within 7 days (capped at 5 for display)
       const now = Date.now();
       const weekMs = 7 * 86400000;
       const closingItems = closingRes.items.filter((t) => {
@@ -98,19 +102,11 @@ export default function DashboardPage() {
         const diff = new Date(t.closingDate).getTime() - now;
         return diff >= 0 && diff <= weekMs;
       });
-      setClosingThisWeek(closingItems.length);
       setClosingSoon(closingItems.slice(0, 5));
 
-      // Fetch recent tenders to count "new today"
-      const recentRes = await searchTenders({
-        pageSize: 50,
-        sortBy: "pub_date",
-        sortDesc: true,
-      });
-      const todayStr = new Date().toISOString().slice(0, 10);
-      setNewToday(
-        recentRes.items.filter((t) => t.publicationDate?.startsWith(todayStr)).length
-      );
+      // Stats bar — accurate counts straight from the DB
+      setClosingThisWeek(tenderStats.closingThisWeek ?? 0);
+      setNewToday(tenderStats.newToday ?? 0);
 
       // Recently viewed (from localStorage)
       const viewedIds = getRecentlyViewedIds(5);
@@ -187,15 +183,15 @@ export default function DashboardPage() {
       {/* Stats Bar */}
       <div className="pp-stats-bar pp-animate-in">
         <span className="pp-stats-bar-item">
-          <span className="stat-num blue">{newToday}</span> New today
+          <span className="stat-num blue">{newToday}</span> New Opportunities Today
         </span>
         <span className="pp-stats-bar-item">
-          <span className="stat-num amber">{closingThisWeek}</span> Closing this week
+          <span className="stat-num amber">{closingThisWeek}</span> Opportunities Closing This Week
         </span>
         {user && stats && stats.newCount > 0 && (
           <>
             <span className="pp-stats-bar-item">
-              <span className="stat-num green">{stats.newCount}</span> Recently matched
+              <span className="stat-num green">{stats.newCount}</span> New Matches For You
             </span>
           </>
         )}

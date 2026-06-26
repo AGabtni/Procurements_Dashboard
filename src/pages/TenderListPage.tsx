@@ -9,8 +9,8 @@ import { categoryLabel } from "../utils/categoryMap";
 const DEFAULT_PARAMS: TenderSearchParams = {
   page: 1,
   pageSize: 20,
-  sortBy: "closing_date",
-  sortDesc: false,
+  sortBy: "pub_date",
+  sortDesc: true,
   openOnly: true,
 };
 

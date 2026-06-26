@@ -3,6 +3,7 @@ import type {
   TenderDetailDto,
   PagedResult,
   TenderSearchParams,
+  TenderStatsDto,
 } from "../types/tender";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5009";
@@ -35,6 +36,10 @@ export async function searchTenders(
   return fetchJson<PagedResult<TenderListDto>>(
     `${API_BASE}/api/tenders?${query}`
   );
+}
+
+export async function getTenderStats(): Promise<TenderStatsDto> {
+  return fetchJson<TenderStatsDto>(`${API_BASE}/api/tenders/stats`);
 }
 
 export async function getTenderById(id: number): Promise<TenderDetailDto> {
