@@ -804,6 +804,79 @@ a:hover {
   padding: 1.25rem;
 }
 
+/* ── Markdown-rendered description ── */
+.pp-markdown {
+  color: var(--pp-text-secondary);
+  line-height: 1.75;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.pp-markdown h1,
+.pp-markdown h2,
+.pp-markdown h3,
+.pp-markdown h4 {
+  color: var(--pp-text);
+  font-weight: 700;
+  margin: 1.25rem 0 .5rem;
+  line-height: 1.3;
+}
+
+.pp-markdown h2 { font-size: 1.05rem; }
+.pp-markdown h3 { font-size: .97rem; }
+
+.pp-markdown p {
+  margin: 0 0 .75rem;
+}
+
+.pp-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.pp-markdown ul,
+.pp-markdown ol {
+  padding-left: 1.4rem;
+  margin: 0 0 .75rem;
+}
+
+.pp-markdown li {
+  margin-bottom: .3rem;
+}
+
+.pp-markdown strong {
+  color: var(--pp-text);
+  font-weight: 700;
+}
+
+.pp-markdown a {
+  color: var(--pp-primary);
+  word-break: break-all;
+}
+
+.pp-markdown a:hover {
+  text-decoration: underline;
+}
+
+.pp-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+  margin-bottom: .75rem;
+}
+
+.pp-markdown th,
+.pp-markdown td {
+  padding: .4rem .75rem;
+  border: 1px solid var(--pp-border);
+  text-align: left;
+}
+
+.pp-markdown th {
+  background: var(--pp-bg);
+  font-weight: 700;
+  color: var(--pp-text);
+}
+
 /* ═══════════════════════════════════════════════════════════
    DASHBOARD
    ═══════════════════════════════════════════════════════════ */

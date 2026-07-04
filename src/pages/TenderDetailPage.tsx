@@ -1,9 +1,24 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import type { Components } from "react-markdown";
 import { getTenderById } from "../api/tenderApi";
 import type { TenderDetailDto } from "../types/tender";
 import { categoryLabel } from "../utils/categoryMap";
 import { recordView } from "../utils/recentlyViewed";
+
+// Convert LLM title-case headings ("Scope Of Work") to sentence case ("Scope of work")
+const toSentenceCase = (s: string) =>
+  s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+
+// Custom heading components so every ## heading renders in sentence case
+const mdComponents: Components = {
+  h1: ({ children }) => <h1>{toSentenceCase(String(children))}</h1>,
+  h2: ({ children }) => <h2>{toSentenceCase(String(children))}</h2>,
+  h3: ({ children }) => <h3>{toSentenceCase(String(children))}</h3>,
+  h4: ({ children }) => <h4>{toSentenceCase(String(children))}</h4>,
+};
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5009";
 
@@ -148,15 +163,31 @@ export default function TenderDetailPage() {
         {/* Main Column */}
         <div className="col-lg-8">
           {/* Description */}
-          {tender.description && (
+          {(tender.descriptionMd || tender.description) && (
             <div className="pp-detail-section pp-animate-in">
               <div className="pp-detail-section-header">
                 📝 Description
               </div>
               <div className="pp-detail-section-body">
-                <p style={{ whiteSpace: "pre-wrap", margin: 0, lineHeight: 1.7, color: "var(--pp-text-secondary)" }}>
-                  {tender.description}
-                </p>
+                {tender.descriptionMd ? (
+                  <div className="pp-markdown">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                      {tender.descriptionMd}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  // Plain-text fallback: split on blank lines → paragraphs,
+                  // collapse in-line newlines (from scraped mid-sentence breaks)
+                  <div style={{ color: "var(--pp-text-secondary)", lineHeight: 1.7 }}>
+                    {tender.description!
+                      .split(/\n\n+/)
+                      .map((para) => para.trim().replace(/\n/g, " "))
+                      .filter(Boolean)
+                      .map((para, i) => (
+                        <p key={i} style={{ margin: "0 0 .75rem" }}>{para}</p>
+                      ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
