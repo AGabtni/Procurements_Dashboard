@@ -19,6 +19,7 @@ import type {
 } from "../types/company";
 import { CATEGORY_MAP } from "../utils/categoryMap";
 import MatchesTable from "../components/MatchesTable";
+import Pagination from "../components/Pagination";
 import TagInput from "../components/TagInput";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import type { DropdownOption } from "../components/MultiSelectDropdown";
@@ -80,6 +81,9 @@ export default function MyCompanyPage() {
 
   // Matches
   const [matches, setMatches] = useState<CompanyMatchDto[]>([]);
+  const [matchPage, setMatchPage] = useState(1);
+  const [matchTotalPages, setMatchTotalPages] = useState(1);
+  const [matchTotalCount, setMatchTotalCount] = useState(0);
   const [stats, setStats] = useState<MatchStatsDto | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [matchesLoading, setMatchesLoading] = useState(false);
@@ -161,21 +165,29 @@ export default function MyCompanyPage() {
     };
   }, [profile?.matchingStatus]);
 
-  // Load matches when switching to matches tab
+  // Load matches when switching to matches tab, changing filter, or changing page
   useEffect(() => {
     if (tab === "matches" && profile) {
-      loadMatches();
+      loadMatches(matchPage);
     }
-  }, [tab, statusFilter]);
+  }, [tab, statusFilter, matchPage]);
 
-  async function loadMatches() {
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setMatchPage(1);
+  }, [statusFilter]);
+
+  async function loadMatches(page = 1) {
     setMatchesLoading(true);
     try {
-      const [m, s] = await Promise.all([
-        getMyMatches(statusFilter || undefined),
+      const [result, s] = await Promise.all([
+        getMyMatches(statusFilter || undefined, page),
         getMyMatchStats(),
       ]);
-      setMatches(m);
+      setMatches(result.items);
+      setMatchPage(result.page);
+      setMatchTotalPages(result.totalPages);
+      setMatchTotalCount(result.totalCount);
       setStats(s);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load matches");
@@ -258,6 +270,7 @@ export default function MyCompanyPage() {
       const result: TriggerMatchResult = await triggerMyMatch();
       if (result.started) {
         setMatchMsg("Matching queued");
+        setProfile((prev) => prev ? { ...prev, matchingStatus: "pending_rematch" } : prev);
         await loadProfile();
       } else if (result.retryAfterSeconds) {
         const h = Math.floor(result.retryAfterSeconds / 3600);
@@ -741,7 +754,16 @@ export default function MyCompanyPage() {
           ) : matches.length === 0 ? (
             <p className="text-muted">No matches found. Try running matching first.</p>
           ) : (
-            <MatchesTable matches={matches} onStatusChange={handleStatusChange} />
+            <>
+              <MatchesTable matches={matches} onStatusChange={handleStatusChange} />
+              <Pagination
+                page={matchPage}
+                totalPages={matchTotalPages}
+                totalCount={matchTotalCount}
+                onPageChange={setMatchPage}
+                label="match"
+              />
+            </>
           )}
         </div>
       )}

@@ -24,6 +24,7 @@ import type { UserDto } from "../types/auth";
 import { CATEGORY_MAP } from "../utils/categoryMap";
 import TagInput from "../components/TagInput";
 import MatchesTable from "../components/MatchesTable";
+import Pagination from "../components/Pagination";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import type { DropdownOption } from "../components/MultiSelectDropdown";
 
@@ -68,6 +69,9 @@ export default function AdminCompaniesPage() {
 
   // Matches
   const [matches, setMatches] = useState<CompanyMatchDto[]>([]);
+  const [matchPage, setMatchPage] = useState(1);
+  const [matchTotalPages, setMatchTotalPages] = useState(1);
+  const [matchTotalCount, setMatchTotalCount] = useState(0);
   const [stats, setStats] = useState<MatchStatsDto | null>(null);
   const [statusFilter, setStatusFilter] = useState("");
   const [matchesLoading, setMatchesLoading] = useState(false);
@@ -127,7 +131,11 @@ export default function AdminCompaniesPage() {
     );
     if (hasActive && !pollRef.current) {
       pollRef.current = setInterval(async () => {
-        try { setProfiles(await getAllProfiles()); } catch { /* ignore */ }
+        try {
+          const updated = await getAllProfiles();
+          setProfiles(updated);
+          setSelectedProfile((prev) => prev ? (updated.find((p) => p.id === prev.id) ?? prev) : null);
+        } catch { /* ignore */ }
       }, 5000);
     } else if (!hasActive && pollRef.current) {
       clearInterval(pollRef.current);
@@ -236,6 +244,8 @@ export default function AdminCompaniesPage() {
       const result = await triggerMatch(companyId);
       if (result.started) {
         setMatchMsg((prev) => ({ ...prev, [companyId]: "Matching queued" }));
+        setProfiles((prev) => prev.map((p) => p.id === companyId ? { ...p, matchingStatus: "pending_rematch" } : p));
+        setSelectedProfile((prev) => prev?.id === companyId ? { ...prev, matchingStatus: "pending_rematch" } : prev);
         await loadProfiles();
       } else {
         setMatchMsg((prev) => ({ ...prev, [companyId]: result.message }));
@@ -290,19 +300,27 @@ export default function AdminCompaniesPage() {
   // Load matches for detail view
   useEffect(() => {
     if (view === "detail" && detailTab === "matches" && selectedProfile) {
-      loadDetailMatches();
+      loadDetailMatches(matchPage);
     }
-  }, [detailTab, statusFilter, selectedProfile?.id]);
+  }, [detailTab, statusFilter, selectedProfile?.id, matchPage]);
 
-  async function loadDetailMatches() {
+  // Reset to page 1 when filter or company changes
+  useEffect(() => {
+    setMatchPage(1);
+  }, [statusFilter, selectedProfile?.id]);
+
+  async function loadDetailMatches(page = 1) {
     if (!selectedProfile) return;
     setMatchesLoading(true);
     try {
-      const [m, s] = await Promise.all([
-        getMatches(selectedProfile.id, statusFilter || undefined),
+      const [result, s] = await Promise.all([
+        getMatches(selectedProfile.id, statusFilter || undefined, page),
         getMatchStats(selectedProfile.id),
       ]);
-      setMatches(m);
+      setMatches(result.items);
+      setMatchPage(result.page);
+      setMatchTotalPages(result.totalPages);
+      setMatchTotalCount(result.totalCount);
       setStats(s);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load matches");
@@ -693,7 +711,16 @@ export default function AdminCompaniesPage() {
           ) : matches.length === 0 ? (
             <p className="text-muted">No matches found.</p>
           ) : (
-            <MatchesTable matches={matches} showReason onStatusChange={handleStatusChange} />
+            <>
+              <MatchesTable matches={matches} showReason onStatusChange={handleStatusChange} />
+              <Pagination
+                page={matchPage}
+                totalPages={matchTotalPages}
+                totalCount={matchTotalCount}
+                onPageChange={setMatchPage}
+                label="match"
+              />
+            </>
           )}
         </div>
       )}

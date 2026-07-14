@@ -2,6 +2,7 @@ import type {
   CompanyProfileDto,
   CompanyMatchDto,
   MatchStatsDto,
+  PagedResult,
   CreateCompanyProfileRequest,
   UpdateCompanyProfileRequest,
   CompanyPreferencesRequest,
@@ -113,12 +114,14 @@ export async function updateMyPreferences(
 
 export async function getMyMatches(
   status?: string,
-  limit?: number
-): Promise<CompanyMatchDto[]> {
+  page = 1,
+  pageSize = 25
+): Promise<PagedResult<CompanyMatchDto>> {
   const query = new URLSearchParams();
   if (status) query.set("status", status);
-  if (limit) query.set("limit", String(limit));
-  return fetchJson<CompanyMatchDto[]>(`${API_BASE}/api/company/me/matches?${query}`);
+  query.set("page", String(page));
+  query.set("pageSize", String(pageSize));
+  return fetchJson<PagedResult<CompanyMatchDto>>(`${API_BASE}/api/company/me/matches?${query}`);
 }
 
 export async function getMyMatchStats(): Promise<MatchStatsDto> {
@@ -212,12 +215,14 @@ export async function updatePreferences(
 export async function getMatches(
   companyId: number,
   status?: string,
-  limit?: number
-): Promise<CompanyMatchDto[]> {
+  page = 1,
+  pageSize = 25
+): Promise<PagedResult<CompanyMatchDto>> {
   const query = new URLSearchParams();
   if (status) query.set("status", status);
-  if (limit) query.set("limit", String(limit));
-  return fetchJson<CompanyMatchDto[]>(
+  query.set("page", String(page));
+  query.set("pageSize", String(pageSize));
+  return fetchJson<PagedResult<CompanyMatchDto>>(
     `${API_BASE}/api/company/${companyId}/matches?${query}`
   );
 }

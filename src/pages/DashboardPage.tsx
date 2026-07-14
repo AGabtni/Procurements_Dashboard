@@ -136,7 +136,7 @@ export default function DashboardPage() {
       if (user) {
         await Promise.allSettled([
           getMyMatchStats().then(setStats).catch(() => null),
-          getMyMatches(undefined, 5).then(setRecentMatches).catch(() => []),
+          getMyMatches(undefined, 1, 5).then((r) => setRecentMatches(r.items)).catch(() => {}),
         ]);
       }
     } finally {

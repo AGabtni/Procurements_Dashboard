@@ -3,6 +3,7 @@ interface Props {
   totalPages: number;
   totalCount: number;
   onPageChange: (page: number) => void;
+  label?: string;
 }
 
 export default function Pagination({
@@ -10,6 +11,7 @@ export default function Pagination({
   totalPages,
   totalCount,
   onPageChange,
+  label = "tender",
 }: Props) {
   if (totalPages <= 1) return null;
 
@@ -21,7 +23,7 @@ export default function Pagination({
   return (
     <div className="pp-pagination mt-3">
       <span style={{ color: "var(--pp-text-muted)", fontSize: ".85rem" }}>
-        {totalCount.toLocaleString()} tender{totalCount !== 1 && "s"} found
+        {totalCount.toLocaleString()} {label}{totalCount !== 1 ? "s" : ""} found
       </span>
       <nav>
         <ul className="pagination pagination-sm mb-0">
