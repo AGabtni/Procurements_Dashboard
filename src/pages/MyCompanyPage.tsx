@@ -23,6 +23,7 @@ import Pagination from "../components/Pagination";
 import TagInput from "../components/TagInput";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import type { DropdownOption } from "../components/MultiSelectDropdown";
+import IndustryPicker from "../components/IndustryPicker";
 import type { TriggerMatchResult } from "../api/companyApi";
 
 const PROVINCES = [
@@ -62,7 +63,7 @@ export default function MyCompanyPage() {
   const [showPrefs, setShowPrefs] = useState(false);
   const [form, setForm] = useState({
     companyName: "",
-    industry: "",
+    industryCodes: [] as string[],
     province: "",
     servicesDescription: "",
     keywords: [] as string[],
@@ -108,13 +109,13 @@ export default function MyCompanyPage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
-    if (!form.companyName.trim() || form.commodityTypes.length === 0) return;
+    if (!form.companyName.trim() || form.industryCodes.length === 0 || form.commodityTypes.length === 0) return;
     setSaving(true);
     setError(null);
     try {
       const req: CreateCompanyProfileRequest = {
         companyName: form.companyName,
-        industry: form.industry || undefined,
+        industryCodes: form.industryCodes,
         province: form.province || undefined,
         servicesDescription: form.servicesDescription || undefined,
         keywords: form.keywords.length ? form.keywords : undefined,
@@ -201,7 +202,7 @@ export default function MyCompanyPage() {
     setEditing(true);
     setForm({
       companyName: profile.companyName,
-      industry: profile.industry ?? "",
+      industryCodes: profile.industryCodes ?? [],
       province: profile.province ?? "",
       servicesDescription: profile.servicesDescription ?? "",
       keywords: profile.keywords ?? [],
@@ -224,13 +225,13 @@ export default function MyCompanyPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
-    if (!form.companyName.trim() || form.commodityTypes.length === 0) return;
+    if (!form.companyName.trim() || form.industryCodes.length === 0 || form.commodityTypes.length === 0) return;
     setSaving(true);
     setError(null);
     try {
       const req: UpdateCompanyProfileRequest = {
         companyName: form.companyName || undefined,
-        industry: form.industry || undefined,
+        industryCodes: form.industryCodes,
         province: form.province || undefined,
         servicesDescription: form.servicesDescription || undefined,
         keywords: form.keywords.length ? form.keywords : undefined,
@@ -379,8 +380,16 @@ export default function MyCompanyPage() {
             </div>
           </div>
           <div className="mb-3">
-            <label className="form-label">Industry</label>
-            <input className="form-control" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} placeholder="e.g. Information Technology" />
+            <label className="form-label">Industries <span className="text-danger fw-bold">*</span></label>
+            <IndustryPicker
+              value={form.industryCodes}
+              onChange={(codes) => setForm({ ...form, industryCodes: codes })}
+              error={submitted && form.industryCodes.length === 0}
+              id="create-industries"
+            />
+            {submitted && form.industryCodes.length === 0 && (
+              <div className="text-danger small mt-1">Please select at least one industry.</div>
+            )}
           </div>
           <div className="mb-3">
             <label className="form-label">Services Description</label>
@@ -507,7 +516,14 @@ export default function MyCompanyPage() {
                 <div className="pp-card-body">
                   <h6 style={{ color: "var(--pp-text-muted)", fontSize: ".8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: ".75rem" }}>Company Details</h6>
                   <p><strong>Name:</strong> {profile.companyName}</p>
-                  <p><strong>Industry:</strong> {profile.industry || "—"}</p>
+                  <p><strong>Industries:</strong></p>
+                  <div className="d-flex flex-wrap gap-1 mb-2">
+                    {profile.industries?.length
+                      ? profile.industries.map((i) => (
+                          <span key={i.code} className="pp-badge pp-badge-blue">{i.titleEn}</span>
+                        ))
+                      : <span style={{ color: "var(--pp-text-muted)" }}>—</span>}
+                  </div>
                   <p><strong>Province:</strong> {profile.province || "—"}</p>
                   <p><strong>Size:</strong> {profile.companySize || "—"}</p>
                   <p><strong>Commodity Types:</strong>{" "}
@@ -617,8 +633,17 @@ export default function MyCompanyPage() {
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Industry</label>
-            <input className="form-control" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} placeholder="e.g. Information Technology" />
+            <label className="form-label">Industries <span className="text-danger fw-bold">*</span></label>
+            <IndustryPicker
+              value={form.industryCodes}
+              onChange={(codes) => setForm({ ...form, industryCodes: codes })}
+              initialLabels={Object.fromEntries((profile?.industries ?? []).map((i) => [i.code, i.titleEn]))}
+              error={submitted && form.industryCodes.length === 0}
+              id="edit-industries"
+            />
+            {submitted && form.industryCodes.length === 0 && (
+              <div className="text-danger small mt-1">Please select at least one industry.</div>
+            )}
           </div>
 
           <div className="mb-3">

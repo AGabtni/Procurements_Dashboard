@@ -27,6 +27,7 @@ import MatchesTable from "../components/MatchesTable";
 import Pagination from "../components/Pagination";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import type { DropdownOption } from "../components/MultiSelectDropdown";
+import IndustryPicker from "../components/IndustryPicker";
 
 const PROVINCES = ["AB","BC","MB","NB","NL","NS","NT","NU","ON","PE","QC","SK","YT"];
 const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-500", "500+"];
@@ -57,7 +58,7 @@ export default function AdminCompaniesPage() {
 
   // Form
   const [form, setForm] = useState({
-    companyName: "", industry: "", province: "", servicesDescription: "",
+    companyName: "", industryCodes: [] as string[], province: "", servicesDescription: "",
     keywords: [] as string[], certifications: [] as string[],
     companySize: "", commodityTypes: [] as string[],
   });
@@ -176,7 +177,7 @@ export default function AdminCompaniesPage() {
     setEditing(true);
     setForm({
       companyName: selectedProfile.companyName,
-      industry: selectedProfile.industry ?? "",
+      industryCodes: selectedProfile.industryCodes ?? [],
       province: selectedProfile.province ?? "",
       servicesDescription: selectedProfile.servicesDescription ?? "",
       keywords: selectedProfile.keywords ?? [],
@@ -200,13 +201,13 @@ export default function AdminCompaniesPage() {
     e.preventDefault();
     if (!selectedProfile) return;
     setSubmitted(true);
-    if (!form.companyName.trim() || form.commodityTypes.length === 0) return;
+    if (!form.companyName.trim() || form.industryCodes.length === 0 || form.commodityTypes.length === 0) return;
     setSaving(true);
     setError(null);
     try {
       const req: UpdateCompanyProfileRequest = {
         companyName: form.companyName || undefined,
-        industry: form.industry || undefined,
+        industryCodes: form.industryCodes,
         province: form.province || undefined,
         servicesDescription: form.servicesDescription || undefined,
         keywords: form.keywords.length ? form.keywords : undefined,
@@ -418,7 +419,7 @@ export default function AdminCompaniesPage() {
                 <tr>
                   <th>Company</th>
                   <th>Owner</th>
-                  <th>Industry</th>
+                  <th>Industries</th>
                   <th>Province</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -433,7 +434,7 @@ export default function AdminCompaniesPage() {
                       </button>
                     </td>
                     <td className="small">{p.ownerName ?? "—"}<br /><span className="text-muted">{p.ownerEmail ?? ""}</span></td>
-                    <td>{p.industry ?? "—"}</td>
+                    <td className="small">{p.industryCodes?.length ? p.industryCodes.join(", ") : "—"}</td>
                     <td>{p.province ?? "—"}</td>
                     <td>{getStatusBadge(p.matchingStatus)}</td>
                     <td>
@@ -554,7 +555,11 @@ export default function AdminCompaniesPage() {
               <div className="card"><div className="card-body">
                 <h6 className="card-subtitle text-muted mb-2">Company Details</h6>
                 <p><strong>Name:</strong> {selectedProfile.companyName}</p>
-                <p><strong>Industry:</strong> {selectedProfile.industry || "—"}</p>
+                <p><strong>Industries:</strong>{" "}
+                  {selectedProfile.industries?.length
+                    ? selectedProfile.industries.map((i) => `${i.code} — ${i.titleEn}`).join(", ")
+                    : "—"}
+                </p>
                 <p><strong>Province:</strong> {selectedProfile.province || "—"}</p>
                 <p><strong>Size:</strong> {selectedProfile.companySize || "—"}</p>
                 <p><strong>Commodity Types:</strong> {selectedProfile.commodityTypes?.length ? selectedProfile.commodityTypes.map((c) => CATEGORY_MAP[c] || c).join(", ") : "—"}</p>
@@ -608,8 +613,17 @@ export default function AdminCompaniesPage() {
             </div>
           </div>
           <div className="mb-3">
-            <label className="form-label">Industry</label>
-            <input className="form-control" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} />
+            <label className="form-label">Industries <span className="text-danger fw-bold">*</span></label>
+            <IndustryPicker
+              value={form.industryCodes}
+              onChange={(codes) => setForm({ ...form, industryCodes: codes })}
+              initialLabels={Object.fromEntries((selectedProfile?.industries ?? []).map((i) => [i.code, i.titleEn]))}
+              error={submitted && form.industryCodes.length === 0}
+              id="admin-edit-industries"
+            />
+            {submitted && form.industryCodes.length === 0 && (
+              <div className="text-danger small mt-1">Please select at least one industry.</div>
+            )}
           </div>
           <div className="mb-3">
             <label className="form-label">Services Description</label>

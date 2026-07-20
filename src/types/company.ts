@@ -1,3 +1,5 @@
+import type { IndustryLabelDto } from "./industry";
+
 // ── Generic ──
 
 export interface PagedResult<T> {
@@ -16,7 +18,6 @@ export interface CompanyProfileDto {
   ownerName: string | null;
   ownerEmail: string | null;
   companyName: string;
-  industry: string | null;
   province: string | null;
   servicesDescription: string | null;
   keywords: string[] | null;
@@ -31,6 +32,8 @@ export interface CompanyProfileDto {
   matchingStartedAt: string | null;
   commodityTypes: string[];
   autoKeywords: string[] | null;
+  industryCodes: string[];
+  industries: IndustryLabelDto[];
   preferences: CompanyPreferencesDto | null;
 }
 
@@ -74,7 +77,6 @@ export interface MatchStatsDto {
 
 export interface CreateCompanyProfileRequest {
   companyName: string;
-  industry?: string;
   province?: string;
   servicesDescription?: string;
   keywords?: string[];
@@ -83,6 +85,7 @@ export interface CreateCompanyProfileRequest {
   certifications?: string[];
   companySize?: string;
   commodityTypes?: string[];
+  industryCodes: string[];
   preferences?: CompanyPreferencesRequest;
 }
 
@@ -92,7 +95,6 @@ export interface AdminCreateCompanyRequest extends CreateCompanyProfileRequest {
 
 export interface UpdateCompanyProfileRequest {
   companyName?: string;
-  industry?: string;
   province?: string;
   servicesDescription?: string;
   keywords?: string[];
@@ -101,6 +103,8 @@ export interface UpdateCompanyProfileRequest {
   certifications?: string[];
   companySize?: string;
   commodityTypes?: string[];
+  // undefined = no change; [] = clear; [...] = replace
+  industryCodes?: string[];
 }
 
 export interface CompanyPreferencesRequest {
