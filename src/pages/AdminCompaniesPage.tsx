@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   getAllProfiles,
   getProfileById,
@@ -59,6 +60,7 @@ export default function AdminCompaniesPage() {
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
+  const [confirmSave, setConfirmSave] = useState(false);  // modal visibility
 
   // Form
   const [form, setForm] = useState({
@@ -201,13 +203,20 @@ export default function AdminCompaniesPage() {
     setShowPrefs(!!prefs);
   }
 
-  async function handleSave(e: React.FormEvent) {
+  function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedProfile) return;
     setSubmitted(true);
     if (!form.companyName.trim() || !form.province || !form.companySize || (form.servicesDescription?.length ?? 0) < 150 || form.industryCodes.length === 0 || form.commodityTypes.length === 0) return;
+    if (!hasChanges()) { setEditing(false); return; }
+    setConfirmSave(true);
+  }
+
+  async function executeSave() {
+    if (!selectedProfile) return;
     setSaving(true);
     setError(null);
+    setConfirmSave(false);  // close modal before API call
     try {
       const req: UpdateCompanyProfileRequest = {
         companyName: form.companyName || undefined,
@@ -216,8 +225,8 @@ export default function AdminCompaniesPage() {
         servicesDescription: descFingerprint(form.servicesDescription) !== descFingerprint(selectedProfile?.servicesDescription ?? "")
           ? form.servicesDescription
           : undefined,
-        keywords: form.keywords.length ? form.keywords : undefined,
-        certifications: form.certifications.length ? form.certifications : undefined,
+        keywords: form.keywords,
+        certifications: form.certifications,
         companySize: form.companySize || undefined,
         commodityTypes: form.commodityTypes.length ? form.commodityTypes : undefined,
       };
@@ -242,6 +251,28 @@ export default function AdminCompaniesPage() {
       maxValue: prefsForm.maxValue ? Number(prefsForm.maxValue) : undefined,
       excludeKeywords: prefsForm.excludeKeywords.length ? prefsForm.excludeKeywords : undefined,
     };
+  }
+
+  function hasChanges(): boolean {
+    if (!selectedProfile) return true;
+    const arr = (a?: string[] | null, b?: string[] | null) =>
+      [...(a ?? [])].sort().join("\0") !== [...(b ?? [])].sort().join("\0");
+    const p = selectedProfile;
+    const pr = p.preferences;
+    return (
+      form.companyName       !== p.companyName ||
+      form.province          !== (p.province ?? "") ||
+      form.companySize       !== (p.companySize ?? "") ||
+      descFingerprint(form.servicesDescription) !== descFingerprint(p.servicesDescription ?? "") ||
+      arr(form.keywords,       p.keywords) ||
+      arr(form.certifications, p.certifications) ||
+      arr(form.industryCodes,  p.industryCodes) ||
+      arr(form.commodityTypes, p.commodityTypes) ||
+      arr(prefsForm.preferredOrgs,      pr?.preferredOrgs) ||
+      arr(prefsForm.preferredNtTypes,   pr?.preferredNtTypes) ||
+      arr(prefsForm.preferredProvinces, pr?.preferredProvinces) ||
+      arr(prefsForm.excludeKeywords,    pr?.excludeKeywords)
+    );
   }
 
   async function handleTrigger(companyId: number) {
@@ -473,6 +504,23 @@ export default function AdminCompaniesPage() {
 
   return (
     <div>
+      {confirmSave && createPortal(
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="card shadow-lg" style={{ maxWidth: 420, width: "90%", borderRadius: 10 }}>
+            <div className="card-body p-4">
+              <h5 className="mb-1">Save Changes</h5>
+              <p className="text-muted small mb-4">Save changes to this company profile? If the description changed, keywords will be re-extracted on the next match run.</p>
+              <div className="d-flex gap-2 justify-content-end">
+                <button className="btn btn-secondary" onClick={() => setConfirmSave(false)}>Go Back</button>
+                <button className="btn btn-primary" disabled={saving} onClick={executeSave}>
+                  {saving ? "Saving..." : "Confirm"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
       <button className="btn btn-outline-secondary btn-sm mb-3" onClick={backToList}>
         ← Back to Companies
       </button>
@@ -712,7 +760,7 @@ export default function AdminCompaniesPage() {
             </div></div>
           )}
           <div className="d-flex gap-2">
-            <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? "Saving..." : "Save"}</button>
+            <button type="submit" className="btn btn-primary" disabled={saving}>Save</button>
             <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
           </div>
         </form>

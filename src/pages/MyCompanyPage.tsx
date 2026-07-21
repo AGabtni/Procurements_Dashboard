@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   getMyProfile,
   createMyProfile,
@@ -88,6 +89,7 @@ export default function MyCompanyPage() {
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
+  const [confirmSave, setConfirmSave] = useState<"create" | "save" | null>(null);
   const [form, setForm] = useState({
     companyName: "",
     industryCodes: [] as string[],
@@ -133,20 +135,25 @@ export default function MyCompanyPage() {
     }
   }, []);
 
-  async function handleCreate(e: React.FormEvent) {
+  function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
     if (!form.companyName.trim() || !form.province || !form.companySize || (form.servicesDescription?.length ?? 0) < 150 || form.industryCodes.length === 0 || form.commodityTypes.length === 0) return;
+    setConfirmSave("create");
+  }
+
+  async function executeCreate() {
     setSaving(true);
     setError(null);
+    setConfirmSave(null);
     try {
       const req: CreateCompanyProfileRequest = {
         companyName: form.companyName,
         industryCodes: form.industryCodes,
         province: form.province || undefined,
         servicesDescription: form.servicesDescription || undefined,
-        keywords: form.keywords.length ? form.keywords : undefined,
-        certifications: form.certifications.length ? form.certifications : undefined,
+        keywords: form.keywords,
+        certifications: form.certifications,
         companySize: form.companySize || undefined,
         commodityTypes: form.commodityTypes.length ? form.commodityTypes : undefined,
       };
@@ -249,12 +256,18 @@ export default function MyCompanyPage() {
     setShowPrefs(!!prefs);
   }
 
-  async function handleSave(e: React.FormEvent) {
+  function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
     if (!form.companyName.trim() || !form.province || !form.companySize || (form.servicesDescription?.length ?? 0) < 150 || form.industryCodes.length === 0 || form.commodityTypes.length === 0) return;
+    if (!hasChanges()) { setEditing(false); return; }
+    setConfirmSave("save");
+  }
+
+  async function executeSave() {
     setSaving(true);
     setError(null);
+    setConfirmSave(null);
     try {
       const req: UpdateCompanyProfileRequest = {
         companyName: form.companyName || undefined,
@@ -263,8 +276,8 @@ export default function MyCompanyPage() {
         servicesDescription: descFingerprint(form.servicesDescription) !== descFingerprint(profile?.servicesDescription ?? "")
           ? form.servicesDescription
           : undefined,
-        keywords: form.keywords.length ? form.keywords : undefined,
-        certifications: form.certifications.length ? form.certifications : undefined,
+        keywords: form.keywords,
+        certifications: form.certifications,
         companySize: form.companySize || undefined,
         commodityTypes: form.commodityTypes.length ? form.commodityTypes : undefined,
       };
@@ -280,6 +293,28 @@ export default function MyCompanyPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function hasChanges(): boolean {
+    if (!profile) return true;
+    const arr = (a?: string[] | null, b?: string[] | null) =>
+      [...(a ?? [])].sort().join("\0") !== [...(b ?? [])].sort().join("\0");
+    const p = profile;
+    const pr = p.preferences;
+    return (
+      form.companyName       !== p.companyName ||
+      form.province          !== (p.province ?? "") ||
+      form.companySize       !== (p.companySize ?? "") ||
+      descFingerprint(form.servicesDescription) !== descFingerprint(p.servicesDescription ?? "") ||
+      arr(form.keywords,       p.keywords) ||
+      arr(form.certifications, p.certifications) ||
+      arr(form.industryCodes,  p.industryCodes) ||
+      arr(form.commodityTypes, p.commodityTypes) ||
+      arr(prefsForm.preferredOrgs,     pr?.preferredOrgs) ||
+      arr(prefsForm.preferredNtTypes,  pr?.preferredNtTypes) ||
+      arr(prefsForm.preferredProvinces,pr?.preferredProvinces) ||
+      arr(prefsForm.excludeKeywords,   pr?.excludeKeywords)
+    );
   }
 
   function buildPrefsRequest(): CompanyPreferencesRequest {
@@ -497,7 +532,7 @@ export default function MyCompanyPage() {
             </div></div>
           )}
           <div className="d-flex gap-2">
-            <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? "Creating..." : "Create Profile"}</button>
+            <button type="submit" className="btn btn-primary" disabled={saving}>Create Profile</button>
             <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
           </div>
         </form>
@@ -505,8 +540,31 @@ export default function MyCompanyPage() {
     );
   }
 
+  const confirmModal = confirmSave ? createPortal(
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="card shadow-lg" style={{ maxWidth: 420, width: "90%", borderRadius: 10 }}>
+        <div className="card-body p-4">
+          <h5 className="mb-1">{confirmSave === "create" ? "Create Profile" : "Save Changes"}</h5>
+          <p className="text-muted small mb-4">
+            {confirmSave === "create"
+              ? "Create your company profile? You can edit it at any time after creation."
+              : "Save changes to your profile? If your description changed, keywords will be re-extracted on your next match run."}
+          </p>
+          <div className="d-flex gap-2 justify-content-end">
+            <button className="pp-btn pp-btn-ghost" onClick={() => setConfirmSave(null)}>Go Back</button>
+            <button className="pp-btn pp-btn-primary" disabled={saving} onClick={confirmSave === "create" ? executeCreate : executeSave}>
+              {saving ? "Saving..." : "Confirm"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
   return (
     <div className="pp-animate-in">
+      {confirmModal}
       <div className="pp-page-header">
         <div>
           <h2>{profile.companyName || "My Company"}</h2>
@@ -794,12 +852,8 @@ export default function MyCompanyPage() {
           )}
 
           <div className="d-flex gap-2">
-            <button type="submit" className="pp-btn pp-btn-primary" disabled={saving}>
-              {saving ? "Saving..." : "Save Profile"}
-            </button>
-            <button type="button" className="pp-btn pp-btn-ghost" onClick={() => setEditing(false)}>
-              Cancel
-            </button>
+            <button type="submit" className="pp-btn pp-btn-primary" disabled={saving}>Save Profile</button>
+            <button type="button" className="pp-btn pp-btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
           </div>
         </form>
       )}
