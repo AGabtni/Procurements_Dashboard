@@ -59,7 +59,7 @@ function FieldTooltip({ text }: { text: string }) {
       <span
         onMouseEnter={() => setVisible(true)}
         onMouseLeave={() => setVisible(false)}
-        style={{ cursor: "help", color: "#6c757d", fontSize: "1em", marginLeft: 4 }}
+        style={{ cursor: "help", color: "#0d6efd", fontSize: "1em", marginLeft: 4 }}
       >ⓘ</span>
       {visible && (
         <div style={{
