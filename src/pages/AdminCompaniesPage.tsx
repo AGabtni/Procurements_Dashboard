@@ -121,6 +121,7 @@ export default function AdminCompaniesPage() {
       const req: AdminCreateCompanyRequest = {
         companyName: createForm.companyName.trim(),
         userId: createForm.userId ? Number(createForm.userId) : undefined,
+        industryCodes: [],
       };
       await adminCreateProfile(req);
       setShowCreate(false);

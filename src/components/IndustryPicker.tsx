@@ -377,6 +377,8 @@ export default function IndustryPicker({
           {detailPanelStyle && (
             <div
               ref={panelRef}
+              onMouseEnter={cancelClear}
+              onMouseLeave={endHover}
               className="border rounded bg-white shadow"
               style={{ ...detailPanelStyle, overflowY: "auto", padding: "12px 14px" }}
             >
