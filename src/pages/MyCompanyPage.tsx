@@ -48,6 +48,33 @@ const NOTICE_TYPE_OPTIONS: DropdownOption[] = [
   "RFP against Supply Arrangement",
 ].map((t) => ({ value: t, label: t }));
 
+function descFingerprint(s: string) {
+  return s.trim().replace(/\s+/g, ' ').replace(/[.,;!?]+$/, '');
+}
+
+function FieldTooltip({ text }: { text: string }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <span style={{ position: "relative", display: "inline-block" }}>
+      <span
+        onMouseEnter={() => setVisible(true)}
+        onMouseLeave={() => setVisible(false)}
+        style={{ cursor: "help", color: "#6c757d", fontSize: "1em", marginLeft: 4 }}
+      >ⓘ</span>
+      {visible && (
+        <div style={{
+          position: "absolute", bottom: "100%", left: "50%", transform: "translateX(-50%)",
+          background: "#212529", color: "#fff", padding: "6px 10px", borderRadius: 4,
+          fontSize: "0.78em", whiteSpace: "normal", width: 230, zIndex: 9999,
+          marginBottom: 4, lineHeight: 1.4, pointerEvents: "none", textAlign: "left",
+        }}>
+          {text}
+        </div>
+      )}
+    </span>
+  );
+}
+
 type Tab = "profile" | "matches";
 
 export default function MyCompanyPage() {
@@ -109,7 +136,7 @@ export default function MyCompanyPage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
-    if (!form.companyName.trim() || form.industryCodes.length === 0 || form.commodityTypes.length === 0) return;
+    if (!form.companyName.trim() || !form.province || !form.companySize || (form.servicesDescription?.length ?? 0) < 150 || form.industryCodes.length === 0 || form.commodityTypes.length === 0) return;
     setSaving(true);
     setError(null);
     try {
@@ -225,7 +252,7 @@ export default function MyCompanyPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
-    if (!form.companyName.trim() || form.industryCodes.length === 0 || form.commodityTypes.length === 0) return;
+    if (!form.companyName.trim() || !form.province || !form.companySize || (form.servicesDescription?.length ?? 0) < 150 || form.industryCodes.length === 0 || form.commodityTypes.length === 0) return;
     setSaving(true);
     setError(null);
     try {
@@ -233,7 +260,9 @@ export default function MyCompanyPage() {
         companyName: form.companyName || undefined,
         industryCodes: form.industryCodes,
         province: form.province || undefined,
-        servicesDescription: form.servicesDescription || undefined,
+        servicesDescription: descFingerprint(form.servicesDescription) !== descFingerprint(profile?.servicesDescription ?? "")
+          ? form.servicesDescription
+          : undefined,
         keywords: form.keywords.length ? form.keywords : undefined,
         certifications: form.certifications.length ? form.certifications : undefined,
         companySize: form.companySize || undefined,
@@ -357,7 +386,7 @@ export default function MyCompanyPage() {
         <form onSubmit={handleCreate}>
           <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label className="form-label">Company Name <span className="text-danger fw-bold">*</span></label>
+              <label className="form-label">Company Name <span className="text-danger fw-bold">*</span><FieldTooltip text="Your legal or trading name. Used for internal reference only." /></label>
               <input
                 className={`form-control${submitted && !form.companyName.trim() ? " is-invalid" : ""}`}
                 required value={form.companyName}
@@ -365,22 +394,24 @@ export default function MyCompanyPage() {
               />
             </div>
             <div className="col-md-3">
-              <label className="form-label">Province</label>
-              <select className="form-select" value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })}>
+              <label className="form-label">Province <span className="text-danger fw-bold">*</span><FieldTooltip text="Your company's primary operating province." /></label>
+              <select className={`form-select${submitted && !form.province ? " is-invalid" : ""}`} value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })}>
                 <option value="">Select...</option>
                 {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
+              {submitted && !form.province && <div className="text-danger small mt-1">Please select a province.</div>}
             </div>
             <div className="col-md-3">
-              <label className="form-label">Company Size</label>
-              <select className="form-select" value={form.companySize} onChange={(e) => setForm({ ...form, companySize: e.target.value })}>
+              <label className="form-label">Company Size <span className="text-danger fw-bold">*</span><FieldTooltip text="Your headcount range. Informational context for the AI scorer." /></label>
+              <select className={`form-select${submitted && !form.companySize ? " is-invalid" : ""}`} value={form.companySize} onChange={(e) => setForm({ ...form, companySize: e.target.value })}>
                 <option value="">Select...</option>
                 {COMPANY_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
+              {submitted && !form.companySize && <div className="text-danger small mt-1">Please select a company size.</div>}
             </div>
           </div>
           <div className="mb-3">
-            <label className="form-label">Industries <span className="text-danger fw-bold">*</span></label>
+            <label className="form-label">Industries <span className="text-danger fw-bold">*</span><FieldTooltip text="NAICS classifications for your business. The AI uses these to assess whether a tender is in your domain." /></label>
             <IndustryPicker
               value={form.industryCodes}
               onChange={(codes) => setForm({ ...form, industryCodes: codes })}
@@ -392,21 +423,40 @@ export default function MyCompanyPage() {
             )}
           </div>
           <div className="mb-3">
-            <label className="form-label">Services Description</label>
-            <textarea className="form-control" rows={3} value={form.servicesDescription} onChange={(e) => setForm({ ...form, servicesDescription: e.target.value })} placeholder="Describe the services your company provides..." />
+            <label className="form-label">Services Description <span className="text-danger fw-bold">*</span><FieldTooltip text="Describe what your company does in specific terms. Domain keywords are extracted from this text. The more precise, the better your matches." /></label>
+            <textarea
+              className={`form-control${submitted && (form.servicesDescription?.length ?? 0) < 150 ? " is-invalid" : ""}`}
+              rows={4}
+              maxLength={2000}
+              value={form.servicesDescription}
+              onChange={(e) => setForm({ ...form, servicesDescription: e.target.value })}
+              placeholder="e.g. We implement and support SAP and Oracle ERP systems for mid-size manufacturers, including S/4HANA migrations, system integrations, and managed cloud hosting. Our team holds SAP Activate certification and has delivered 30+ projects across automotive and industrial sectors."
+            />
+            <div className="d-flex justify-content-between mt-1">
+              {submitted && (form.servicesDescription?.length ?? 0) < 150
+                ? <div className="text-danger small">At least 150 characters required — be specific about technologies, platforms, and sectors you serve.</div>
+                : <div className="text-muted small">Be specific: name technologies, platforms, certifications, and sectors. Vague descriptions produce fewer keyword matches.</div>}
+              <div className={`small ms-2 flex-shrink-0 ${
+                (form.servicesDescription?.length ?? 0) === 2000 ? "text-danger" :
+                (form.servicesDescription?.length ?? 0) >= 1800 ? "text-warning" :
+                (form.servicesDescription?.length ?? 0) >= 150 ? "text-success" : "text-muted"
+              }`}>
+                {form.servicesDescription?.length ?? 0} / 2000
+              </div>
+            </div>
           </div>
           <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label className="form-label">Keywords</label>
+              <label className="form-label">Keywords<FieldTooltip text="Specific technologies, products, or platforms your company works with. Each keyword is matched word-for-word against every tender before AI scoring. Strong signal for relevance." /></label>
               <TagInput value={form.keywords} onChange={(tags) => setForm({ ...form, keywords: tags })} placeholder="Type keyword and press Enter" />
             </div>
             <div className="col-md-6">
-              <label className="form-label">Certifications</label>
+              <label className="form-label">Certifications<FieldTooltip text="Professional or trade certifications your company holds. The AI references these when assessing whether a tender requires credentials you have." /></label>
               <TagInput value={form.certifications} onChange={(tags) => setForm({ ...form, certifications: tags })} placeholder="Type certification and press Enter" />
             </div>
           </div>
           <div className="mb-3">
-            <label className="form-label">Commodity Types <span className="text-danger fw-bold">*</span></label>
+            <label className="form-label">Commodity Types <span className="text-danger fw-bold">*</span><FieldTooltip text="Whether your company sells goods, services, or both. Tenders whose category clearly conflicts with your selection are rejected before AI scoring." /></label>
             <MultiSelectDropdown id="commodityTypes" options={COMMODITY_OPTIONS} value={form.commodityTypes} onChange={(sel) => setForm({ ...form, commodityTypes: sel })} placeholder="Select commodity types..." className={submitted && form.commodityTypes.length === 0 ? "is-invalid" : ""} />
             {submitted && form.commodityTypes.length === 0 && <div className="text-danger small mt-1">Please select at least one commodity type.</div>}
           </div>
@@ -418,33 +468,29 @@ export default function MyCompanyPage() {
           {showPrefs && (
             <div className="card mb-3"><div className="card-body">
               <h5 className="card-title">Matching Preferences</h5>
+              <div className="alert alert-warning py-2 small mb-3 mt-4">
+                ⚠ <strong>These are hard filters.</strong> Tenders that don't match every active filter are rejected before the AI ever sees them. They will never appear in your results. Leave a filter empty to place no restriction on that field.
+              </div>
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
-                  <label className="form-label">Preferred Organizations</label>
+                  <label className="form-label">Preferred Organizations<FieldTooltip text="Hard filter. Only tenders issued by these buying organizations will be scored. Leave empty to receive tenders from all organizations." /></label>
                   <TagInput value={prefsForm.preferredOrgs} onChange={(tags) => setPrefsForm({ ...prefsForm, preferredOrgs: tags })} placeholder="Type organization and press Enter" />
                 </div>
               </div>
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
-                  <label className="form-label">Preferred Notice Types</label>
+                  <label className="form-label">Preferred Notice Types<FieldTooltip text="Hard filter. Only tenders of these types will be scored. Leave empty to receive all notice types." /></label>
                   <MultiSelectDropdown id="prefNtTypes" options={NOTICE_TYPE_OPTIONS} value={prefsForm.preferredNtTypes} onChange={(sel) => setPrefsForm({ ...prefsForm, preferredNtTypes: sel })} placeholder="Select notice types..." />
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label">Preferred Provinces</label>
+                  <label className="form-label">Preferred Provinces (Delivery)<FieldTooltip text="Hard filter on delivery region. Only applies when a tender specifies where work must be delivered. Tenders with no delivery region are always included." /></label>
                   <MultiSelectDropdown id="prefProvinces" options={PROVINCE_OPTIONS} value={prefsForm.preferredProvinces} onChange={(sel) => setPrefsForm({ ...prefsForm, preferredProvinces: sel })} placeholder="Select provinces..." />
+                  <div className="text-muted small mt-1">Tenders with no specified delivery region are never filtered out by this setting.</div>
                 </div>
               </div>
               <div className="row g-3 mb-3">
-                <div className="col-md-4">
-                  <label className="form-label">Min Value ($)</label>
-                  <input type="number" className="form-control" value={prefsForm.minValue} onChange={(e) => setPrefsForm({ ...prefsForm, minValue: e.target.value })} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Max Value ($)</label>
-                  <input type="number" className="form-control" value={prefsForm.maxValue} onChange={(e) => setPrefsForm({ ...prefsForm, maxValue: e.target.value })} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Exclude Keywords</label>
+                <div className="col-md-6">
+                  <label className="form-label">Exclude Keywords<FieldTooltip text="Hard filter. Any tender containing these words anywhere in its title or description is rejected before scoring." /></label>
                   <TagInput value={prefsForm.excludeKeywords} onChange={(tags) => setPrefsForm({ ...prefsForm, excludeKeywords: tags })} placeholder="Type keyword and press Enter" />
                 </div>
               </div>
@@ -560,6 +606,17 @@ export default function MyCompanyPage() {
                       </div>
                     </>
                   )}
+                  {!profile.lastMatchedAt && (
+                    <div className="alert alert-info mt-3 mb-0 py-2 small">
+                      <strong>No match has run yet.</strong> Keywords will be extracted from your description when you run your first match — the more specific it is, the better your results.
+                    </div>
+                  )}
+                  {profile.autoKeywords !== null && profile.autoKeywords !== undefined && profile.autoKeywords.length < 5 && (
+                    <div className="alert alert-warning mt-3 mb-0 py-2 small">
+                      <strong>Weak keyword extraction</strong> — only {profile.autoKeywords.length} domain-specific term{profile.autoKeywords.length === 1 ? "" : "s"} were found in your description.
+                      Enrich it with specific technologies, platforms, certifications, and sectors to improve match quality before running a match.
+                    </div>
+                  )}
                   <p className="mt-2"><strong>Certifications:</strong></p>
                   <div>
                     {profile.certifications?.length ? (
@@ -580,7 +637,7 @@ export default function MyCompanyPage() {
                 <h6 style={{ color: "var(--pp-text-muted)", fontSize: ".8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: ".75rem" }}>Matching Preferences</h6>
                 <div className="row">
                   <div className="col-md-4">
-                    <p><strong>Preferred Provinces:</strong>{" "}
+                    <p><strong>Preferred Provinces (Delivery):</strong>{" "}
                       {profile.preferences.preferredProvinces?.join(", ") || "Any"}
                     </p>
                   </div>
@@ -590,10 +647,8 @@ export default function MyCompanyPage() {
                     </p>
                   </div>
                   <div className="col-md-4">
-                    <p><strong>Value Range:</strong>{" "}
-                      {profile.preferences.minValue || profile.preferences.maxValue
-                        ? `$${profile.preferences.minValue ?? "0"} – $${profile.preferences.maxValue ?? "∞"}`
-                        : "Any"}
+                    <p><strong>Preferred Organizations:</strong>{" "}
+                      {profile.preferences.preferredOrgs?.join(", ") || "Any"}
                     </p>
                   </div>
                 </div>
@@ -608,7 +663,7 @@ export default function MyCompanyPage() {
         <form onSubmit={handleSave}>
           <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label className="form-label">Company Name <span className="text-danger fw-bold">*</span></label>
+              <label className="form-label">Company Name <span className="text-danger fw-bold">*</span><FieldTooltip text="Your legal or trading name. Used for internal reference only." /></label>
               <input
                 className={`form-control${submitted && !form.companyName.trim() ? " is-invalid" : ""}`}
                 required
@@ -617,23 +672,25 @@ export default function MyCompanyPage() {
               />
             </div>
             <div className="col-md-3">
-              <label className="form-label">Province</label>
-              <select className="form-select" value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })}>
+              <label className="form-label">Province <span className="text-danger fw-bold">*</span><FieldTooltip text="Your company's primary operating province." /></label>
+              <select className={`form-select${submitted && !form.province ? " is-invalid" : ""}`} value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })}>
                 <option value="">Select...</option>
                 {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
+              {submitted && !form.province && <div className="text-danger small mt-1">Please select a province.</div>}
             </div>
             <div className="col-md-3">
-              <label className="form-label">Company Size</label>
-              <select className="form-select" value={form.companySize} onChange={(e) => setForm({ ...form, companySize: e.target.value })}>
+              <label className="form-label">Company Size <span className="text-danger fw-bold">*</span><FieldTooltip text="Your headcount range. Informational context for the AI scorer." /></label>
+              <select className={`form-select${submitted && !form.companySize ? " is-invalid" : ""}`} value={form.companySize} onChange={(e) => setForm({ ...form, companySize: e.target.value })}>
                 <option value="">Select...</option>
                 {COMPANY_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
+              {submitted && !form.companySize && <div className="text-danger small mt-1">Please select a company size.</div>}
             </div>
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Industries <span className="text-danger fw-bold">*</span></label>
+            <label className="form-label">Industries <span className="text-danger fw-bold">*</span><FieldTooltip text="NAICS classifications for your business. The AI uses these to assess whether a tender is in your domain." /></label>
             <IndustryPicker
               value={form.industryCodes}
               onChange={(codes) => setForm({ ...form, industryCodes: codes })}
@@ -647,23 +704,42 @@ export default function MyCompanyPage() {
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Services Description</label>
-            <textarea className="form-control" rows={3} value={form.servicesDescription} onChange={(e) => setForm({ ...form, servicesDescription: e.target.value })} placeholder="Describe the services your company provides..." />
+            <label className="form-label">Services Description <span className="text-danger fw-bold">*</span><FieldTooltip text="Describe what your company does in specific terms. Domain keywords are extracted from this text. The more precise, the better your matches." /></label>
+            <textarea
+              className={`form-control${submitted && (form.servicesDescription?.length ?? 0) < 150 ? " is-invalid" : ""}`}
+              rows={4}
+              maxLength={2000}
+              value={form.servicesDescription}
+              onChange={(e) => setForm({ ...form, servicesDescription: e.target.value })}
+              placeholder="e.g. We implement and support SAP and Oracle ERP systems for mid-size manufacturers, including S/4HANA migrations, system integrations, and managed cloud hosting. Our team holds SAP Activate certification and has delivered 30+ projects across automotive and industrial sectors."
+            />
+            <div className="d-flex justify-content-between mt-1">
+              {submitted && (form.servicesDescription?.length ?? 0) < 150
+                ? <div className="text-danger small">At least 150 characters required — be specific about technologies, platforms, and sectors you serve.</div>
+                : <div className="text-muted small">Be specific: name technologies, platforms, certifications, and sectors. Vague descriptions produce fewer keyword matches.</div>}
+              <div className={`small ms-2 flex-shrink-0 ${
+                (form.servicesDescription?.length ?? 0) === 2000 ? "text-danger" :
+                (form.servicesDescription?.length ?? 0) >= 1800 ? "text-warning" :
+                (form.servicesDescription?.length ?? 0) >= 150 ? "text-success" : "text-muted"
+              }`}>
+                {form.servicesDescription?.length ?? 0} / 2000
+              </div>
+            </div>
           </div>
 
           <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label className="form-label">Keywords</label>
+              <label className="form-label">Keywords<FieldTooltip text="Specific technologies, products, or platforms your company works with. Each keyword is matched word-for-word against every tender before AI scoring. Strong signal for relevance." /></label>
               <TagInput value={form.keywords} onChange={(tags) => setForm({ ...form, keywords: tags })} placeholder="Type keyword and press Enter" />
             </div>
             <div className="col-md-6">
-              <label className="form-label">Certifications</label>
+              <label className="form-label">Certifications<FieldTooltip text="Professional or trade certifications your company holds. The AI references these when assessing whether a tender requires credentials you have." /></label>
               <TagInput value={form.certifications} onChange={(tags) => setForm({ ...form, certifications: tags })} placeholder="Type certification and press Enter" />
             </div>
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Commodity Types <span className="text-danger fw-bold">*</span></label>
+            <label className="form-label">Commodity Types <span className="text-danger fw-bold">*</span><FieldTooltip text="Whether your company sells goods, services, or both. Tenders whose category clearly conflicts with your selection are rejected before AI scoring." /></label>
             <MultiSelectDropdown
               id="commodityTypes"
               options={COMMODITY_OPTIONS}
@@ -687,33 +763,29 @@ export default function MyCompanyPage() {
             <div className="pp-card mb-3">
               <div className="pp-card-body">
                 <h5 className="card-title">Matching Preferences</h5>
+                <div className="alert alert-warning py-2 small mb-3 mt-4">
+                  ⚠ <strong>These are hard filters.</strong> Tenders that don't match every active filter are rejected before the AI ever sees them. They will never appear in your results. Leave a filter empty to place no restriction on that field.
+                </div>
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label">Preferred Organizations</label>
+                    <label className="form-label">Preferred Organizations<FieldTooltip text="Hard filter. Only tenders issued by these buying organizations will be scored. Leave empty to receive tenders from all organizations." /></label>
                     <TagInput value={prefsForm.preferredOrgs} onChange={(tags) => setPrefsForm({ ...prefsForm, preferredOrgs: tags })} placeholder="Type organization and press Enter" />
                   </div>
                 </div>
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label">Preferred Notice Types</label>
+                    <label className="form-label">Preferred Notice Types<FieldTooltip text="Hard filter. Only tenders of these types will be scored. Leave empty to receive all notice types." /></label>
                     <MultiSelectDropdown id="prefNtTypes" options={NOTICE_TYPE_OPTIONS} value={prefsForm.preferredNtTypes} onChange={(sel) => setPrefsForm({ ...prefsForm, preferredNtTypes: sel })} placeholder="Select notice types..." />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Preferred Provinces</label>
+                    <label className="form-label">Preferred Provinces (Delivery)<FieldTooltip text="Hard filter on delivery region. Only applies when a tender specifies where work must be delivered. Tenders with no delivery region are always included." /></label>
                     <MultiSelectDropdown id="prefProvinces" options={PROVINCE_OPTIONS} value={prefsForm.preferredProvinces} onChange={(sel) => setPrefsForm({ ...prefsForm, preferredProvinces: sel })} placeholder="Select provinces..." />
+                    <div className="text-muted small mt-1">Tenders with no specified delivery region are never filtered out by this setting.</div>
                   </div>
                 </div>
                 <div className="row g-3 mb-3">
-                  <div className="col-md-4">
-                    <label className="form-label">Min Value ($)</label>
-                    <input type="number" className="form-control" value={prefsForm.minValue} onChange={(e) => setPrefsForm({ ...prefsForm, minValue: e.target.value })} />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Max Value ($)</label>
-                    <input type="number" className="form-control" value={prefsForm.maxValue} onChange={(e) => setPrefsForm({ ...prefsForm, maxValue: e.target.value })} />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Exclude Keywords</label>
+                  <div className="col-md-6">
+                    <label className="form-label">Exclude Keywords<FieldTooltip text="Hard filter. Any tender containing these words anywhere in its title or description is rejected before scoring." /></label>
                     <TagInput value={prefsForm.excludeKeywords} onChange={(tags) => setPrefsForm({ ...prefsForm, excludeKeywords: tags })} placeholder="Type keyword and press Enter" />
                   </div>
                 </div>

@@ -39,6 +39,10 @@ const NOTICE_TYPE_OPTIONS: DropdownOption[] = [
   "RFP against Supply Arrangement",
 ].map((t) => ({ value: t, label: t }));
 
+function descFingerprint(s: string) {
+  return s.trim().replace(/\s+/g, ' ').replace(/[.,;!?]+$/, '');
+}
+
 type View = "list" | "detail";
 type DetailTab = "profile" | "matches";
 
@@ -201,7 +205,7 @@ export default function AdminCompaniesPage() {
     e.preventDefault();
     if (!selectedProfile) return;
     setSubmitted(true);
-    if (!form.companyName.trim() || form.industryCodes.length === 0 || form.commodityTypes.length === 0) return;
+    if (!form.companyName.trim() || !form.province || !form.companySize || (form.servicesDescription?.length ?? 0) < 150 || form.industryCodes.length === 0 || form.commodityTypes.length === 0) return;
     setSaving(true);
     setError(null);
     try {
@@ -209,7 +213,9 @@ export default function AdminCompaniesPage() {
         companyName: form.companyName || undefined,
         industryCodes: form.industryCodes,
         province: form.province || undefined,
-        servicesDescription: form.servicesDescription || undefined,
+        servicesDescription: descFingerprint(form.servicesDescription) !== descFingerprint(selectedProfile?.servicesDescription ?? "")
+          ? form.servicesDescription
+          : undefined,
         keywords: form.keywords.length ? form.keywords : undefined,
         certifications: form.certifications.length ? form.certifications : undefined,
         companySize: form.companySize || undefined,
@@ -598,18 +604,20 @@ export default function AdminCompaniesPage() {
               <input className={`form-control${submitted && !form.companyName.trim() ? " is-invalid" : ""}`} required value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} />
             </div>
             <div className="col-md-3">
-              <label className="form-label">Province</label>
-              <select className="form-select" value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })}>
+              <label className="form-label">Province <span className="text-danger fw-bold">*</span></label>
+              <select className={`form-select${submitted && !form.province ? " is-invalid" : ""}`} value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })}>
                 <option value="">Select...</option>
                 {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
+              {submitted && !form.province && <div className="text-danger small mt-1">Please select a province.</div>}
             </div>
             <div className="col-md-3">
-              <label className="form-label">Company Size</label>
-              <select className="form-select" value={form.companySize} onChange={(e) => setForm({ ...form, companySize: e.target.value })}>
+              <label className="form-label">Company Size <span className="text-danger fw-bold">*</span></label>
+              <select className={`form-select${submitted && !form.companySize ? " is-invalid" : ""}`} value={form.companySize} onChange={(e) => setForm({ ...form, companySize: e.target.value })}>
                 <option value="">Select...</option>
                 {COMPANY_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
+              {submitted && !form.companySize && <div className="text-danger small mt-1">Please select a company size.</div>}
             </div>
           </div>
           <div className="mb-3">
@@ -626,8 +634,27 @@ export default function AdminCompaniesPage() {
             )}
           </div>
           <div className="mb-3">
-            <label className="form-label">Services Description</label>
-            <textarea className="form-control" rows={3} value={form.servicesDescription} onChange={(e) => setForm({ ...form, servicesDescription: e.target.value })} />
+            <label className="form-label">Services Description <span className="text-danger fw-bold">*</span></label>
+            <textarea
+              className={`form-control${submitted && (form.servicesDescription?.length ?? 0) < 150 ? " is-invalid" : ""}`}
+              rows={4}
+              maxLength={2000}
+              value={form.servicesDescription}
+              onChange={(e) => setForm({ ...form, servicesDescription: e.target.value })}
+              placeholder="e.g. We implement and support SAP and Oracle ERP systems for mid-size manufacturers, including S/4HANA migrations, system integrations, and managed cloud hosting. Our team holds SAP Activate certification and has delivered 30+ projects across automotive and industrial sectors."
+            />
+            <div className="d-flex justify-content-between mt-1">
+              {submitted && (form.servicesDescription?.length ?? 0) < 150
+                ? <div className="text-danger small">At least 150 characters required.</div>
+                : <div className="text-muted small">Be specific: technologies, platforms, certifications, sectors.</div>}
+              <div className={`small ms-2 flex-shrink-0 ${
+                (form.servicesDescription?.length ?? 0) === 2000 ? "text-danger" :
+                (form.servicesDescription?.length ?? 0) >= 1800 ? "text-warning" :
+                (form.servicesDescription?.length ?? 0) >= 150 ? "text-success" : "text-muted"
+              }`}>
+                {form.servicesDescription?.length ?? 0} / 2000
+              </div>
+            </div>
           </div>
           <div className="row g-3 mb-3">
             <div className="col-md-6">
