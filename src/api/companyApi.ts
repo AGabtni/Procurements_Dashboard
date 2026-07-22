@@ -10,6 +10,11 @@ import type {
   UpdateMatchStatusRequest,
   AdminCreateCompanyRequest,
 } from "../types/company";
+import { decodeHtml } from "../utils/html";
+
+function normalizeMatch(m: CompanyMatchDto): CompanyMatchDto {
+  return { ...m, tenderTitle: decodeHtml(m.tenderTitle) };
+}
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5009";
 const STORAGE_KEY = "procureportal_auth";
@@ -121,7 +126,8 @@ export async function getMyMatches(
   if (status) query.set("status", status);
   query.set("page", String(page));
   query.set("pageSize", String(pageSize));
-  return fetchJson<PagedResult<CompanyMatchDto>>(`${API_BASE}/api/company/me/matches?${query}`);
+  const result = await fetchJson<PagedResult<CompanyMatchDto>>(`${API_BASE}/api/company/me/matches?${query}`);
+  return { ...result, items: result.items.map(normalizeMatch) };
 }
 
 export async function getMyMatchStats(): Promise<MatchStatsDto> {
@@ -222,9 +228,10 @@ export async function getMatches(
   if (status) query.set("status", status);
   query.set("page", String(page));
   query.set("pageSize", String(pageSize));
-  return fetchJson<PagedResult<CompanyMatchDto>>(
+  const result = await fetchJson<PagedResult<CompanyMatchDto>>(
     `${API_BASE}/api/company/${companyId}/matches?${query}`
   );
+  return { ...result, items: result.items.map(normalizeMatch) };
 }
 
 export async function getMatchStats(

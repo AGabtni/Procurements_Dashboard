@@ -103,9 +103,12 @@ export default function IndustryPicker({
     return () => document.removeEventListener("mousemove", track);
   }, []);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const initialLabelsKey = JSON.stringify(initialLabels);
   useEffect(() => {
     setLabelMap((prev) => ({ ...initialLabels, ...prev }));
-  }, [initialLabels]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialLabelsKey]);
 
   useEffect(() => {
     if (!open) return;

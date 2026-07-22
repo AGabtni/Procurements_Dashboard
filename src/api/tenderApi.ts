@@ -5,6 +5,7 @@ import type {
   TenderSearchParams,
   TenderStatsDto,
 } from "../types/tender";
+import { decodeHtml } from "../utils/html";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5009";
 
@@ -14,6 +15,21 @@ async function fetchJson<T>(url: string): Promise<T> {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
   return res.json();
+}
+
+function normalizeTenderList(item: TenderListDto): TenderListDto {
+  return { ...item, title: decodeHtml(item.title) };
+}
+
+function normalizeTenderDetail(t: TenderDetailDto): TenderDetailDto {
+  return {
+    ...t,
+    title: decodeHtml(t.title),
+    description: decodeHtml(t.description),
+    descriptionMd: decodeHtml(t.descriptionMd),
+    buyingOrganization: decodeHtml(t.buyingOrganization),
+    documents: t.documents.map((d) => ({ ...d, title: decodeHtml(d.title) })),
+  };
 }
 
 export async function searchTenders(
@@ -33,9 +49,10 @@ export async function searchTenders(
   if (params.sortDesc !== undefined)
     query.set("sortDesc", String(params.sortDesc));
 
-  return fetchJson<PagedResult<TenderListDto>>(
+  const result = await fetchJson<PagedResult<TenderListDto>>(
     `${API_BASE}/api/tenders?${query}`
   );
+  return { ...result, items: result.items.map(normalizeTenderList) };
 }
 
 export async function getTenderStats(): Promise<TenderStatsDto> {
@@ -43,15 +60,17 @@ export async function getTenderStats(): Promise<TenderStatsDto> {
 }
 
 export async function getTenderById(id: number): Promise<TenderDetailDto> {
-  return fetchJson<TenderDetailDto>(`${API_BASE}/api/tenders/${id}`);
+  const t = await fetchJson<TenderDetailDto>(`${API_BASE}/api/tenders/${id}`);
+  return normalizeTenderDetail(t);
 }
 
 export async function getTenderByNoticeId(
   noticeId: string
 ): Promise<TenderDetailDto> {
-  return fetchJson<TenderDetailDto>(
+  const t = await fetchJson<TenderDetailDto>(
     `${API_BASE}/api/tenders/by-notice/${encodeURIComponent(noticeId)}`
   );
+  return normalizeTenderDetail(t);
 }
 
 export async function getCategories(): Promise<string[]> {

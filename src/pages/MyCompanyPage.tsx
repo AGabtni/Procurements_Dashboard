@@ -399,6 +399,28 @@ export default function MyCompanyPage() {
     );
   }
 
+  const confirmModal = confirmSave ? createPortal(
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="card shadow-lg" style={{ maxWidth: 420, width: "90%", borderRadius: 10 }}>
+        <div className="card-body p-4">
+          <h5 className="mb-1">{confirmSave === "create" ? "Create Profile" : "Save Changes"}</h5>
+          <p className="text-muted small mb-4">
+            {confirmSave === "create"
+              ? "Create your company profile? You can edit it at any time after creation."
+              : "Save changes to your profile? If your description changed, keywords will be re-extracted on your next match run."}
+          </p>
+          <div className="d-flex gap-2 justify-content-end">
+            <button className="pp-btn pp-btn-ghost" onClick={() => setConfirmSave(null)}>Go Back</button>
+            <button className="pp-btn pp-btn-primary" disabled={saving} onClick={confirmSave === "create" ? executeCreate : executeSave}>
+              {saving ? "Saving..." : "Confirm"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
   if (!profile) {
     if (!editing) {
       return (
@@ -416,6 +438,7 @@ export default function MyCompanyPage() {
     // Show create form
     return (
       <div>
+        {confirmModal}
         <h2>Create Company Profile</h2>
         {error && <div className="alert alert-danger">{error}</div>}
         <form onSubmit={handleCreate}>
@@ -539,28 +562,6 @@ export default function MyCompanyPage() {
       </div>
     );
   }
-
-  const confirmModal = confirmSave ? createPortal(
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div className="card shadow-lg" style={{ maxWidth: 420, width: "90%", borderRadius: 10 }}>
-        <div className="card-body p-4">
-          <h5 className="mb-1">{confirmSave === "create" ? "Create Profile" : "Save Changes"}</h5>
-          <p className="text-muted small mb-4">
-            {confirmSave === "create"
-              ? "Create your company profile? You can edit it at any time after creation."
-              : "Save changes to your profile? If your description changed, keywords will be re-extracted on your next match run."}
-          </p>
-          <div className="d-flex gap-2 justify-content-end">
-            <button className="pp-btn pp-btn-ghost" onClick={() => setConfirmSave(null)}>Go Back</button>
-            <button className="pp-btn pp-btn-primary" disabled={saving} onClick={confirmSave === "create" ? executeCreate : executeSave}>
-              {saving ? "Saving..." : "Confirm"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>,
-    document.body
-  ) : null;
 
   return (
     <div className="pp-animate-in">
