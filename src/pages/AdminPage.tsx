@@ -3,6 +3,23 @@ import { getAllUsers, activateUser, deactivateUser } from "../api/authApi";
 import type { UserDto } from "../types/auth";
 import AdminCompaniesPage from "./AdminCompaniesPage";
 
+function TrialCells({ activatedAt, trialDays }: { activatedAt: string | null; trialDays: number }) {
+  if (!activatedAt) {
+    return <><td className="text-muted small">—</td><td className="text-muted small">—</td><td className="text-muted small">—</td></>;
+  }
+  const activated = new Date(activatedAt);
+  const expires = new Date(activated.getTime() + trialDays * 24 * 60 * 60 * 1000);
+  const daysLeft = Math.ceil((expires.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+  const badgeClass = daysLeft > 3 ? "bg-success" : daysLeft > 0 ? "bg-warning text-dark" : "bg-danger";
+  return (
+    <>
+      <td className="small">{activated.toLocaleDateString()}</td>
+      <td className="small">{expires.toLocaleDateString()}</td>
+      <td><span className={`badge ${badgeClass}`}>{daysLeft <= 0 ? "Expired" : `${daysLeft}d`}</span></td>
+    </>
+  );
+}
+
 type Tab = "users" | "profiles";
 
 export default function AdminPage() {
@@ -29,8 +46,8 @@ export default function AdminPage() {
 
   async function handleActivate(id: number) {
     try {
-      await activateUser(id);
-      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, isActive: true } : u)));
+      const { activatedAt } = await activateUser(id);
+      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, isActive: true, activatedAt } : u)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed");
     }
@@ -39,7 +56,7 @@ export default function AdminPage() {
   async function handleDeactivate(id: number) {
     try {
       await deactivateUser(id);
-      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, isActive: false } : u)));
+      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, isActive: false, activatedAt: null } : u)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed");
     }
@@ -79,6 +96,9 @@ export default function AdminPage() {
                 <th>Active</th>
                 <th>Company</th>
                 <th>Created</th>
+                <th>Activated</th>
+                <th>Expires</th>
+                <th>Days Left</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -98,6 +118,7 @@ export default function AdminPage() {
                   </td>
                   <td>{u.companyName ?? <span className="text-muted">—</span>}</td>
                   <td className="small">{new Date(u.createdAt).toLocaleDateString()}</td>
+                  <TrialCells activatedAt={u.activatedAt} trialDays={u.trialDays} />
                   <td>
                     {u.role !== "admin" && (
                       u.isActive ? (

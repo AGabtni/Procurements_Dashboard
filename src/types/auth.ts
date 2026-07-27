@@ -16,6 +16,8 @@ export interface AuthResponse {
   role: string;
   emailConfirmed: boolean;
   notificationsEnabled: boolean;
+  activatedAt: string | null;
+  trialDays: number;
 }
 
 export interface UserDto {
@@ -29,6 +31,8 @@ export interface UserDto {
   notificationsEnabled: boolean;
   companyId: number | null;
   companyName: string | null;
+  activatedAt: string | null;
+  trialDays: number;
 }
 
 export interface SettingsDto {

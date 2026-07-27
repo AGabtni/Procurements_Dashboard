@@ -1,6 +1,28 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+function TrialBanner({ activatedAt, trialDays }: { activatedAt: string | null; trialDays: number }) {
+  if (!activatedAt) return null;
+  const expires = new Date(new Date(activatedAt).getTime() + trialDays * 24 * 60 * 60 * 1000);
+  const daysLeft = Math.ceil((expires.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+  if (daysLeft <= 0) return null;
+  return (
+    <div style={{
+      background: "#1d4ed8",
+      color: "rgba(255,255,255,.75)",
+      textAlign: "center",
+      padding: "4px 16px",
+      fontSize: ".75rem",
+    }}>
+      You have <strong>{daysLeft} day{daysLeft !== 1 ? "s" : ""}</strong> left in your free trial.
+      {" "}Questions?{" "}
+      <a href="mailto:admin.procureportal@gmail.com" style={{ color: "rgba(255,255,255,.75)", textDecoration: "underline" }}>
+        admin.procureportal@gmail.com
+      </a>
+    </div>
+  );
+}
+
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -21,6 +43,7 @@ export default function Layout() {
 
   return (
     <>
+      {user && user.role !== "admin" && <TrialBanner activatedAt={user.activatedAt} trialDays={user.trialDays} />}
       <nav className="pp-navbar navbar navbar-expand-lg">
         <div className="container">
           <NavLink className="navbar-brand d-flex align-items-center gap-2" to="/">

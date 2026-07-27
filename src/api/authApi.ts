@@ -86,12 +86,13 @@ export async function getUnlinkedUsers(): Promise<UserDto[]> {
   return res.json();
 }
 
-export async function activateUser(id: number): Promise<void> {
+export async function activateUser(id: number): Promise<{ activatedAt: string }> {
   const res = await fetch(`${API_BASE}/api/auth/users/${id}/activate`, {
     method: "PATCH",
     headers: authHeaders(),
   });
   if (!res.ok) throw new Error("Failed to activate user");
+  return res.json();
 }
 
 export async function deactivateUser(id: number): Promise<void> {
