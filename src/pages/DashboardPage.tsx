@@ -165,7 +165,7 @@ export default function DashboardPage() {
         </h1>
         <p>
           {user
-            ? "Your procurement intelligence dashboard — new matches, closing deadlines, and opportunities await."
+            ? "Your procurement intelligence dashboard. New matches, closing deadlines, and opportunities await."
             : "Browse thousands of public tenders from across Canada. Sign in to get personalized matches."}
         </p>
         {!user && (

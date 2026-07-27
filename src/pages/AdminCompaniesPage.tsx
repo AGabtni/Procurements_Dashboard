@@ -427,7 +427,7 @@ export default function AdminCompaniesPage() {
                     value={createForm.userId}
                     onChange={(e) => setCreateForm({ ...createForm, userId: e.target.value })}
                   >
-                    <option value="">— No user (standalone) —</option>
+                    <option value="">No user (standalone)</option>
                     {createUnlinkedUsers.map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.fullName} ({u.email})
@@ -563,7 +563,7 @@ export default function AdminCompaniesPage() {
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
                 >
-                  <option value="">— No user (unlink) —</option>
+                  <option value="">No user (unlink)</option>
                   {linkableUsers.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.fullName} ({u.email})
@@ -612,7 +612,7 @@ export default function AdminCompaniesPage() {
                 <p><strong>Name:</strong> {selectedProfile.companyName}</p>
                 <p><strong>Industries:</strong>{" "}
                   {selectedProfile.industries?.length
-                    ? selectedProfile.industries.map((i) => `${i.code} — ${i.titleEn}`).join(", ")
+                    ? selectedProfile.industries.map((i) => `${i.code} ${i.titleEn}`).join(", ")
                     : "—"}
                 </p>
                 <p><strong>Province:</strong> {selectedProfile.province || "—"}</p>

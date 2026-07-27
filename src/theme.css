@@ -126,7 +126,7 @@ a:hover {
 .pp-navbar {
   background: var(--pp-nav-bg);
   border-bottom: 1px solid rgba(255,255,255,.06);
-  padding: .5rem 0;
+  padding: 8px 0;
   position: sticky;
   top: 0;
   z-index: 1030;

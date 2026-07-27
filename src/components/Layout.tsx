@@ -11,8 +11,8 @@ function TrialBanner({ activatedAt, trialDays }: { activatedAt: string | null; t
       background: "#1d4ed8",
       color: "rgba(255,255,255,.75)",
       textAlign: "center",
-      padding: "4px 16px",
-      fontSize: ".75rem",
+      padding: "6px 16px",
+      fontSize: ".85rem",
     }}>
       You have <strong>{daysLeft} day{daysLeft !== 1 ? "s" : ""}</strong> left in your free trial.
       {" "}Questions?{" "}

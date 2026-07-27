@@ -340,7 +340,7 @@ export default function MyCompanyPage() {
       } else if (result.retryAfterSeconds) {
         const h = Math.floor(result.retryAfterSeconds / 3600);
         const m = Math.ceil((result.retryAfterSeconds % 3600) / 60);
-        setMatchMsg(`Cooldown active — retry in ${h}h ${m}m`);
+        setMatchMsg(`Cooldown active. Retry in ${h}h ${m}m`);
       } else {
         setMatchMsg(result.message);
       }
@@ -492,7 +492,7 @@ export default function MyCompanyPage() {
             />
             <div className="d-flex justify-content-between mt-1">
               {submitted && (form.servicesDescription?.length ?? 0) < 150
-                ? <div className="text-danger small">At least 150 characters required — be specific about technologies, platforms, and sectors you serve.</div>
+                ? <div className="text-danger small">At least 150 characters required. Be specific about technologies, platforms, and sectors you serve.</div>
                 : <div className="text-muted small">Be specific: name technologies, platforms, certifications, and sectors. Vague descriptions produce fewer keyword matches.</div>}
               <div className={`small ms-2 flex-shrink-0 ${
                 (form.servicesDescription?.length ?? 0) === 2000 ? "text-danger" :
@@ -667,12 +667,12 @@ export default function MyCompanyPage() {
                   )}
                   {!profile.lastMatchedAt && (
                     <div className="alert alert-info mt-3 mb-0 py-2 small">
-                      <strong>No match has run yet.</strong> Keywords will be extracted from your description when you run your first match — the more specific it is, the better your results.
+                      <strong>No match has run yet.</strong> Keywords will be extracted from your description when you run your first match. The more specific it is, the better your results.
                     </div>
                   )}
                   {profile.autoKeywords !== null && profile.autoKeywords !== undefined && profile.autoKeywords.length < 5 && (
                     <div className="alert alert-warning mt-3 mb-0 py-2 small">
-                      <strong>Weak keyword extraction</strong> — only {profile.autoKeywords.length} domain-specific term{profile.autoKeywords.length === 1 ? "" : "s"} were found in your description.
+                      <strong>Weak keyword extraction:</strong> only {profile.autoKeywords.length} domain-specific term{profile.autoKeywords.length === 1 ? "" : "s"} were found in your description.
                       Enrich it with specific technologies, platforms, certifications, and sectors to improve match quality before running a match.
                     </div>
                   )}
@@ -774,7 +774,7 @@ export default function MyCompanyPage() {
             />
             <div className="d-flex justify-content-between mt-1">
               {submitted && (form.servicesDescription?.length ?? 0) < 150
-                ? <div className="text-danger small">At least 150 characters required — be specific about technologies, platforms, and sectors you serve.</div>
+                ? <div className="text-danger small">At least 150 characters required. Be specific about technologies, platforms, and sectors you serve.</div>
                 : <div className="text-muted small">Be specific: name technologies, platforms, certifications, and sectors. Vague descriptions produce fewer keyword matches.</div>}
               <div className={`small ms-2 flex-shrink-0 ${
                 (form.servicesDescription?.length ?? 0) === 2000 ? "text-danger" :
