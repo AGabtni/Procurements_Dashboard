@@ -74,6 +74,12 @@ export async function confirmEmail(token: string): Promise<void> {
 
 // ── Admin: User Management ──
 
+export async function refreshSession(): Promise<{ activatedAt: string | null; trialDays: number }> {
+  const res = await fetch(`${API_BASE}/api/auth/me`, { headers: authHeaders() });
+  if (!res.ok) throw new Error("Failed to refresh session");
+  return res.json();
+}
+
 export async function getAllUsers(): Promise<UserDto[]> {
   const res = await fetch(`${API_BASE}/api/auth/users`, { headers: authHeaders() });
   if (!res.ok) throw new Error("Failed to load users");

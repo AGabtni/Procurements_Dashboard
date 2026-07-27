@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import type { AuthResponse } from "../types/auth";
-import { login as apiLogin } from "../api/authApi";
+import { login as apiLogin, refreshSession } from "../api/authApi";
 import type { LoginRequest } from "../types/auth";
 
 interface AuthState {
@@ -56,6 +56,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) saveAuth(user);
     else clearAuth();
   }, [user]);
+
+  useEffect(() => {
+    if (user && user.activatedAt === undefined) {
+      refreshSession()
+        .then(({ activatedAt, trialDays }) =>
+          setUser((prev) => prev ? { ...prev, activatedAt, trialDays } : prev)
+        )
+        .catch(() => {});
+    }
+  }, []);
 
   async function login(req: LoginRequest) {
     const res: AuthResponse = await apiLogin(req);
