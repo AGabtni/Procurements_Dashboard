@@ -11,6 +11,8 @@ import {
   triggerMatch,
   linkUserToProfile,
   adminCreateProfile,
+  dissociateUser,
+  deleteCompanyProfile,
 } from "../api/companyApi";
 import { getUnlinkedUsers } from "../api/authApi";
 import type {
@@ -44,7 +46,7 @@ function descFingerprint(s: string) {
   return s.trim().replace(/\s+/g, ' ').replace(/[.,;!?]+$/, '');
 }
 
-type View = "list" | "detail";
+type View = "list" | "detail" | "create";
 type DetailTab = "profile" | "matches";
 
 export default function AdminCompaniesPage() {
@@ -89,9 +91,20 @@ export default function AdminCompaniesPage() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Create profile
-  const [showCreate, setShowCreate] = useState(false);
   const [createUnlinkedUsers, setCreateUnlinkedUsers] = useState<UserDto[]>([]);
-  const [createForm, setCreateForm] = useState({ companyName: "", userId: "" });
+  const [createUserId, setCreateUserId] = useState("");
+  const [createSubmitted, setCreateSubmitted] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    companyName: "", province: "", companySize: "", servicesDescription: "",
+    industryCodes: [] as string[], keywords: [] as string[],
+    certifications: [] as string[], commodityTypes: [] as string[],
+  });
+  const [createPrefsForm, setCreatePrefsForm] = useState({
+    preferredOrgs: [] as string[], preferredNtTypes: [] as string[],
+    preferredProvinces: [] as string[], minValue: "", maxValue: "",
+    excludeKeywords: [] as string[],
+  });
+  const [createShowPrefs, setCreateShowPrefs] = useState(false);
   const [creating, setCreating] = useState(false);
 
   // Link user
@@ -100,31 +113,56 @@ export default function AdminCompaniesPage() {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [linkBusy, setLinkBusy] = useState(false);
 
+  // Danger actions (dissociate / delete)
+  const [dangerAction, setDangerAction] = useState<"dissociate" | "delete" | null>(null);
+  const [dangerPassword, setDangerPassword] = useState("");
+  const [dangerBusy, setDangerBusy] = useState(false);
+  const [dangerError, setDangerError] = useState<string | null>(null);
+
   useEffect(() => { loadProfiles(); }, []);
 
   async function openCreateForm() {
-    setShowCreate(true);
-    setCreateForm({ companyName: "", userId: "" });
-    try {
-      setCreateUnlinkedUsers(await getUnlinkedUsers());
-    } catch {
-      setCreateUnlinkedUsers([]);
-    }
+    setCreateForm({ companyName: "", province: "", companySize: "", servicesDescription: "",
+      industryCodes: [], keywords: [], certifications: [], commodityTypes: [] });
+    setCreatePrefsForm({ preferredOrgs: [], preferredNtTypes: [], preferredProvinces: [],
+      minValue: "", maxValue: "", excludeKeywords: [] });
+    setCreateUserId("");
+    setCreateSubmitted(false);
+    setCreateShowPrefs(false);
+    try { setCreateUnlinkedUsers(await getUnlinkedUsers()); } catch { setCreateUnlinkedUsers([]); }
+    setView("create");
   }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!createForm.companyName.trim()) return;
+    setCreateSubmitted(true);
+    if (!createForm.companyName.trim() || !createForm.province || !createForm.companySize ||
+        (createForm.servicesDescription?.length ?? 0) < 150 ||
+        createForm.industryCodes.length === 0 || createForm.commodityTypes.length === 0) return;
     setCreating(true);
     setError(null);
     try {
       const req: AdminCreateCompanyRequest = {
         companyName: createForm.companyName.trim(),
-        userId: createForm.userId ? Number(createForm.userId) : undefined,
-        industryCodes: [],
+        userId: createUserId ? Number(createUserId) : undefined,
+        province: createForm.province,
+        companySize: createForm.companySize,
+        servicesDescription: createForm.servicesDescription,
+        industryCodes: createForm.industryCodes,
+        keywords: createForm.keywords,
+        certifications: createForm.certifications,
+        commodityTypes: createForm.commodityTypes,
+        preferences: createShowPrefs ? {
+          preferredOrgs: createPrefsForm.preferredOrgs.length ? createPrefsForm.preferredOrgs : undefined,
+          preferredNtTypes: createPrefsForm.preferredNtTypes.length ? createPrefsForm.preferredNtTypes : undefined,
+          preferredProvinces: createPrefsForm.preferredProvinces.length ? createPrefsForm.preferredProvinces : undefined,
+          minValue: createPrefsForm.minValue ? Number(createPrefsForm.minValue) : undefined,
+          maxValue: createPrefsForm.maxValue ? Number(createPrefsForm.maxValue) : undefined,
+          excludeKeywords: createPrefsForm.excludeKeywords.length ? createPrefsForm.excludeKeywords : undefined,
+        } : undefined,
       };
       await adminCreateProfile(req);
-      setShowCreate(false);
+      setView("list");
       await loadProfiles();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create profile");
@@ -336,6 +374,33 @@ export default function AdminCompaniesPage() {
     }
   }
 
+  function openDangerModal(action: "dissociate" | "delete") {
+    setDangerAction(action);
+    setDangerPassword("");
+    setDangerError(null);
+  }
+
+  async function executeDangerAction() {
+    if (!selectedProfile || !dangerAction) return;
+    setDangerBusy(true);
+    setDangerError(null);
+    try {
+      if (dangerAction === "dissociate") {
+        const updated = await dissociateUser(selectedProfile.id, dangerPassword);
+        setSelectedProfile(updated);
+        setDangerAction(null);
+      } else {
+        await deleteCompanyProfile(selectedProfile.id, dangerPassword);
+        setDangerAction(null);
+        backToList();
+      }
+    } catch (err) {
+      setDangerError(err instanceof Error ? err.message : "Action failed");
+    } finally {
+      setDangerBusy(false);
+    }
+  }
+
   // Load matches for detail view
   useEffect(() => {
     if (view === "detail" && detailTab === "matches" && selectedProfile) {
@@ -394,6 +459,138 @@ export default function AdminCompaniesPage() {
     return <div className="text-center py-5"><div className="spinner-border" /></div>;
   }
 
+  // ── Create View ──
+  if (view === "create") {
+    return (
+      <div>
+        <div className="d-flex align-items-center gap-3 mb-4">
+          <button className="btn btn-outline-secondary btn-sm" onClick={() => setView("list")}>← Back</button>
+          <h4 className="mb-0">Create Company Profile</h4>
+        </div>
+        {error && <div className="alert alert-danger">{error}</div>}
+        <form onSubmit={handleCreate}>
+          <div className="row g-3 mb-3">
+            <div className="col-md-6">
+              <label className="form-label">Link to User (optional)</label>
+              <select className="form-select" value={createUserId} onChange={(e) => setCreateUserId(e.target.value)}>
+                <option value="">No user (standalone)</option>
+                {createUnlinkedUsers.map((u) => (
+                  <option key={u.id} value={u.id}>{u.fullName} ({u.email})</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="row g-3 mb-3">
+            <div className="col-md-6">
+              <label className="form-label">Company Name <span className="text-danger fw-bold">*</span></label>
+              <input className={`form-control${createSubmitted && !createForm.companyName.trim() ? " is-invalid" : ""}`} required value={createForm.companyName} onChange={(e) => setCreateForm({ ...createForm, companyName: e.target.value })} />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label">Province <span className="text-danger fw-bold">*</span></label>
+              <select className={`form-select${createSubmitted && !createForm.province ? " is-invalid" : ""}`} value={createForm.province} onChange={(e) => setCreateForm({ ...createForm, province: e.target.value })}>
+                <option value="">Select...</option>
+                {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+              {createSubmitted && !createForm.province && <div className="text-danger small mt-1">Please select a province.</div>}
+            </div>
+            <div className="col-md-3">
+              <label className="form-label">Company Size <span className="text-danger fw-bold">*</span></label>
+              <select className={`form-select${createSubmitted && !createForm.companySize ? " is-invalid" : ""}`} value={createForm.companySize} onChange={(e) => setCreateForm({ ...createForm, companySize: e.target.value })}>
+                <option value="">Select...</option>
+                {COMPANY_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+              {createSubmitted && !createForm.companySize && <div className="text-danger small mt-1">Please select a company size.</div>}
+            </div>
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Industries <span className="text-danger fw-bold">*</span></label>
+            <IndustryPicker value={createForm.industryCodes} onChange={(codes) => setCreateForm({ ...createForm, industryCodes: codes })} error={createSubmitted && createForm.industryCodes.length === 0} id="admin-create-industries" />
+            {createSubmitted && createForm.industryCodes.length === 0 && <div className="text-danger small mt-1">Please select at least one industry.</div>}
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Services Description <span className="text-danger fw-bold">*</span></label>
+            <textarea
+              className={`form-control${createSubmitted && (createForm.servicesDescription?.length ?? 0) < 150 ? " is-invalid" : ""}`}
+              rows={4} maxLength={2000}
+              value={createForm.servicesDescription}
+              onChange={(e) => setCreateForm({ ...createForm, servicesDescription: e.target.value })}
+              placeholder="e.g. We implement and support SAP and Oracle ERP systems for mid-size manufacturers, including S/4HANA migrations, system integrations, and managed cloud hosting."
+            />
+            <div className="d-flex justify-content-between mt-1">
+              {createSubmitted && (createForm.servicesDescription?.length ?? 0) < 150
+                ? <div className="text-danger small">At least 150 characters required.</div>
+                : <div className="text-muted small">Be specific: technologies, platforms, certifications, sectors.</div>}
+              <div className={`small ms-2 flex-shrink-0 ${
+                (createForm.servicesDescription?.length ?? 0) === 2000 ? "text-danger" :
+                (createForm.servicesDescription?.length ?? 0) >= 1800 ? "text-warning" :
+                (createForm.servicesDescription?.length ?? 0) >= 150 ? "text-success" : "text-muted"
+              }`}>{createForm.servicesDescription?.length ?? 0} / 2000</div>
+            </div>
+          </div>
+          <div className="row g-3 mb-3">
+            <div className="col-md-6">
+              <label className="form-label">Keywords</label>
+              <TagInput value={createForm.keywords} onChange={(tags) => setCreateForm({ ...createForm, keywords: tags })} placeholder="Type keyword and press Enter" />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">Certifications</label>
+              <TagInput value={createForm.certifications} onChange={(tags) => setCreateForm({ ...createForm, certifications: tags })} placeholder="Type certification and press Enter" />
+            </div>
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Commodity Types <span className="text-danger fw-bold">*</span></label>
+            <MultiSelectDropdown id="createCommodityTypes" options={COMMODITY_OPTIONS} value={createForm.commodityTypes} onChange={(sel) => setCreateForm({ ...createForm, commodityTypes: sel })} placeholder="Select commodity types..." className={createSubmitted && createForm.commodityTypes.length === 0 ? "is-invalid" : ""} />
+            {createSubmitted && createForm.commodityTypes.length === 0 && <div className="text-danger small mt-1">Please select at least one commodity type.</div>}
+          </div>
+          <div className="mb-3">
+            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setCreateShowPrefs(!createShowPrefs)}>
+              {createShowPrefs ? "▼ Hide" : "▶ Show"} Matching Preferences
+            </button>
+          </div>
+          {createShowPrefs && (
+            <div className="card mb-3"><div className="card-body">
+              <h5 className="card-title">Matching Preferences</h5>
+              <div className="row g-3 mb-3">
+                <div className="col-md-6">
+                  <label className="form-label">Preferred Organizations</label>
+                  <TagInput value={createPrefsForm.preferredOrgs} onChange={(tags) => setCreatePrefsForm({ ...createPrefsForm, preferredOrgs: tags })} placeholder="Type organization and press Enter" />
+                </div>
+              </div>
+              <div className="row g-3 mb-3">
+                <div className="col-md-6">
+                  <label className="form-label">Preferred Notice Types</label>
+                  <MultiSelectDropdown id="createPrefNtTypes" options={NOTICE_TYPE_OPTIONS} value={createPrefsForm.preferredNtTypes} onChange={(sel) => setCreatePrefsForm({ ...createPrefsForm, preferredNtTypes: sel })} placeholder="Select notice types..." />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Preferred Provinces</label>
+                  <MultiSelectDropdown id="createPrefProvinces" options={PROVINCE_OPTIONS} value={createPrefsForm.preferredProvinces} onChange={(sel) => setCreatePrefsForm({ ...createPrefsForm, preferredProvinces: sel })} placeholder="Select provinces..." />
+                </div>
+              </div>
+              <div className="row g-3 mb-3">
+                <div className="col-md-4">
+                  <label className="form-label">Min Value ($)</label>
+                  <input type="number" className="form-control" value={createPrefsForm.minValue} onChange={(e) => setCreatePrefsForm({ ...createPrefsForm, minValue: e.target.value })} />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Max Value ($)</label>
+                  <input type="number" className="form-control" value={createPrefsForm.maxValue} onChange={(e) => setCreatePrefsForm({ ...createPrefsForm, maxValue: e.target.value })} />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Exclude Keywords</label>
+                  <TagInput value={createPrefsForm.excludeKeywords} onChange={(tags) => setCreatePrefsForm({ ...createPrefsForm, excludeKeywords: tags })} placeholder="Type keyword and press Enter" />
+                </div>
+              </div>
+            </div></div>
+          )}
+          <div className="d-flex gap-2">
+            <button type="submit" className="btn btn-primary" disabled={creating}>{creating ? "Creating..." : "Create Profile"}</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setView("list")}>Cancel</button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
   // ── List View ──
   if (view === "list") {
     return (
@@ -405,48 +602,6 @@ export default function AdminCompaniesPage() {
             + Create Profile
           </button>
         </div>
-
-        {showCreate && (
-          <div className="card mb-3">
-            <div className="card-body">
-              <h6>Create Company Profile</h6>
-              <form onSubmit={handleCreate} className="row g-2 align-items-end">
-                <div className="col-md-4">
-                  <label className="form-label">Company Name <span className="text-danger">*</span></label>
-                  <input
-                    className="form-control"
-                    required
-                    value={createForm.companyName}
-                    onChange={(e) => setCreateForm({ ...createForm, companyName: e.target.value })}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Link to User (optional)</label>
-                  <select
-                    className="form-select"
-                    value={createForm.userId}
-                    onChange={(e) => setCreateForm({ ...createForm, userId: e.target.value })}
-                  >
-                    <option value="">No user (standalone)</option>
-                    {createUnlinkedUsers.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.fullName} ({u.email})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-4 d-flex gap-2">
-                  <button className="btn btn-success btn-sm" type="submit" disabled={creating}>
-                    {creating ? "Creating..." : "Create"}
-                  </button>
-                  <button className="btn btn-outline-secondary btn-sm" type="button" onClick={() => setShowCreate(false)}>
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
         {profiles.length === 0 ? (
           <p className="text-muted">No company profiles yet.</p>
@@ -522,6 +677,41 @@ export default function AdminCompaniesPage() {
         </div>,
         document.body
       )}
+
+      {dangerAction && createPortal(
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 2100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="card shadow-lg" style={{ maxWidth: 420, width: "90%", borderRadius: 10 }}>
+            <div className="card-body p-4">
+              <h5 className="mb-1 text-danger">
+                {dangerAction === "dissociate" ? "Dissociate User" : "Delete Company Profile"}
+              </h5>
+              <p className="text-muted small mb-3">
+                {dangerAction === "dissociate"
+                  ? `Remove the link between "${selectedProfile?.companyName}" and its owner. The user account will remain but will no longer have a company profile.`
+                  : `Permanently delete "${selectedProfile?.companyName}" and all its matches. This cannot be undone.`}
+              </p>
+              <label className="form-label fw-semibold">Enter your admin password to confirm</label>
+              <input
+                type="password"
+                className={`form-control mb-2${dangerError ? " is-invalid" : ""}`}
+                value={dangerPassword}
+                onChange={(e) => setDangerPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !dangerBusy && dangerPassword && executeDangerAction()}
+                autoFocus
+                placeholder="Password"
+              />
+              {dangerError && <div className="text-danger small mb-2">{dangerError}</div>}
+              <div className="d-flex gap-2 justify-content-end mt-3">
+                <button className="btn btn-secondary" onClick={() => setDangerAction(null)} disabled={dangerBusy}>Cancel</button>
+                <button className="btn btn-danger" disabled={dangerBusy || !dangerPassword} onClick={executeDangerAction}>
+                  {dangerBusy ? "Processing..." : dangerAction === "dissociate" ? "Dissociate" : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
       <button className="btn btn-outline-secondary btn-sm mb-3" onClick={backToList}>
         ← Back to Companies
       </button>
@@ -537,20 +727,19 @@ export default function AdminCompaniesPage() {
           >
             Run Matching
           </button>
-        </div>
-      </div>
-
-      {selectedProfile.ownerName ? (
-        <div className="d-flex align-items-center gap-2 mb-2">
-          <span className="text-muted">Owner: {selectedProfile.ownerName} ({selectedProfile.ownerEmail})</span>
-          <button className="btn btn-outline-secondary btn-sm" onClick={openLinkUser}>Change</button>
-        </div>
-      ) : (
-        <div className="d-flex align-items-center gap-2 mb-2">
-          <span className="text-muted">No owner linked</span>
+          {selectedProfile.userId && (
+            <button className="btn btn-outline-warning btn-sm" onClick={() => openDangerModal("dissociate")}>
+              Dissociate User
+            </button>
+          )}
+          {!selectedProfile.userId && (
+            <button className="btn btn-outline-danger btn-sm" onClick={() => openDangerModal("delete")}>
+              Delete
+            </button>
+          )}
           <button className="btn btn-outline-primary btn-sm" onClick={openLinkUser}>Link User</button>
         </div>
-      )}
+      </div>
 
       {showLinkUser && (
         <div className="card mb-3">

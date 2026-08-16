@@ -181,6 +181,28 @@ export async function linkUserToProfile(
   });
 }
 
+export async function dissociateUser(
+  companyId: number,
+  password: string
+): Promise<CompanyProfileDto> {
+  return fetchJson<CompanyProfileDto>(`${API_BASE}/api/company/${companyId}/dissociate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+}
+
+export async function deleteCompanyProfile(
+  companyId: number,
+  password: string
+): Promise<void> {
+  return fetchVoid(`${API_BASE}/api/company/${companyId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+}
+
 export async function getProfileById(id: number): Promise<CompanyProfileDto> {
   return fetchJson<CompanyProfileDto>(`${API_BASE}/api/company/${id}`);
 }
