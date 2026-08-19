@@ -13,6 +13,7 @@ import {
   adminCreateProfile,
   dissociateUser,
   deleteCompanyProfile,
+  sendManualNotification,
 } from "../api/companyApi";
 import { getUnlinkedUsers } from "../api/authApi";
 import type {
@@ -112,6 +113,10 @@ export default function AdminCompaniesPage() {
   const [linkableUsers, setLinkableUsers] = useState<UserDto[]>([]);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [linkBusy, setLinkBusy] = useState(false);
+
+  // Manual notification
+  const [notifyBusy, setNotifyBusy] = useState(false);
+  const [notifyMsg, setNotifyMsg] = useState<string | null>(null);
 
   // Danger actions (dissociate / delete)
   const [dangerAction, setDangerAction] = useState<"dissociate" | "delete" | null>(null);
@@ -371,6 +376,19 @@ export default function AdminCompaniesPage() {
       setError(err instanceof Error ? err.message : "Failed to link user");
     } finally {
       setLinkBusy(false);
+    }
+  }
+
+  async function handleSendNotification(companyId: number) {
+    setNotifyBusy(true);
+    setNotifyMsg(null);
+    try {
+      const result = await sendManualNotification(companyId);
+      setNotifyMsg(result.message);
+    } catch (err) {
+      setNotifyMsg(err instanceof Error ? err.message : "Failed to send");
+    } finally {
+      setNotifyBusy(false);
     }
   }
 
@@ -727,6 +745,17 @@ export default function AdminCompaniesPage() {
           >
             Run Matching
           </button>
+          {selectedProfile.userId && (
+            <button
+              className="btn btn-outline-info btn-sm"
+              onClick={() => handleSendNotification(selectedProfile.id)}
+              disabled={notifyBusy}
+              title="Send match notification email to linked user"
+            >
+              {notifyBusy ? "Sending..." : "Notify User"}
+            </button>
+          )}
+          {notifyMsg && <span className="small text-muted">{notifyMsg}</span>}
           {selectedProfile.userId && (
             <button className="btn btn-outline-warning btn-sm" onClick={() => openDangerModal("dissociate")}>
               Dissociate User

@@ -324,3 +324,15 @@ async function handleTriggerResponse(res: Response): Promise<TriggerMatchResult>
 
   throw new Error(`API error: ${res.status} ${res.statusText}`);
 }
+
+export async function sendManualNotification(
+  companyId: number
+): Promise<{ message: string; matchCount: number }> {
+  const res = await fetch(`${API_BASE}/api/notifications/send/${companyId}`, {
+    method: "POST",
+    headers: { ...authHeaders() },
+  });
+  const body = await res.json();
+  if (!res.ok) throw new Error((body.message as string) ?? `Error ${res.status}`);
+  return body as { message: string; matchCount: number };
+}
