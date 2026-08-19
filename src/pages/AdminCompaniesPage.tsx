@@ -352,7 +352,7 @@ export default function AdminCompaniesPage() {
           fullName: selectedProfile.ownerName,
           role: "", isActive: true, createdAt: "", emailConfirmed: false,
           notificationsEnabled: false, companyId: selectedProfile.id,
-          companyName: selectedProfile.companyName, activatedAt: null, trialDays: 7,
+          companyName: selectedProfile.companyName, activatedAt: null, trialDays: 7, lastLogin: null,
         };
         setLinkableUsers([current, ...users]);
       } else {
