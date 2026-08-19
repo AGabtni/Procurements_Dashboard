@@ -332,7 +332,8 @@ export async function sendManualNotification(
     method: "POST",
     headers: { ...authHeaders() },
   });
-  const body = await res.json();
-  if (!res.ok) throw new Error((body.message as string) ?? `Error ${res.status}`);
+  let body: Record<string, unknown> = {};
+  try { body = await res.json(); } catch { /* empty body */ }
+  if (!res.ok) throw new Error((body.message as string) ?? `HTTP ${res.status}`);
   return body as { message: string; matchCount: number };
 }
