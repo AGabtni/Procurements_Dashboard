@@ -33,6 +33,7 @@ export interface UserDto {
   companyName: string | null;
   activatedAt: string | null;
   trialDays: number;
+  lastLogin: string | null;
 }
 
 export interface SettingsDto {

@@ -3,7 +3,7 @@ import { getAllUsers, activateUser, deactivateUser } from "../api/authApi";
 import type { UserDto } from "../types/auth";
 import AdminCompaniesPage from "./AdminCompaniesPage";
 
-function TrialCells({ activatedAt, trialDays }: { activatedAt: string | null; trialDays: number }) {
+function TrialCells({ activatedAt, trialDays, lastLogin }: { activatedAt: string | null; trialDays: number; lastLogin: string | null }) {
   if (!activatedAt) {
     return <><td className="text-muted small">—</td><td className="text-muted small">—</td><td className="text-muted small">—</td></>;
   }
@@ -14,7 +14,7 @@ function TrialCells({ activatedAt, trialDays }: { activatedAt: string | null; tr
   return (
     <>
       <td className="small">{activated.toLocaleDateString()}</td>
-      <td className="small">{expires.toLocaleDateString()}</td>
+      <td className="small">{lastLogin ? new Date(lastLogin).toLocaleDateString() : <span className="text-muted">—</span>}</td>
       <td><span className={`badge ${badgeClass}`}>{daysLeft <= 0 ? "Expired" : `${daysLeft}d`}</span></td>
     </>
   );
@@ -97,7 +97,7 @@ export default function AdminPage() {
                 <th>Company</th>
                 <th>Created</th>
                 <th>Activated</th>
-                <th>Expires</th>
+                <th>Last Login</th>
                 <th>Days Left</th>
                 <th>Actions</th>
               </tr>
@@ -118,7 +118,7 @@ export default function AdminPage() {
                   </td>
                   <td>{u.companyName ?? <span className="text-muted">—</span>}</td>
                   <td className="small">{new Date(u.createdAt).toLocaleDateString()}</td>
-                  <TrialCells activatedAt={u.activatedAt} trialDays={u.trialDays} />
+                  <TrialCells activatedAt={u.activatedAt} trialDays={u.trialDays} lastLogin={u.lastLogin} />
                   <td>
                     {u.role !== "admin" && (
                       u.isActive ? (
