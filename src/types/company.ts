@@ -12,11 +12,15 @@ export interface PagedResult<T> {
 
 // ── Response DTOs ──
 
+export interface CompanyUserDto {
+  id: number;
+  fullName: string;
+  email: string;
+}
+
 export interface CompanyProfileDto {
   id: number;
-  userId: number | null;
-  ownerName: string | null;
-  ownerEmail: string | null;
+  users: CompanyUserDto[];
   companyName: string;
   province: string | null;
   servicesDescription: string | null;

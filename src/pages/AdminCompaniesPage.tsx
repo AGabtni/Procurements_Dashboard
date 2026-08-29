@@ -14,11 +14,13 @@ import {
   dissociateUser,
   deleteCompanyProfile,
   sendManualNotification,
+  sendNotificationToUser,
 } from "../api/companyApi";
 import { getUnlinkedUsers } from "../api/authApi";
 import type {
   CompanyProfileDto,
   CompanyMatchDto,
+  CompanyUserDto,
   MatchStatsDto,
   UpdateCompanyProfileRequest,
   CompanyPreferencesRequest,
@@ -48,7 +50,7 @@ function descFingerprint(s: string) {
 }
 
 type View = "list" | "detail" | "create";
-type DetailTab = "profile" | "matches";
+type DetailTab = "profile" | "users" | "matches";
 
 export default function AdminCompaniesPage() {
   const [view, setView] = useState<View>("list");
@@ -114,12 +116,13 @@ export default function AdminCompaniesPage() {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [linkBusy, setLinkBusy] = useState(false);
 
-  // Manual notification
-  const [notifyBusy, setNotifyBusy] = useState(false);
-  const [notifyMsg, setNotifyMsg] = useState<string | null>(null);
+  // Per-user manual notification
+  const [notifyBusy, setNotifyBusy] = useState<Set<number>>(new Set());
+  const [notifyMsg, setNotifyMsg] = useState<Record<number, string>>({});
 
   // Danger actions (dissociate / delete)
   const [dangerAction, setDangerAction] = useState<"dissociate" | "delete" | null>(null);
+  const [dangerTargetUser, setDangerTargetUser] = useState<CompanyUserDto | null>(null);
   const [dangerPassword, setDangerPassword] = useState("");
   const [dangerBusy, setDangerBusy] = useState(false);
   const [dangerError, setDangerError] = useState<string | null>(null);
@@ -341,35 +344,20 @@ export default function AdminCompaniesPage() {
 
   async function openLinkUser() {
     setShowLinkUser(true);
-    setSelectedUserId(selectedProfile?.userId?.toString() ?? "");
+    setSelectedUserId("");
     try {
-      const users = await getUnlinkedUsers();
-      // Also include the currently linked user if any
-      if (selectedProfile?.userId && selectedProfile?.ownerName) {
-        const current: UserDto = {
-          id: selectedProfile.userId,
-          email: selectedProfile.ownerEmail ?? "",
-          fullName: selectedProfile.ownerName,
-          role: "", isActive: true, createdAt: "", emailConfirmed: false,
-          notificationsEnabled: false, companyId: selectedProfile.id,
-          companyName: selectedProfile.companyName, activatedAt: null, trialDays: 7, lastLogin: null,
-        };
-        setLinkableUsers([current, ...users]);
-      } else {
-        setLinkableUsers(users);
-      }
+      setLinkableUsers(await getUnlinkedUsers());
     } catch {
       setLinkableUsers([]);
     }
   }
 
   async function handleLinkUser() {
-    if (!selectedProfile) return;
+    if (!selectedProfile || !selectedUserId) return;
     setLinkBusy(true);
     setError(null);
     try {
-      const userId = selectedUserId ? Number(selectedUserId) : null;
-      await linkUserToProfile(selectedProfile.id, userId);
+      await linkUserToProfile(selectedProfile.id, Number(selectedUserId));
       setSelectedProfile(await getProfileById(selectedProfile.id));
       setShowLinkUser(false);
     } catch (err) {
@@ -379,21 +367,22 @@ export default function AdminCompaniesPage() {
     }
   }
 
-  async function handleSendNotification(companyId: number) {
-    setNotifyBusy(true);
-    setNotifyMsg(null);
+  async function handleNotifyUser(companyId: number, userId: number) {
+    setNotifyBusy((prev) => new Set(prev).add(userId));
+    setNotifyMsg((prev) => ({ ...prev, [userId]: "" }));
     try {
-      const result = await sendManualNotification(companyId);
-      setNotifyMsg(result.message);
+      const result = await sendNotificationToUser(companyId, userId);
+      setNotifyMsg((prev) => ({ ...prev, [userId]: result.message }));
     } catch (err) {
-      setNotifyMsg(err instanceof Error ? err.message : "Failed to send");
+      setNotifyMsg((prev) => ({ ...prev, [userId]: err instanceof Error ? err.message : "Failed" }));
     } finally {
-      setNotifyBusy(false);
+      setNotifyBusy((prev) => { const n = new Set(prev); n.delete(userId); return n; });
     }
   }
 
-  function openDangerModal(action: "dissociate" | "delete") {
+  function openDangerModal(action: "dissociate" | "delete", user?: CompanyUserDto) {
     setDangerAction(action);
+    setDangerTargetUser(user ?? null);
     setDangerPassword("");
     setDangerError(null);
   }
@@ -403,11 +392,11 @@ export default function AdminCompaniesPage() {
     setDangerBusy(true);
     setDangerError(null);
     try {
-      if (dangerAction === "dissociate") {
-        const updated = await dissociateUser(selectedProfile.id, dangerPassword);
+      if (dangerAction === "dissociate" && dangerTargetUser) {
+        const updated = await dissociateUser(selectedProfile.id, dangerTargetUser.id, dangerPassword);
         setSelectedProfile(updated);
         setDangerAction(null);
-      } else {
+      } else if (dangerAction === "delete") {
         await deleteCompanyProfile(selectedProfile.id, dangerPassword);
         setDangerAction(null);
         backToList();
@@ -629,7 +618,7 @@ export default function AdminCompaniesPage() {
               <thead>
                 <tr>
                   <th>Company</th>
-                  <th>Owner</th>
+                  <th>Users</th>
                   <th>Industries</th>
                   <th>Province</th>
                   <th>Status</th>
@@ -644,7 +633,11 @@ export default function AdminCompaniesPage() {
                         {p.companyName}
                       </button>
                     </td>
-                    <td className="small">{p.ownerName ?? "—"}<br /><span className="text-muted">{p.ownerEmail ?? ""}</span></td>
+                    <td className="small">
+                      {p.users.length === 0
+                        ? <span className="text-muted">—</span>
+                        : p.users.map((u) => <div key={u.id}>{u.fullName}<br /><span className="text-muted">{u.email}</span></div>)}
+                    </td>
                     <td className="small">{p.industryCodes?.length ? p.industryCodes.join(", ") : "—"}</td>
                     <td>{p.province ?? "—"}</td>
                     <td>{getStatusBadge(p.matchingStatus)}</td>
@@ -705,7 +698,7 @@ export default function AdminCompaniesPage() {
               </h5>
               <p className="text-muted small mb-3">
                 {dangerAction === "dissociate"
-                  ? `Remove the link between "${selectedProfile?.companyName}" and its owner. The user account will remain but will no longer have a company profile.`
+                  ? `Remove ${dangerTargetUser?.fullName} (${dangerTargetUser?.email}) from "${selectedProfile?.companyName}". Their account will remain active.`
                   : `Permanently delete "${selectedProfile?.companyName}" and all its matches. This cannot be undone.`}
               </p>
               <label className="form-label fw-semibold">Enter your admin password to confirm</label>
@@ -745,62 +738,13 @@ export default function AdminCompaniesPage() {
           >
             Run Matching
           </button>
-          {selectedProfile.userId && (
-            <button
-              className="btn btn-outline-info btn-sm"
-              onClick={() => handleSendNotification(selectedProfile.id)}
-              disabled={notifyBusy}
-              title="Send match notification email to linked user"
-            >
-              {notifyBusy ? "Sending..." : "Notify User"}
-            </button>
-          )}
-          {notifyMsg && <span className="small text-muted">{notifyMsg}</span>}
-          {selectedProfile.userId && (
-            <button className="btn btn-outline-warning btn-sm" onClick={() => openDangerModal("dissociate")}>
-              Dissociate User
-            </button>
-          )}
-          {!selectedProfile.userId && (
+          {selectedProfile.users.length === 0 && (
             <button className="btn btn-outline-danger btn-sm" onClick={() => openDangerModal("delete")}>
               Delete
             </button>
           )}
-          <button className="btn btn-outline-primary btn-sm" onClick={openLinkUser}>Link User</button>
         </div>
       </div>
-
-      {showLinkUser && (
-        <div className="card mb-3">
-          <div className="card-body">
-            <div className="row g-2 align-items-end">
-              <div className="col-md-6">
-                <label className="form-label">Assign User</label>
-                <select
-                  className="form-select"
-                  value={selectedUserId}
-                  onChange={(e) => setSelectedUserId(e.target.value)}
-                >
-                  <option value="">No user (unlink)</option>
-                  {linkableUsers.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.fullName} ({u.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-md-6 d-flex gap-2">
-                <button className="btn btn-success btn-sm" onClick={handleLinkUser} disabled={linkBusy}>
-                  {linkBusy ? "Saving..." : "Save"}
-                </button>
-                <button className="btn btn-outline-secondary btn-sm" onClick={() => setShowLinkUser(false)}>
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {error && <div className="alert alert-danger py-2">{error}</div>}
 
@@ -808,6 +752,11 @@ export default function AdminCompaniesPage() {
         <li className="nav-item">
           <button className={`nav-link ${detailTab === "profile" ? "active" : ""}`} onClick={() => setDetailTab("profile")}>
             Profile
+          </button>
+        </li>
+        <li className="nav-item">
+          <button className={`nav-link ${detailTab === "users" ? "active" : ""}`} onClick={() => { setDetailTab("users"); setShowLinkUser(false); }}>
+            Users ({selectedProfile.users.length})
           </button>
         </li>
         <li className="nav-item">
@@ -983,6 +932,96 @@ export default function AdminCompaniesPage() {
             <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
           </div>
         </form>
+      )}
+
+      {/* Users tab */}
+      {detailTab === "users" && (
+        <div>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h6 className="mb-0">Linked Users</h6>
+            <div className="d-flex gap-2">
+              {selectedProfile.users.length > 0 && (
+                <button
+                  className="btn btn-info btn-sm"
+                  disabled={notifyBusy.size > 0}
+                  onClick={async () => {
+                    try {
+                      const r = await sendManualNotification(selectedProfile.id);
+                      setNotifyMsg((prev) => {
+                        const next = { ...prev };
+                        selectedProfile.users.forEach((u) => { next[u.id] = r.message; });
+                        return next;
+                      });
+                    } catch (err) {
+                      alert(err instanceof Error ? err.message : "Failed to notify");
+                    }
+                  }}
+                >
+                  Notify All
+                </button>
+              )}
+              <button className="btn btn-outline-primary btn-sm" onClick={openLinkUser}>+ Add User</button>
+            </div>
+          </div>
+
+          {showLinkUser && (
+            <div className="card mb-3"><div className="card-body">
+              <div className="row g-2 align-items-end">
+                <div className="col-md-6">
+                  <label className="form-label">Select User</label>
+                  <select className="form-select" value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)}>
+                    <option value="">Select a user...</option>
+                    {linkableUsers.map((u) => (
+                      <option key={u.id} value={u.id}>{u.fullName} ({u.email})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-md-6 d-flex gap-2">
+                  <button className="btn btn-success btn-sm" onClick={handleLinkUser} disabled={linkBusy || !selectedUserId}>
+                    {linkBusy ? "Saving..." : "Add"}
+                  </button>
+                  <button className="btn btn-outline-secondary btn-sm" onClick={() => setShowLinkUser(false)}>Cancel</button>
+                </div>
+              </div>
+            </div></div>
+          )}
+
+          {selectedProfile.users.length === 0 && !showLinkUser
+            ? <p className="text-muted">No users linked to this company.</p>
+            : (
+              <table className="table table-hover">
+                <thead>
+                  <tr><th>Name</th><th>Email</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                  {selectedProfile.users.map((u) => (
+                    <tr key={u.id}>
+                      <td>{u.fullName}</td>
+                      <td className="text-muted small">{u.email}</td>
+                      <td>
+                        <div className="d-flex gap-2 align-items-center">
+                          <button
+                            className="btn btn-outline-info btn-sm"
+                            onClick={() => handleNotifyUser(selectedProfile.id, u.id)}
+                            disabled={notifyBusy.has(u.id)}
+                          >
+                            {notifyBusy.has(u.id) ? "Sending..." : "Notify"}
+                          </button>
+                          <button
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => openDangerModal("dissociate", u)}
+                          >
+                            Remove
+                          </button>
+                          {notifyMsg[u.id] && <span className="text-muted small">{notifyMsg[u.id]}</span>}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+        </div>
       )}
 
       {/* Matches tab */}

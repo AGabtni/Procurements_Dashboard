@@ -172,7 +172,7 @@ export async function adminCreateProfile(
 
 export async function linkUserToProfile(
   companyId: number,
-  userId: number | null
+  userId: number
 ): Promise<CompanyProfileDto> {
   return fetchJson<CompanyProfileDto>(`${API_BASE}/api/company/${companyId}/link-user`, {
     method: "PATCH",
@@ -183,9 +183,10 @@ export async function linkUserToProfile(
 
 export async function dissociateUser(
   companyId: number,
+  userId: number,
   password: string
 ): Promise<CompanyProfileDto> {
-  return fetchJson<CompanyProfileDto>(`${API_BASE}/api/company/${companyId}/dissociate`, {
+  return fetchJson<CompanyProfileDto>(`${API_BASE}/api/company/${companyId}/dissociate/${userId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ password }),
@@ -329,6 +330,20 @@ export async function sendManualNotification(
   companyId: number
 ): Promise<{ message: string; matchCount: number }> {
   const res = await fetch(`${API_BASE}/api/notifications/send/${companyId}`, {
+    method: "POST",
+    headers: { ...authHeaders() },
+  });
+  let body: Record<string, unknown> = {};
+  try { body = await res.json(); } catch { /* empty body */ }
+  if (!res.ok) throw new Error((body.message as string) ?? `HTTP ${res.status}`);
+  return body as { message: string; matchCount: number };
+}
+
+export async function sendNotificationToUser(
+  companyId: number,
+  userId: number
+): Promise<{ message: string; matchCount: number }> {
+  const res = await fetch(`${API_BASE}/api/notifications/send/${companyId}/${userId}`, {
     method: "POST",
     headers: { ...authHeaders() },
   });
