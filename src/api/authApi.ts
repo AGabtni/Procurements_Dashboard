@@ -53,6 +53,18 @@ export async function updateSettings(request: UpdateSettingsRequest): Promise<Se
   return res.json();
 }
 
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/auth/change-password`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message || "Failed to change password");
+  }
+}
+
 export async function sendConfirmationEmail(): Promise<void> {
   const res = await fetch(`${API_BASE}/api/auth/send-confirmation`, {
     method: "POST",

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSettings, updateSettings, sendConfirmationEmail } from "../api/authApi";
+import { getSettings, updateSettings, sendConfirmationEmail, changePassword } from "../api/authApi";
 import type { SettingsDto } from "../types/auth";
 import { useAuth } from "../context/AuthContext";
 
@@ -12,6 +12,12 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [sendingConfirm, setSendingConfirm] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "danger"; text: string } | null>(null);
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<{ type: "success" | "danger"; text: string } | null>(null);
 
   useEffect(() => {
     loadSettings();
@@ -60,6 +66,31 @@ export default function SettingsPage() {
       setMessage({ type: "danger", text: err instanceof Error ? err.message : "Failed to send" });
     } finally {
       setSendingConfirm(false);
+    }
+  }
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPasswordMessage(null);
+    if (newPassword.length < 8) {
+      setPasswordMessage({ type: "danger", text: "New password must be at least 8 characters." });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ type: "danger", text: "Passwords do not match." });
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await changePassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordMessage({ type: "success", text: "Password changed successfully." });
+    } catch (err) {
+      setPasswordMessage({ type: "danger", text: err instanceof Error ? err.message : "Failed to change password" });
+    } finally {
+      setChangingPassword(false);
     }
   }
 
@@ -170,6 +201,49 @@ export default function SettingsPage() {
           <button type="submit" className="btn btn-primary" disabled={saving}>
             {saving ? "Saving..." : "Save Settings"}
           </button>
+        </form>
+
+        {/* Change Password */}
+        <form onSubmit={handleChangePassword} className="mt-4">
+          <div className="card mb-4">
+            <div className="card-header">
+              <h5 className="mb-0">Change Password</h5>
+            </div>
+            <div className="card-body">
+              {passwordMessage && (
+                <div className={`alert alert-${passwordMessage.type} alert-dismissible py-2`}>
+                  {passwordMessage.text}
+                  <button className="btn-close" onClick={() => setPasswordMessage(null)} />
+                </div>
+              )}
+              <div className="mb-3">
+                <label className="form-label">Current Password</label>
+                <input type="password" className="form-control" value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)} required />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">New Password</label>
+                <input type="password" className="form-control" value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)} required minLength={8} />
+                <div className="form-text">Minimum 8 characters.</div>
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Confirm New Password</label>
+                <input type="password" className="form-control"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  style={confirmPassword && confirmPassword !== newPassword ? { borderColor: "var(--bs-danger)" } : {}}
+                />
+                {confirmPassword && confirmPassword !== newPassword && (
+                  <div className="form-text text-danger">Passwords do not match.</div>
+                )}
+              </div>
+              <button type="submit" className="btn btn-primary" disabled={changingPassword}>
+                {changingPassword ? "Changing..." : "Change Password"}
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </div>
