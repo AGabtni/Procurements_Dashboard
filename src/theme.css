@@ -822,8 +822,9 @@ a:hover {
   line-height: 1.3;
 }
 
-.pp-markdown h2 { font-size: 1.05rem; }
-.pp-markdown h3 { font-size: .97rem; }
+.pp-markdown h2 { font-size: 1.1rem; }
+.pp-markdown h3 { font-size: 1rem; }
+.pp-markdown h4 { font-size: .9rem; text-transform: uppercase; letter-spacing: .04em; }
 
 .pp-markdown p {
   margin: 0 0 .75rem;

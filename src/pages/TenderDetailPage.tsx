@@ -20,6 +20,27 @@ const mdComponents: Components = {
   h4: ({ children }) => <h4>{toSentenceCase(String(children))}</h4>,
 };
 
+// Convert inline • bullet characters (used by SEAO) into proper Markdown list items.
+// Operates block-by-block so existing ## headings are untouched.
+function normalizeBullets(text: string): string {
+  if (!text.includes("•")) return text;
+  return text
+    .split(/\n\n+/)
+    .map((block) => {
+      if (!block.includes("•")) return block;
+      const parts = block.split(/\s*•\s*/).map((p) => p.trim()).filter(Boolean);
+      if (parts.length <= 1) return block;
+      const lines: string[] = [];
+      if (parts[0]) lines.push(parts[0]);
+      lines.push("");
+      for (let i = 1; i < parts.length; i++) {
+        if (parts[i]) lines.push(`- ${parts[i]}`);
+      }
+      return lines.join("\n");
+    })
+    .join("\n\n");
+}
+
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5009";
 
 function formatDate(iso: string | null) {
@@ -93,7 +114,7 @@ export default function TenderDetailPage() {
     ? tender.contactEmail.split(/,\s*/).map((s) => s.trim()).filter(Boolean)
     : [];
   const contactPhones = tender.contactPhone
-    ? tender.contactPhone.split(/[\s|,]+/).map((s) => s.trim()).filter(Boolean)
+    ? tender.contactPhone.split(" | ").map((s) => s.trim()).filter(Boolean)
     : [];
   const contactCount = Math.max(contactNames.length, contactEmails.length, contactPhones.length);
   const hasContacts = contactCount > 0;
@@ -211,7 +232,7 @@ export default function TenderDetailPage() {
               <div className="pp-detail-section-body">
                 <div className="pp-markdown">
                   <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-                    {tender.selectionCriteria}
+                    {normalizeBullets(tender.selectionCriteria)}
                   </ReactMarkdown>
                 </div>
               </div>
