@@ -176,11 +176,6 @@ export default function SettingsPage() {
                   Email notifications for new matches
                 </label>
               </div>
-              {notifications && !settings?.emailConfirmed && (
-                <div className="form-text text-warning mt-2">
-                  You need to confirm your email before notifications can be sent.
-                </div>
-              )}
               <p className="form-text mt-2 mb-0">
                 When enabled, you'll receive an email when new tender matches are found for your company.
               </p>
