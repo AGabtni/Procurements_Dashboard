@@ -86,6 +86,18 @@ export default function TenderDetailPage() {
     ? Math.ceil((new Date(tender.closingDate).getTime() - Date.now()) / 86400000)
     : null;
 
+  const contactNames = tender.contactName
+    ? tender.contactName.split(" | ").map((s) => s.trim()).filter(Boolean)
+    : [];
+  const contactEmails = tender.contactEmail
+    ? tender.contactEmail.split(/,\s*/).map((s) => s.trim()).filter(Boolean)
+    : [];
+  const contactPhones = tender.contactPhone
+    ? tender.contactPhone.split(/[\s|,]+/).map((s) => s.trim()).filter(Boolean)
+    : [];
+  const contactCount = Math.max(contactNames.length, contactEmails.length, contactPhones.length);
+  const hasContacts = contactCount > 0;
+
   return (
     <div className="pp-animate-in">
       <button
@@ -192,6 +204,20 @@ export default function TenderDetailPage() {
             </div>
           )}
 
+          {/* Selection Criteria */}
+          {tender.selectionCriteria && (
+            <div className="pp-detail-section pp-animate-in">
+              <div className="pp-detail-section-header">🎯 Selection Criteria</div>
+              <div className="pp-detail-section-body">
+                <div className="pp-markdown">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                    {tender.selectionCriteria}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Documents */}
           {tender.documents.length > 0 && (
             <div className="pp-detail-section pp-animate-in">
@@ -241,9 +267,6 @@ export default function TenderDetailPage() {
                 <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Procurement Method</dt>
                 <dd className="mb-3">{tender.procurementMethod ?? "—"}</dd>
 
-                <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Selection Criteria</dt>
-                <dd className="mb-3">{tender.selectionCriteria ?? "—"}</dd>
-
                 {tender.regionOfDelivery && (
                   <>
                     <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Region of Delivery</dt>
@@ -284,34 +307,67 @@ export default function TenderDetailPage() {
           </div>
 
           {/* Contact */}
-          {(tender.contactName || tender.contactEmail || tender.contactPhone) && (
+          {hasContacts && (
             <div className="pp-detail-section pp-animate-in">
-              <div className="pp-detail-section-header">📞 Contact</div>
+              <div className="pp-detail-section-header">
+                📞 Contact{contactCount > 1 ? "s" : ""}
+                {contactCount > 1 && (
+                  <span className="pp-badge pp-badge-blue ms-2">{contactCount}</span>
+                )}
+              </div>
               <div className="pp-detail-section-body">
-                <dl style={{ fontSize: ".9rem" }} className="mb-0">
-                  {tender.contactName && (
-                    <>
-                      <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Name</dt>
-                      <dd className="mb-2">{tender.contactName}</dd>
-                    </>
-                  )}
-                  {tender.contactEmail && (
-                    <>
-                      <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Email</dt>
-                      <dd className="mb-2">
-                        <a href={`mailto:${tender.contactEmail}`}>{tender.contactEmail}</a>
-                      </dd>
-                    </>
-                  )}
-                  {tender.contactPhone && (
-                    <>
-                      <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Phone</dt>
-                      <dd className="mb-0">
-                        <a href={`tel:${tender.contactPhone}`}>{tender.contactPhone}</a>
-                      </dd>
-                    </>
-                  )}
-                </dl>
+                {contactCount <= 1 ? (
+                  <dl style={{ fontSize: ".9rem" }} className="mb-0">
+                    {contactNames[0] && (
+                      <>
+                        <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Name</dt>
+                        <dd className="mb-2">{contactNames[0]}</dd>
+                      </>
+                    )}
+                    {contactEmails[0] && (
+                      <>
+                        <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Email</dt>
+                        <dd className="mb-2">
+                          <a href={`mailto:${contactEmails[0]}`}>{contactEmails[0]}</a>
+                        </dd>
+                      </>
+                    )}
+                    {contactPhones[0] && (
+                      <>
+                        <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Phone</dt>
+                        <dd className="mb-0">
+                          <a href={`tel:${contactPhones[0]}`}>{contactPhones[0]}</a>
+                        </dd>
+                      </>
+                    )}
+                  </dl>
+                ) : (
+                  <div className="d-flex flex-column gap-3" style={{ fontSize: ".9rem" }}>
+                    {Array.from({ length: contactCount }).map((_, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          borderLeft: "2px solid var(--pp-border)",
+                          paddingLeft: "12px",
+                        }}
+                      >
+                        {contactNames[i] && (
+                          <div style={{ fontWeight: 600 }}>{contactNames[i]}</div>
+                        )}
+                        {contactEmails[i] && (
+                          <div style={{ marginTop: "2px" }}>
+                            <a href={`mailto:${contactEmails[i]}`}>{contactEmails[i]}</a>
+                          </div>
+                        )}
+                        {contactPhones[i] && (
+                          <div style={{ marginTop: "2px", color: "var(--pp-text-secondary)" }}>
+                            <a href={`tel:${contactPhones[i]}`}>{contactPhones[i]}</a>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
