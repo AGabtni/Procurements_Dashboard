@@ -1,4 +1,9 @@
 import { useEffect, useState, useRef } from "react";
+import {
+  getMatchFilters,
+} from "../api/companyApi";
+import type { MatchSearchParams } from "../api/companyApi";
+import MatchesSearchBar from "../components/MatchesSearchBar";
 import { createPortal } from "react-dom";
 import {
   getAllProfiles,
@@ -85,8 +90,11 @@ export default function AdminCompaniesPage() {
   const [matchTotalPages, setMatchTotalPages] = useState(1);
   const [matchTotalCount, setMatchTotalCount] = useState(0);
   const [stats, setStats] = useState<MatchStatsDto | null>(null);
-  const [statusFilter, setStatusFilter] = useState("");
   const [matchesLoading, setMatchesLoading] = useState(false);
+  const [matchSearch, setMatchSearch] = useState<MatchSearchParams>({});
+  const [matchOrgs, setMatchOrgs] = useState<string[]>([]);
+  const [matchNoticeTypes, setMatchNoticeTypes] = useState<string[]>([]);
+  const [exportLoading, setExportLoading] = useState(false);
 
   // Trigger
   const [matchBusy, setMatchBusy] = useState<Set<number>>(new Set());
@@ -408,24 +416,33 @@ export default function AdminCompaniesPage() {
     }
   }
 
+  // Load filter options when a company's matches tab opens
+  useEffect(() => {
+    if (view === "detail" && detailTab === "matches" && selectedProfile) {
+      getMatchFilters(selectedProfile.id)
+        .then((f) => { setMatchOrgs(f.organizations); setMatchNoticeTypes(f.noticeTypes); })
+        .catch(() => {});
+    }
+  }, [view, detailTab, selectedProfile?.id]);
+
   // Load matches for detail view
   useEffect(() => {
     if (view === "detail" && detailTab === "matches" && selectedProfile) {
       loadDetailMatches(matchPage);
     }
-  }, [detailTab, statusFilter, selectedProfile?.id, matchPage]);
+  }, [detailTab, matchSearch, selectedProfile?.id, matchPage]);
 
-  // Reset to page 1 when filter or company changes
+  // Reset to page 1 when search or company changes
   useEffect(() => {
     setMatchPage(1);
-  }, [statusFilter, selectedProfile?.id]);
+  }, [matchSearch, selectedProfile?.id]);
 
   async function loadDetailMatches(page = 1) {
     if (!selectedProfile) return;
     setMatchesLoading(true);
     try {
       const [result, s] = await Promise.all([
-        getMatches(selectedProfile.id, statusFilter || undefined, page),
+        getMatches(selectedProfile.id, page, 25, matchSearch),
         getMatchStats(selectedProfile.id),
       ]);
       setMatches(result.items);
@@ -445,6 +462,51 @@ export default function AdminCompaniesPage() {
       await loadDetailMatches();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update status");
+    }
+  }
+
+  async function handleExport() {
+    if (!selectedProfile) return;
+    setExportLoading(true);
+    try {
+      const result = await getMatches(selectedProfile.id, 1, 1000, matchSearch);
+      const rows = result.items;
+      if (rows.length === 0) return;
+      const esc = (v: unknown) => {
+        const s = v == null ? "" : String(v);
+        return s.includes(",") || s.includes('"') || s.includes("\n")
+          ? `"${s.replace(/"/g, '""')}"`
+          : s;
+      };
+      const fmt = (d: string | null | undefined) =>
+        d ? new Date(d).toLocaleDateString("en-CA") : "";
+      const lines = [
+        ["Title", "Organization", "Category", "Notice Type", "Score", "Status", "Matched On", "Closing Date", "Notice Link"].join(","),
+        ...rows.map((m) =>
+          [
+            esc(m.tenderTitle),
+            esc(m.buyingOrganization),
+            esc(m.procurementCategory),
+            esc(m.noticeType),
+            m.matchScore,
+            m.status,
+            fmt(m.matchedAt),
+            fmt(m.closingDate),
+            esc(m.noticeLink),
+          ].join(",")
+        ),
+      ];
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${selectedProfile.companyName}-matches-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Export failed");
+    } finally {
+      setExportLoading(false);
     }
   }
 
@@ -760,7 +822,7 @@ export default function AdminCompaniesPage() {
           </button>
         </li>
         <li className="nav-item">
-          <button className={`nav-link ${detailTab === "matches" ? "active" : ""}`} onClick={() => { setDetailTab("matches"); setStatusFilter(""); }}>
+          <button className={`nav-link ${detailTab === "matches" ? "active" : ""}`} onClick={() => { setDetailTab("matches"); setMatchSearch({}); }}>
             Matches
           </button>
         </li>
@@ -1046,13 +1108,22 @@ export default function AdminCompaniesPage() {
               ))}
             </div>
           )}
-          <div className="btn-group mb-3">
-            {[{ label: "All", value: "" },{ label: "New", value: "new" },{ label: "Viewed", value: "viewed" },{ label: "Saved", value: "saved" },{ label: "Dismissed", value: "dismissed" }].map(({ label, value }) => (
-              <button key={value} className={`btn btn-sm ${statusFilter === value ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setStatusFilter(value)}>
-                {label}
-              </button>
-            ))}
+          <div className="d-flex justify-content-end mb-2">
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              onClick={handleExport}
+              disabled={exportLoading || matchesLoading || matchTotalCount === 0}
+            >
+              {exportLoading ? "Exporting..." : "↓ Export CSV"}
+            </button>
           </div>
+          <MatchesSearchBar
+            key={`matches-${selectedProfile.id}`}
+            params={matchSearch}
+            organizations={matchOrgs}
+            noticeTypes={matchNoticeTypes}
+            onSearch={(p) => setMatchSearch(p)}
+          />
           {matchesLoading ? (
             <div className="text-center py-3"><div className="spinner-border spinner-border-sm" /></div>
           ) : matches.length === 0 ? (

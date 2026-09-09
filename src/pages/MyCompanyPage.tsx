@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
   getMyProfile,
@@ -7,9 +7,12 @@ import {
   updateMyPreferences,
   getMyMatches,
   getMyMatchStats,
+  getMyMatchFilters,
   updateMyMatchStatus,
   triggerMyMatch,
 } from "../api/companyApi";
+import type { MatchSearchParams } from "../api/companyApi";
+import MatchesSearchBar from "../components/MatchesSearchBar";
 import type {
   CompanyProfileDto,
   CompanyMatchDto,
@@ -115,8 +118,11 @@ export default function MyCompanyPage() {
   const [matchTotalPages, setMatchTotalPages] = useState(1);
   const [matchTotalCount, setMatchTotalCount] = useState(0);
   const [stats, setStats] = useState<MatchStatsDto | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>("");
   const [matchesLoading, setMatchesLoading] = useState(false);
+  const [matchSearch, setMatchSearch] = useState<MatchSearchParams>({});
+  const [matchOrgs, setMatchOrgs] = useState<string[]>([]);
+  const [matchNoticeTypes, setMatchNoticeTypes] = useState<string[]>([]);
+  const [exportLoading, setExportLoading] = useState(false);
 
   // Matching trigger
   const [matchBusy, setMatchBusy] = useState(false);
@@ -200,23 +206,32 @@ export default function MyCompanyPage() {
     };
   }, [profile?.matchingStatus]);
 
-  // Load matches when switching to matches tab, changing filter, or changing page
+  // Load filter options when matches tab first opens
+  useEffect(() => {
+    if (tab === "matches" && profile) {
+      getMyMatchFilters()
+        .then((f) => { setMatchOrgs(f.organizations); setMatchNoticeTypes(f.noticeTypes); })
+        .catch(() => {});
+    }
+  }, [tab, profile]);
+
+  // Load matches when switching to matches tab, changing search, or changing page
   useEffect(() => {
     if (tab === "matches" && profile) {
       loadMatches(matchPage);
     }
-  }, [tab, statusFilter, matchPage]);
+  }, [tab, matchSearch, matchPage]);
 
-  // Reset to page 1 when filter changes
+  // Reset to page 1 when search changes
   useEffect(() => {
     setMatchPage(1);
-  }, [statusFilter]);
+  }, [matchSearch]);
 
   async function loadMatches(page = 1) {
     setMatchesLoading(true);
     try {
       const [result, s] = await Promise.all([
-        getMyMatches(statusFilter || undefined, page),
+        getMyMatches(page, 25, matchSearch),
         getMyMatchStats(),
       ]);
       setMatches(result.items);
@@ -357,6 +372,50 @@ export default function MyCompanyPage() {
       await loadMatches();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update status");
+    }
+  }
+
+  async function handleExport() {
+    setExportLoading(true);
+    try {
+      const result = await getMyMatches(1, 1000, matchSearch);
+      const rows = result.items;
+      if (rows.length === 0) return;
+      const esc = (v: unknown) => {
+        const s = v == null ? "" : String(v);
+        return s.includes(",") || s.includes('"') || s.includes("\n")
+          ? `"${s.replace(/"/g, '""')}"`
+          : s;
+      };
+      const fmt = (d: string | null | undefined) =>
+        d ? new Date(d).toLocaleDateString("en-CA") : "";
+      const lines = [
+        ["Title", "Organization", "Category", "Notice Type", "Score", "Status", "Matched On", "Closing Date", "Notice Link"].join(","),
+        ...rows.map((m) =>
+          [
+            esc(m.tenderTitle),
+            esc(m.buyingOrganization),
+            esc(m.procurementCategory),
+            esc(m.noticeType),
+            m.matchScore,
+            m.status,
+            fmt(m.matchedAt),
+            fmt(m.closingDate),
+            esc(m.noticeLink),
+          ].join(",")
+        ),
+      ];
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `matches-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Export failed");
+    } finally {
+      setExportLoading(false);
     }
   }
 
@@ -883,23 +942,21 @@ export default function MyCompanyPage() {
             </div>
           )}
 
-          <div className="d-flex gap-1 mb-3">
-            {[
-              { label: "All", value: "" },
-              { label: "New", value: "new" },
-              { label: "Viewed", value: "viewed" },
-              { label: "Saved", value: "saved" },
-              { label: "Dismissed", value: "dismissed" },
-            ].map(({ label, value }) => (
-              <button
-                key={value}
-                className={`pp-btn pp-btn-sm ${statusFilter === value ? "pp-btn-primary" : "pp-btn-ghost"}`}
-                onClick={() => setStatusFilter(value)}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="d-flex justify-content-end mb-2">
+            <button
+              className="pp-btn pp-btn-ghost pp-btn-sm"
+              onClick={handleExport}
+              disabled={exportLoading || matchesLoading || matchTotalCount === 0}
+            >
+              {exportLoading ? "Exporting..." : "↓ Export CSV"}
+            </button>
           </div>
+          <MatchesSearchBar
+            params={matchSearch}
+            organizations={matchOrgs}
+            noticeTypes={matchNoticeTypes}
+            onSearch={(p) => setMatchSearch(p)}
+          />
 
           {matchesLoading ? (
             <div className="pp-loader"><div className="pp-spinner" /></div>

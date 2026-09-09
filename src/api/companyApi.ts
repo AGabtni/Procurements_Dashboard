@@ -117,17 +117,42 @@ export async function updateMyPreferences(
   });
 }
 
+export interface MatchFiltersDto {
+  organizations: string[];
+  noticeTypes: string[];
+}
+
+export interface MatchSearchParams {
+  keyword?: string;
+  organizations?: string[];
+  noticeTypes?: string[];
+  statuses?: string[];
+}
+
+function buildMatchQuery(page: number, pageSize: number, filters?: MatchSearchParams): URLSearchParams {
+  const q = new URLSearchParams();
+  if (filters?.keyword) q.set("search", filters.keyword.trim());
+  (filters?.statuses ?? []).forEach((s) => q.append("statuses", s));
+  (filters?.organizations ?? []).forEach((o) => q.append("organizations", o));
+  (filters?.noticeTypes ?? []).forEach((t) => q.append("noticeTypes", t));
+  q.set("page", String(page));
+  q.set("pageSize", String(pageSize));
+  return q;
+}
+
 export async function getMyMatches(
-  status?: string,
   page = 1,
-  pageSize = 25
+  pageSize = 25,
+  filters?: MatchSearchParams,
 ): Promise<PagedResult<CompanyMatchDto>> {
-  const query = new URLSearchParams();
-  if (status) query.set("status", status);
-  query.set("page", String(page));
-  query.set("pageSize", String(pageSize));
-  const result = await fetchJson<PagedResult<CompanyMatchDto>>(`${API_BASE}/api/company/me/matches?${query}`);
+  const result = await fetchJson<PagedResult<CompanyMatchDto>>(
+    `${API_BASE}/api/company/me/matches?${buildMatchQuery(page, pageSize, filters)}`
+  );
   return { ...result, items: result.items.map(normalizeMatch) };
+}
+
+export async function getMyMatchFilters(): Promise<MatchFiltersDto> {
+  return fetchJson<MatchFiltersDto>(`${API_BASE}/api/company/me/matches/filters`);
 }
 
 export async function getMyMatchStats(): Promise<MatchStatsDto> {
@@ -243,18 +268,18 @@ export async function updatePreferences(
 
 export async function getMatches(
   companyId: number,
-  status?: string,
   page = 1,
-  pageSize = 25
+  pageSize = 25,
+  filters?: MatchSearchParams,
 ): Promise<PagedResult<CompanyMatchDto>> {
-  const query = new URLSearchParams();
-  if (status) query.set("status", status);
-  query.set("page", String(page));
-  query.set("pageSize", String(pageSize));
   const result = await fetchJson<PagedResult<CompanyMatchDto>>(
-    `${API_BASE}/api/company/${companyId}/matches?${query}`
+    `${API_BASE}/api/company/${companyId}/matches?${buildMatchQuery(page, pageSize, filters)}`
   );
   return { ...result, items: result.items.map(normalizeMatch) };
+}
+
+export async function getMatchFilters(companyId: number): Promise<MatchFiltersDto> {
+  return fetchJson<MatchFiltersDto>(`${API_BASE}/api/company/${companyId}/matches/filters`);
 }
 
 export async function getMatchStats(
