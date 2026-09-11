@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { CompanyMatchDto } from "../types/company";
 import { categoryLabel } from "../utils/categoryMap";
+import { decodeHtml } from "../utils/html";
 
 interface Props {
   matches: CompanyMatchDto[];
@@ -111,7 +112,7 @@ export default function MatchesTable({ matches, showReason, onStatusChange }: Pr
                 )}
               </td>
               <td style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
-                {m.buyingOrganization ?? "—"}
+                {decodeHtml(m.buyingOrganization) ?? "—"}
               </td>
               <td>
                 <span className="pp-badge pp-badge-blue">{categoryLabel(m.procurementCategory)}</span>

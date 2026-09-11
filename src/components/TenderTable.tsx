@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { TenderListDto, TenderSearchParams } from "../types/tender";
+import { decodeHtml } from "../utils/html";
 
 interface Props {
   tenders: TenderListDto[];
@@ -90,8 +91,8 @@ export default function TenderTable({ tenders, params, onSort }: Props) {
                     {t.title ?? "Untitled"}
                   </Link>
                 </td>
-                <td className="text-truncate" style={{ color: "var(--pp-text-secondary)", fontSize: ".88rem" }} title={t.buyingOrganization ?? undefined}>
-                  {t.buyingOrganization ?? "—"}
+                <td className="text-truncate" style={{ color: "var(--pp-text-secondary)", fontSize: ".88rem" }} title={decodeHtml(t.buyingOrganization) ?? undefined}>
+                  {decodeHtml(t.buyingOrganization) ?? "—"}
                 </td>
                 <td style={{ textAlign: "center", verticalAlign: "middle" }}>
                   {t.noticeType && t.noticeType !== "Not Applicable" && (
