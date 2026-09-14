@@ -3,23 +3,6 @@ import { getAllUsers, activateUser, deactivateUser } from "../api/authApi";
 import type { UserDto } from "../types/auth";
 import AdminCompaniesPage from "./AdminCompaniesPage";
 
-function TrialCells({ activatedAt, trialDays, lastLogin }: { activatedAt: string | null; trialDays: number; lastLogin: string | null }) {
-  if (!activatedAt) {
-    return <><td className="text-muted small">—</td><td className="text-muted small">—</td><td className="text-muted small">—</td></>;
-  }
-  const activated = new Date(activatedAt);
-  const expires = new Date(activated.getTime() + trialDays * 24 * 60 * 60 * 1000);
-  const daysLeft = Math.ceil((expires.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
-  const badgeClass = daysLeft > 3 ? "bg-success" : daysLeft > 0 ? "bg-warning text-dark" : "bg-danger";
-  return (
-    <>
-      <td className="small">{activated.toLocaleDateString()}</td>
-      <td className="small">{lastLogin ? new Date(lastLogin).toLocaleDateString() : <span className="text-muted">—</span>}</td>
-      <td><span className={`badge ${badgeClass}`}>{daysLeft <= 0 ? "Expired" : `${daysLeft}d`}</span></td>
-    </>
-  );
-}
-
 type Tab = "users" | "profiles";
 
 export default function AdminPage() {
@@ -96,9 +79,7 @@ export default function AdminPage() {
                 <th>Active</th>
                 <th>Company</th>
                 <th>Created</th>
-                <th>Activated</th>
                 <th>Last Login</th>
-                <th>Days Left</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -118,7 +99,7 @@ export default function AdminPage() {
                   </td>
                   <td>{u.companyName ?? <span className="text-muted">—</span>}</td>
                   <td className="small">{new Date(u.createdAt).toLocaleDateString()}</td>
-                  <TrialCells activatedAt={u.activatedAt} trialDays={u.trialDays} lastLogin={u.lastLogin} />
+                  <td className="small">{u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : <span className="text-muted">—</span>}</td>
                   <td>
                     {u.role !== "admin" && (
                       u.isActive ? (

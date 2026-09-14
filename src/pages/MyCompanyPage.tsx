@@ -23,6 +23,8 @@ import type {
 } from "../types/company";
 import { CATEGORY_MAP } from "../utils/categoryMap";
 import MatchesTable from "../components/MatchesTable";
+import LockedMatches from "../components/LockedMatches";
+import { useAuth } from "../context/AuthContext";
 import Pagination from "../components/Pagination";
 import TagInput from "../components/TagInput";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
@@ -82,6 +84,8 @@ function FieldTooltip({ text }: { text: string }) {
 type Tab = "profile" | "matches";
 
 export default function MyCompanyPage() {
+  const { user } = useAuth();
+  const locked = user?.subscriptionStatus === "expired";
   const [tab, setTab] = useState<Tab>("profile");
   const [profile, setProfile] = useState<CompanyProfileDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -344,6 +348,7 @@ export default function MyCompanyPage() {
   }
 
   async function handleTrigger() {
+    if (locked) return;
     setMatchBusy(true);
     setMatchMsg("");
     try {
@@ -637,9 +642,10 @@ export default function MyCompanyPage() {
           <button
             className="pp-btn pp-btn-primary pp-btn-sm"
             onClick={handleTrigger}
-            disabled={matchBusy || isMatchActive}
+            disabled={matchBusy || isMatchActive || locked}
+            title={locked ? "Your trial has ended — subscribe to run matching" : undefined}
           >
-            {matchBusy || isMatchActive ? "⟳ Matching..." : "🎯 Run Matching"}
+            {locked ? "🔒 Run Matching" : matchBusy || isMatchActive ? "⟳ Matching..." : "🎯 Run Matching"}
           </button>
         </div>
       </div>
@@ -942,6 +948,10 @@ export default function MyCompanyPage() {
             </div>
           )}
 
+          {locked ? (
+            <LockedMatches newCount={stats?.newCount ?? 0} companyName={profile.companyName} />
+          ) : (
+          <>
           <div className="d-flex justify-content-end mb-2">
             <button
               className="pp-btn pp-btn-ghost pp-btn-sm"
@@ -973,6 +983,8 @@ export default function MyCompanyPage() {
                 label="match"
               />
             </>
+          )}
+          </>
           )}
         </div>
       )}

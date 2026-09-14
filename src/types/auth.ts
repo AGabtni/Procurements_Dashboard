@@ -18,6 +18,9 @@ export interface AuthResponse {
   notificationsEnabled: boolean;
   activatedAt: string | null;
   trialDays: number;
+  subscriptionStatus: string | null;
+  trialEndsAt: string | null;
+  companyId: number | null;
 }
 
 export interface UserDto {

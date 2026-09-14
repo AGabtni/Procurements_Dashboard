@@ -1,11 +1,33 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-function TrialBanner({ activatedAt, trialDays }: { activatedAt: string | null; trialDays: number }) {
-  if (!activatedAt) return null;
-  const expires = new Date(new Date(activatedAt).getTime() + trialDays * 24 * 60 * 60 * 1000);
-  const daysLeft = Math.ceil((expires.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
-  if (daysLeft <= 0) return null;
+// Single source of truth for the trial clock: company_profile.trial_ends_at + subscription_status.
+// (Not app_user.activated_at — that only marks admin activation now.)
+function TrialBanner({ subscriptionStatus, trialEndsAt }: { subscriptionStatus: string | null; trialEndsAt: string | null }) {
+  // Trial ended — one red bar that matches the server-side lock exactly.
+  if (subscriptionStatus === "expired") {
+    return (
+      <div style={{
+        background: "#b91c1c",
+        color: "rgba(255,255,255,.9)",
+        textAlign: "center",
+        padding: "6px 16px",
+        fontSize: ".85rem",
+      }}>
+        Your free trial has ended. <strong>Subscribe</strong> to unlock your matches.
+        {" "}Questions?{" "}
+        <a href="mailto:admin.procureportal@gmail.com" style={{ color: "rgba(255,255,255,.9)", textDecoration: "underline" }}>
+          admin.procureportal@gmail.com
+        </a>
+      </div>
+    );
+  }
+
+  // Paid or no company yet → no banner.
+  if (subscriptionStatus !== "trialing" || !trialEndsAt) return null;
+
+  const daysLeft = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+  if (daysLeft <= 0) return null; // status not yet refreshed to expired; lock still governs
   return (
     <div style={{
       background: "#1d4ed8",
@@ -43,7 +65,7 @@ export default function Layout() {
 
   return (
     <>
-      {user && user.role !== "admin" && <TrialBanner activatedAt={user.activatedAt} trialDays={user.trialDays} />}
+      {user && user.role !== "admin" && <TrialBanner subscriptionStatus={user.subscriptionStatus} trialEndsAt={user.trialEndsAt} />}
       <nav className="pp-navbar navbar navbar-expand-lg">
         <div className="container">
           <NavLink className="navbar-brand d-flex align-items-center gap-2" to="/">

@@ -18,6 +18,9 @@ interface AuthState {
   notificationsEnabled: boolean;
   activatedAt: string | null;
   trialDays: number;
+  subscriptionStatus: string | null;
+  trialEndsAt: string | null;
+  companyId: number | null;
 }
 
 interface AuthContextValue {
@@ -57,14 +60,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     else clearAuth();
   }, [user]);
 
+  // Refresh session metadata on mount so trial expiry / subscription changes
+  // take effect without requiring a re-login. Never the security gate — the API
+  // strips locked payloads regardless — this just keeps the UI honest.
   useEffect(() => {
-    if (user && user.activatedAt === undefined) {
+    if (user) {
       refreshSession()
-        .then(({ activatedAt, trialDays }) =>
-          setUser((prev) => prev ? { ...prev, activatedAt, trialDays } : prev)
+        .then(({ activatedAt, trialDays, subscriptionStatus, trialEndsAt, companyId }) =>
+          setUser((prev) => prev ? { ...prev, activatedAt, trialDays, subscriptionStatus, trialEndsAt, companyId } : prev)
         )
         .catch(() => {});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function login(req: LoginRequest) {
@@ -78,6 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       notificationsEnabled: res.notificationsEnabled,
       activatedAt: res.activatedAt,
       trialDays: res.trialDays,
+      subscriptionStatus: res.subscriptionStatus,
+      trialEndsAt: res.trialEndsAt,
+      companyId: res.companyId,
     });
   }
 

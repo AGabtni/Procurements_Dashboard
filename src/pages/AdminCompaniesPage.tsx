@@ -524,6 +524,23 @@ export default function AdminCompaniesPage() {
     }
   }
 
+  // Subscription status = the COMPUTED effective status from the API (expiry applied on read).
+  function subscriptionBadge(p: CompanyProfileDto) {
+    if (p.subscriptionStatus === "active") return <span className="badge bg-success">Active</span>;
+    if (p.subscriptionStatus === "expired") return <span className="badge bg-danger">Trial expired</span>;
+    if (p.trialEndsAt) {
+      const daysLeft = Math.ceil((new Date(p.trialEndsAt).getTime() - Date.now()) / 86400000);
+      const cls = daysLeft > 3 ? "bg-info" : "bg-warning text-dark";
+      return <span className={`badge ${cls}`} title={`Trial ends ${new Date(p.trialEndsAt).toLocaleDateString()}`}>Trial · {daysLeft}d left</span>;
+    }
+    return <span className="badge bg-secondary">Trial</span>;
+  }
+
+  function seatUsage(p: CompanyProfileDto) {
+    const used = p.users.filter((u) => u.hasSeat).length;
+    return `${used}/${p.maxSeats}`;
+  }
+
   if (loading) {
     return <div className="text-center py-5"><div className="spinner-border" /></div>;
   }
@@ -681,9 +698,11 @@ export default function AdminCompaniesPage() {
                 <tr>
                   <th>Company</th>
                   <th>Users</th>
-                  <th>Industries</th>
+                  <th>Subscription</th>
+                  <th>Trial ends</th>
+                  <th>Seats</th>
                   <th>Province</th>
-                  <th>Status</th>
+                  <th>Matching</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -700,7 +719,9 @@ export default function AdminCompaniesPage() {
                         ? <span className="text-muted">—</span>
                         : p.users.map((u) => <div key={u.id}>{u.fullName}<br /><span className="text-muted">{u.email}</span></div>)}
                     </td>
-                    <td className="small">{p.industryCodes?.length ? p.industryCodes.join(", ") : "—"}</td>
+                    <td>{subscriptionBadge(p)}</td>
+                    <td className="small">{p.trialEndsAt ? new Date(p.trialEndsAt).toLocaleDateString() : "—"}</td>
+                    <td className="small">{seatUsage(p)}</td>
                     <td>{p.province ?? "—"}</td>
                     <td>{getStatusBadge(p.matchingStatus)}</td>
                     <td>
@@ -792,6 +813,8 @@ export default function AdminCompaniesPage() {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2>{selectedProfile.companyName}</h2>
         <div className="d-flex gap-2 align-items-center">
+          {subscriptionBadge(selectedProfile)}
+          <span className="text-muted small">{seatUsage(selectedProfile)} seats</span>
           {getStatusBadge(selectedProfile.matchingStatus)}
           <button
             className="btn btn-outline-primary btn-sm"
@@ -1053,13 +1076,18 @@ export default function AdminCompaniesPage() {
             : (
               <table className="table table-hover">
                 <thead>
-                  <tr><th>Name</th><th>Email</th><th>Actions</th></tr>
+                  <tr><th>Name</th><th>Email</th><th>Seat</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                   {selectedProfile.users.map((u) => (
                     <tr key={u.id}>
                       <td>{u.fullName}</td>
                       <td className="text-muted small">{u.email}</td>
+                      <td>
+                        {u.hasSeat
+                          ? <span className="badge bg-success">Seated</span>
+                          : <span className="badge bg-light text-muted">No seat</span>}
+                      </td>
                       <td>
                         <div className="d-flex gap-2 align-items-center">
                           <button

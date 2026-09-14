@@ -16,6 +16,7 @@ export interface CompanyUserDto {
   id: number;
   fullName: string;
   email: string;
+  hasSeat: boolean;
 }
 
 export interface CompanyProfileDto {
@@ -34,6 +35,9 @@ export interface CompanyProfileDto {
   lastMatchedAt: string | null;
   matchingStatus: string;
   matchingStartedAt: string | null;
+  subscriptionStatus: string;
+  trialEndsAt: string | null;
+  maxSeats: number;
   commodityTypes: string[];
   autoKeywords: string[] | null;
   industryCodes: string[];

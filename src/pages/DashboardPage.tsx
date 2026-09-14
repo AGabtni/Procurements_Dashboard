@@ -10,6 +10,7 @@ import {
 import type { TenderListDto } from "../types/tender";
 import type { CompanyMatchDto, MatchStatsDto, CompanyProfileDto } from "../types/company";
 import { getRecentlyViewedIds } from "../utils/recentlyViewed";
+import LockedMatches from "../components/LockedMatches";
 
 function ScoreRing({ score }: { score: number }) {
   const r = 18;
@@ -287,6 +288,8 @@ export default function DashboardPage() {
                     Create profile
                   </Link>
                 </div>
+              ) : user?.subscriptionStatus === "expired" ? (
+                <LockedMatches newCount={stats?.newCount ?? 0} companyName={profile.companyName} variant="card" />
               ) : recentMatches.length === 0 ? (
                 <div className="pp-empty-state" style={{ padding: "2rem 1.5rem" }}>
                   <div className="empty-icon">🔍</div>
