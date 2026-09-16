@@ -1,0 +1,12 @@
+{
+  "language": {
+    "title": "Langue",
+    "interfaceLabel": "Langue de l'interface",
+    "commsLabel": "Langue des communications",
+    "commsHelp": "S'applique aux résumés de correspondances, résumés de scrapes et courriels de compte.",
+    "saving": "Enregistrement...",
+    "savedInterface": "Langue de l'interface mise à jour.",
+    "savedComms": "Langue des communications mise à jour.",
+    "failed": "Échec de la mise à jour de la langue."
+  }
+}

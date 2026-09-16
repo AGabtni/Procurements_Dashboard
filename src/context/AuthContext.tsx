@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import type { AuthResponse } from "../types/auth";
-import { login as apiLogin, refreshSession } from "../api/authApi";
+import { login as apiLogin, refreshSession, updateLocale as apiUpdateLocale, updateCommsLocale as apiUpdateCommsLocale } from "../api/authApi";
 import type { LoginRequest } from "../types/auth";
 import i18n, { normalizeLocale, LOCALE_STORAGE_KEY } from "../i18n";
 
@@ -31,6 +31,8 @@ interface AuthContextValue {
   login: (req: LoginRequest) => Promise<void>;
   logout: () => void;
   getToken: () => string | null;
+  setLocale: (locale: string) => Promise<void>;
+  setCommsLocale: (commsLocale: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -116,8 +118,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return user?.token ?? null;
   }
 
+  async function setLocale(locale: string) {
+    const normalized = normalizeLocale(locale);
+    const res = await apiUpdateLocale(normalized);
+    setUser((prev) => (prev ? { ...prev, locale: res.locale } : prev));
+    syncI18nLocale(res.locale);
+  }
+
+  async function setCommsLocale(commsLocale: string) {
+    const normalized = normalizeLocale(commsLocale);
+    const res = await apiUpdateCommsLocale(normalized);
+    setUser((prev) => (prev ? { ...prev, commsLocale: res.commsLocale } : prev));
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, getToken }}>
+    <AuthContext.Provider value={{ user, login, logout, getToken, setLocale, setCommsLocale }}>
       {children}
     </AuthContext.Provider>
   );

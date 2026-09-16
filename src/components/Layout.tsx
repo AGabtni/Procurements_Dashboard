@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 // Single source of truth for the trial clock: company_profile.trial_ends_at + subscription_status.
 // (Not app_user.activated_at — that only marks admin activation now.)
@@ -122,6 +123,7 @@ export default function Layout() {
             </ul>
 
             <div className="ms-auto d-flex align-items-center gap-2">
+              <LanguageSwitcher />
               {user ? (
                 <>
                   <NavLink className="nav-link" to="/settings" style={{ color: "#94a3b8", fontSize: ".85rem" }}>

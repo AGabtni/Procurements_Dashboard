@@ -1,9 +1,10 @@
 import i18n from "i18next";
-import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 
 import enCommon from "./locales/en/common.json";
 import frCommon from "./locales/fr/common.json";
+import enSettings from "./locales/en/settings.json";
+import frSettings from "./locales/fr/settings.json";
 
 export const SUPPORTED_LOCALES = ["en-CA", "fr-CA"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -16,32 +17,34 @@ export function normalizeLocale(raw: string | undefined | null): SupportedLocale
   return raw.toLowerCase().startsWith("fr") ? "fr-CA" : "en-CA";
 }
 
+function detectInitialLocale(): SupportedLocale {
+  try {
+    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (stored) return normalizeLocale(stored);
+  } catch {
+    // localStorage unavailable — fall through to navigator.
+  }
+  return normalizeLocale(typeof navigator !== "undefined" ? navigator.language : null);
+}
+
+const initialLang = detectInitialLocale();
+
 void i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
-      "en-CA": { common: enCommon },
-      "fr-CA": { common: frCommon },
+      "en-CA": { common: enCommon, settings: enSettings },
+      "fr-CA": { common: frCommon, settings: frSettings },
     },
+    lng: initialLang,
     fallbackLng: "en-CA",
     supportedLngs: [...SUPPORTED_LOCALES],
-    nonExplicitSupportedLngs: true,
-    ns: ["common"],
+    ns: ["common", "settings"],
     defaultNS: "common",
     interpolation: { escapeValue: false },
-    detection: {
-      order: ["localStorage", "navigator"],
-      lookupLocalStorage: LOCALE_STORAGE_KEY,
-      caches: ["localStorage"],
-    },
     returnNull: false,
   });
 
-const initialLang = normalizeLocale(i18n.language);
-if (initialLang !== i18n.language) {
-  void i18n.changeLanguage(initialLang);
-}
 document.documentElement.lang = initialLang;
 
 i18n.on("languageChanged", (lng) => {

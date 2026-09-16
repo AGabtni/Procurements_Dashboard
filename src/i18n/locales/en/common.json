@@ -1,3 +1,8 @@
 {
-  "appName": "ProcurePortal"
+  "appName": "ProcurePortal",
+  "languageSwitcher": {
+    "label": "Language",
+    "en": "English",
+    "fr": "Français"
+  }
 }

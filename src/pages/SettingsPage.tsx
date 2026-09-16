@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { getSettings, updateSettings, sendConfirmationEmail, changePassword } from "../api/authApi";
 import type { SettingsDto } from "../types/auth";
 import { useAuth } from "../context/AuthContext";
+import { SUPPORTED_LOCALES, normalizeLocale, type SupportedLocale } from "../i18n";
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, setLocale, setCommsLocale } = useAuth();
+  const { t } = useTranslation(["settings", "common"]);
   const [settings, setSettings] = useState<SettingsDto | null>(null);
   const [email, setEmail] = useState("");
   const [notifications, setNotifications] = useState(false);
@@ -12,6 +15,8 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [sendingConfirm, setSendingConfirm] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "danger"; text: string } | null>(null);
+  const [langMessage, setLangMessage] = useState<{ type: "success" | "danger"; text: string } | null>(null);
+  const [savingLocale, setSavingLocale] = useState<"locale" | "commsLocale" | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -66,6 +71,24 @@ export default function SettingsPage() {
       setMessage({ type: "danger", text: err instanceof Error ? err.message : "Failed to send" });
     } finally {
       setSendingConfirm(false);
+    }
+  }
+
+  async function handleLocaleChange(kind: "locale" | "commsLocale", value: SupportedLocale) {
+    setLangMessage(null);
+    setSavingLocale(kind);
+    try {
+      if (kind === "locale") {
+        await setLocale(value);
+        setLangMessage({ type: "success", text: t("language.savedInterface") });
+      } else {
+        await setCommsLocale(value);
+        setLangMessage({ type: "success", text: t("language.savedComms") });
+      }
+    } catch (err) {
+      setLangMessage({ type: "danger", text: err instanceof Error ? err.message : t("language.failed") });
+    } finally {
+      setSavingLocale(null);
     }
   }
 
@@ -158,6 +181,36 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          {/* Language Section */}
+          <div className="card mb-4">
+            <div className="card-header">
+              <h5 className="mb-0">{t("language.title")}</h5>
+            </div>
+            <div className="card-body">
+              {langMessage && (
+                <div className={`alert alert-${langMessage.type} alert-dismissible py-2`}>
+                  {langMessage.text}
+                  <button className="btn-close" onClick={() => setLangMessage(null)} />
+                </div>
+              )}
+              <div className="mb-1">
+                <label className="form-label">{t("language.interfaceLabel")}</label>
+                <select
+                  className="form-select"
+                  value={normalizeLocale(user?.locale)}
+                  onChange={(e) => handleLocaleChange("locale", e.target.value as SupportedLocale)}
+                  disabled={savingLocale === "locale"}
+                >
+                  {SUPPORTED_LOCALES.map((code) => (
+                    <option key={code} value={code}>
+                      {t(`languageSwitcher.${code.slice(0, 2)}`, { ns: "common" })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
           {/* Notifications Section */}
           <div className="card mb-4">
             <div className="card-header">
@@ -176,9 +229,25 @@ export default function SettingsPage() {
                   Email notifications for new matches
                 </label>
               </div>
-              <p className="form-text mt-2 mb-0">
+              <p className="form-text mt-2 mb-3">
                 When enabled, you'll receive an email when new tender matches are found for your company.
               </p>
+              <div className="mb-1">
+                <label className="form-label">{t("language.commsLabel")}</label>
+                <select
+                  className="form-select"
+                  value={normalizeLocale(user?.commsLocale)}
+                  onChange={(e) => handleLocaleChange("commsLocale", e.target.value as SupportedLocale)}
+                  disabled={savingLocale === "commsLocale"}
+                >
+                  {SUPPORTED_LOCALES.map((code) => (
+                    <option key={code} value={code}>
+                      {t(`languageSwitcher.${code.slice(0, 2)}`, { ns: "common" })}
+                    </option>
+                  ))}
+                </select>
+                <div className="form-text">{t("language.commsHelp")}</div>
+              </div>
             </div>
           </div>
 

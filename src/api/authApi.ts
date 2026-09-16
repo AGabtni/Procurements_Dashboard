@@ -92,6 +92,32 @@ export async function refreshSession(): Promise<{ activatedAt: string | null; tr
   return res.json();
 }
 
+export async function updateLocale(locale: string): Promise<{ locale: string }> {
+  const res = await fetch(`${API_BASE}/api/auth/me/locale`, {
+    method: "PATCH",
+    headers: authHeaders(),
+    body: JSON.stringify({ locale }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message || "Failed to update locale");
+  }
+  return res.json();
+}
+
+export async function updateCommsLocale(commsLocale: string): Promise<{ commsLocale: string }> {
+  const res = await fetch(`${API_BASE}/api/auth/me/comms-locale`, {
+    method: "PATCH",
+    headers: authHeaders(),
+    body: JSON.stringify({ commsLocale }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message || "Failed to update comms locale");
+  }
+  return res.json();
+}
+
 export async function getAllUsers(): Promise<UserDto[]> {
   const res = await fetch(`${API_BASE}/api/auth/users`, { headers: authHeaders() });
   if (!res.ok) throw new Error("Failed to load users");

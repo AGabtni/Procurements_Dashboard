@@ -1,0 +1,12 @@
+{
+  "language": {
+    "title": "Language",
+    "interfaceLabel": "Interface language",
+    "commsLabel": "Communications language",
+    "commsHelp": "Applies to match digests, scrape summaries, and account emails.",
+    "saving": "Saving...",
+    "savedInterface": "Interface language updated.",
+    "savedComms": "Communications language updated.",
+    "failed": "Failed to update language."
+  }
+}
