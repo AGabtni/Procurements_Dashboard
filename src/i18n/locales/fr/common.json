@@ -4,5 +4,29 @@
     "label": "Langue",
     "en": "English",
     "fr": "Français"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "tenders": "Appels d'offres",
+    "myCompany": "Mon entreprise",
+    "admin": "Admin",
+    "settings": "Paramètres",
+    "logout": "Déconnexion",
+    "signIn": "Se connecter",
+    "toggle": "Ouvrir la navigation"
+  },
+  "trial": {
+    "endedBanner": "Votre essai gratuit est terminé. <1>Abonnez-vous</1> pour débloquer vos correspondances.",
+    "questions": "Des questions ?",
+    "daysLeftBanner_one": "Il vous reste <1>{{count}} jour</1> dans votre essai gratuit.",
+    "daysLeftBanner_other": "Il vous reste <1>{{count}} jours</1> dans votre essai gratuit."
+  },
+  "locked": {
+    "headlineEnded": "Votre essai est terminé",
+    "headlineWithCount_one": "{{count}} nouvelle correspondance",
+    "headlineWithCount_other": "{{count}} nouvelles correspondances",
+    "headlineForCompany": "{{headline}} pour {{company}}",
+    "description": "Votre essai gratuit est terminé. Abonnez-vous pour débloquer vos correspondances et continuer à recevoir de nouvelles opportunités.",
+    "cta": "S'abonner pour débloquer →"
   }
 }

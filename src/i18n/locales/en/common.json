@@ -4,5 +4,29 @@
     "label": "Language",
     "en": "English",
     "fr": "Français"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "tenders": "Tenders",
+    "myCompany": "My Company",
+    "admin": "Admin",
+    "settings": "Settings",
+    "logout": "Logout",
+    "signIn": "Sign In",
+    "toggle": "Toggle navigation"
+  },
+  "trial": {
+    "endedBanner": "Your free trial has ended. <1>Subscribe</1> to unlock your matches.",
+    "questions": "Questions?",
+    "daysLeftBanner_one": "You have <1>{{count}} day</1> left in your free trial.",
+    "daysLeftBanner_other": "You have <1>{{count}} days</1> left in your free trial."
+  },
+  "locked": {
+    "headlineEnded": "Your trial has ended",
+    "headlineWithCount_one": "{{count}} new match",
+    "headlineWithCount_other": "{{count}} new matches",
+    "headlineForCompany": "{{headline}} for {{company}}",
+    "description": "Your free trial has ended. Subscribe to unlock your matches and keep receiving new tender opportunities.",
+    "cta": "Subscribe to unlock →"
   }
 }

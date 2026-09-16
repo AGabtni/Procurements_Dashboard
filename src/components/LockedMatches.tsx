@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { STRIPE_PAYMENT_URL } from "../config";
 import { useAuth } from "../context/AuthContext";
 
@@ -39,10 +40,16 @@ const PLACEHOLDER_ROWS = [
  */
 export default function LockedMatches({ newCount, companyName, variant = "block" }: Props) {
   const { user } = useAuth();
+  const { t } = useTranslation("common");
   const headline =
     newCount > 0
-      ? `${newCount} new match${newCount !== 1 ? "es" : ""}${companyName ? ` for ${companyName}` : ""}`
-      : "Your trial has ended";
+      ? (companyName
+          ? t("locked.headlineForCompany", {
+              headline: t("locked.headlineWithCount", { count: newCount }),
+              company: companyName,
+            })
+          : t("locked.headlineWithCount", { count: newCount }))
+      : t("locked.headlineEnded");
 
   return (
     <div
@@ -94,14 +101,14 @@ export default function LockedMatches({ newCount, companyName, variant = "block"
           {headline}
         </p>
         <p style={{ margin: 0, fontSize: ".9rem", color: "#e2e8f0", maxWidth: 340 }}>
-          Your free trial has ended. Subscribe to unlock your matches and keep receiving new tender opportunities.
+          {t("locked.description")}
         </p>
         <a
           href={paymentUrl(user?.email, user?.companyId)}
           className="pp-btn pp-btn-primary mt-1"
           style={{ fontSize: "1rem", padding: ".5rem 1.25rem" }}
         >
-          Subscribe to unlock →
+          {t("locked.cta")}
         </a>
       </div>
     </div>
