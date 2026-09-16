@@ -8,6 +8,7 @@ import {
 import type { AuthResponse } from "../types/auth";
 import { login as apiLogin, refreshSession } from "../api/authApi";
 import type { LoginRequest } from "../types/auth";
+import i18n, { normalizeLocale, LOCALE_STORAGE_KEY } from "../i18n";
 
 interface AuthState {
   token: string;
@@ -21,6 +22,8 @@ interface AuthState {
   subscriptionStatus: string | null;
   trialEndsAt: string | null;
   companyId: number | null;
+  locale: string;
+  commsLocale: string;
 }
 
 interface AuthContextValue {
@@ -52,6 +55,16 @@ function clearAuth() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
+// Server locale wins over any prior client detection so a user logging in from
+// a shared machine sees their own preference, not the previous user's.
+function syncI18nLocale(rawLocale: string | null | undefined) {
+  const normalized = normalizeLocale(rawLocale);
+  if (i18n.language !== normalized) {
+    void i18n.changeLanguage(normalized);
+  }
+  localStorage.setItem(LOCALE_STORAGE_KEY, normalized);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthState | null>(loadAuth);
 
@@ -66,9 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (user) {
       refreshSession()
-        .then(({ activatedAt, trialDays, subscriptionStatus, trialEndsAt, companyId }) =>
-          setUser((prev) => prev ? { ...prev, activatedAt, trialDays, subscriptionStatus, trialEndsAt, companyId } : prev)
-        )
+        .then(({ activatedAt, trialDays, subscriptionStatus, trialEndsAt, companyId, locale, commsLocale }) => {
+          setUser((prev) => prev ? { ...prev, activatedAt, trialDays, subscriptionStatus, trialEndsAt, companyId, locale, commsLocale } : prev);
+          syncI18nLocale(locale);
+        })
         .catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,7 +102,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscriptionStatus: res.subscriptionStatus,
       trialEndsAt: res.trialEndsAt,
       companyId: res.companyId,
+      locale: res.locale,
+      commsLocale: res.commsLocale,
     });
+    syncI18nLocale(res.locale);
   }
 
   function logout() {

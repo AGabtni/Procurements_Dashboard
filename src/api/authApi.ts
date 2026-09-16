@@ -86,7 +86,7 @@ export async function confirmEmail(token: string): Promise<void> {
 
 // ── Admin: User Management ──
 
-export async function refreshSession(): Promise<{ activatedAt: string | null; trialDays: number; subscriptionStatus: string | null; trialEndsAt: string | null; companyId: number | null }> {
+export async function refreshSession(): Promise<{ activatedAt: string | null; trialDays: number; subscriptionStatus: string | null; trialEndsAt: string | null; companyId: number | null; locale: string; commsLocale: string }> {
   const res = await fetch(`${API_BASE}/api/auth/me`, { headers: authHeaders() });
   if (!res.ok) throw new Error("Failed to refresh session");
   return res.json();

@@ -21,6 +21,8 @@ export interface AuthResponse {
   subscriptionStatus: string | null;
   trialEndsAt: string | null;
   companyId: number | null;
+  locale: string;
+  commsLocale: string;
 }
 
 export interface UserDto {
@@ -37,6 +39,8 @@ export interface UserDto {
   activatedAt: string | null;
   trialDays: number;
   lastLogin: string | null;
+  locale: string;
+  commsLocale: string;
 }
 
 export interface SettingsDto {
