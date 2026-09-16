@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
+import { Trans, useTranslation } from "react-i18next";
+import i18n from "../i18n";
 import {
   getMyProfile,
   createMyProfile,
@@ -85,6 +87,7 @@ type Tab = "profile" | "matches";
 
 export default function MyCompanyPage() {
   const { user } = useAuth();
+  const { t } = useTranslation("myCompany");
   const locked = user?.subscriptionStatus === "expired";
   const [tab, setTab] = useState<Tab>("profile");
   const [profile, setProfile] = useState<CompanyProfileDto | null>(null);
@@ -139,11 +142,11 @@ export default function MyCompanyPage() {
       setProfile(data);
       if (s) setStats(s);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load profile");
+      setError(err instanceof Error ? err.message : t("errors.loadProfile"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -175,7 +178,7 @@ export default function MyCompanyPage() {
       setSubmitted(false);
       await loadProfile();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create profile");
+      setError(err instanceof Error ? err.message : t("errors.createProfile"));
     } finally {
       setSaving(false);
     }
@@ -244,7 +247,7 @@ export default function MyCompanyPage() {
       setMatchTotalCount(result.totalCount);
       setStats(s);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load matches");
+      setError(err instanceof Error ? err.message : t("errors.loadMatches"));
     } finally {
       setMatchesLoading(false);
     }
@@ -308,7 +311,7 @@ export default function MyCompanyPage() {
       setSubmitted(false);
       await loadProfile();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      setError(err instanceof Error ? err.message : t("errors.saveProfile"));
     } finally {
       setSaving(false);
     }
@@ -354,18 +357,18 @@ export default function MyCompanyPage() {
     try {
       const result: TriggerMatchResult = await triggerMyMatch();
       if (result.started) {
-        setMatchMsg("Matching queued");
+        setMatchMsg(t("trigger.queued"));
         setProfile((prev) => prev ? { ...prev, matchingStatus: "pending_rematch" } : prev);
         await loadProfile();
       } else if (result.retryAfterSeconds) {
         const h = Math.floor(result.retryAfterSeconds / 3600);
         const m = Math.ceil((result.retryAfterSeconds % 3600) / 60);
-        setMatchMsg(`Cooldown active. Retry in ${h}h ${m}m`);
+        setMatchMsg(t("trigger.cooldown", { hours: h, minutes: m }));
       } else {
         setMatchMsg(result.message);
       }
     } catch (err) {
-      setMatchMsg(err instanceof Error ? err.message : "Failed");
+      setMatchMsg(err instanceof Error ? err.message : t("trigger.failed"));
     } finally {
       setMatchBusy(false);
     }
@@ -376,7 +379,7 @@ export default function MyCompanyPage() {
       await updateMyMatchStatus(matchId, { status: newStatus });
       await loadMatches();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update status");
+      setError(err instanceof Error ? err.message : t("errors.updateStatus"));
     }
   }
 
@@ -393,9 +396,19 @@ export default function MyCompanyPage() {
           : s;
       };
       const fmt = (d: string | null | undefined) =>
-        d ? new Date(d).toLocaleDateString("en-CA") : "";
+        d ? new Date(d).toLocaleDateString(i18n.language) : "";
       const lines = [
-        ["Title", "Organization", "Category", "Notice Type", "Score", "Status", "Matched On", "Closing Date", "Notice Link"].join(","),
+        [
+          t("matches.csvHeaders.title"),
+          t("matches.csvHeaders.organization"),
+          t("matches.csvHeaders.category"),
+          t("matches.csvHeaders.noticeType"),
+          t("matches.csvHeaders.score"),
+          t("matches.csvHeaders.status"),
+          t("matches.csvHeaders.matchedOn"),
+          t("matches.csvHeaders.closingDate"),
+          t("matches.csvHeaders.noticeLink"),
+        ].join(","),
         ...rows.map((m) =>
           [
             esc(m.tenderTitle),
@@ -418,7 +431,7 @@ export default function MyCompanyPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Export failed");
+      setError(err instanceof Error ? err.message : t("errors.exportFailed"));
     } finally {
       setExportLoading(false);
     }
@@ -429,25 +442,25 @@ export default function MyCompanyPage() {
       case "running":
       case "pending_rematch":
       case "pending_reset":
-        return <span className="pp-badge pp-badge-amber">⟳ Matching...</span>;
+        return <span className="pp-badge pp-badge-amber">{t("status.matching")}</span>;
       case "completed":
-        return <span className="pp-badge pp-badge-green">✓ Matched</span>;
+        return <span className="pp-badge pp-badge-green">{t("status.matched")}</span>;
       case "failed":
-        return <span className="pp-badge pp-badge-red">✕ Failed</span>;
+        return <span className="pp-badge pp-badge-red">{t("status.failed")}</span>;
       default:
-        return <span className="pp-badge pp-badge-gray">Not matched</span>;
+        return <span className="pp-badge pp-badge-gray">{t("status.notMatched")}</span>;
     }
   }
 
   function getTimeAgo(dateStr: string | null): string {
-    if (!dateStr) return "Never";
+    if (!dateStr) return t("timeAgo.never");
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "Just now";
-    if (mins < 60) return `${mins}m ago`;
+    if (mins < 1) return t("timeAgo.justNow");
+    if (mins < 60) return t("timeAgo.mAgo", { count: mins });
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
+    if (hours < 24) return t("timeAgo.hAgo", { count: hours });
+    return t("timeAgo.dAgo", { count: Math.floor(hours / 24) });
   }
 
   const isMatchActive =
@@ -467,16 +480,14 @@ export default function MyCompanyPage() {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div className="card shadow-lg" style={{ maxWidth: 420, width: "90%", borderRadius: 10 }}>
         <div className="card-body p-4">
-          <h5 className="mb-1">{confirmSave === "create" ? "Create Profile" : "Save Changes"}</h5>
+          <h5 className="mb-1">{confirmSave === "create" ? t("confirmModal.createTitle") : t("confirmModal.saveTitle")}</h5>
           <p className="text-muted small mb-4">
-            {confirmSave === "create"
-              ? "Create your company profile? You can edit it at any time after creation."
-              : "Save changes to your profile? If your description changed, keywords will be re-extracted on your next match run."}
+            {confirmSave === "create" ? t("confirmModal.createBody") : t("confirmModal.saveBody")}
           </p>
           <div className="d-flex gap-2 justify-content-end">
-            <button className="pp-btn pp-btn-ghost" onClick={() => setConfirmSave(null)}>Go Back</button>
+            <button className="pp-btn pp-btn-ghost" onClick={() => setConfirmSave(null)}>{t("confirmModal.goBack")}</button>
             <button className="pp-btn pp-btn-primary" disabled={saving} onClick={confirmSave === "create" ? executeCreate : executeSave}>
-              {saving ? "Saving..." : "Confirm"}
+              {saving ? t("confirmModal.saving") : t("confirmModal.confirm")}
             </button>
           </div>
         </div>
@@ -490,10 +501,10 @@ export default function MyCompanyPage() {
       return (
         <div className="pp-empty-state" style={{ paddingTop: "5rem" }}>
           <div className="empty-icon">◈</div>
-          <h3>Set Up Your Company Profile</h3>
-          <p>Create your company profile to start matching with government tenders.</p>
+          <h3>{t("setup.title")}</h3>
+          <p>{t("setup.body")}</p>
           <button className="pp-btn pp-btn-primary mt-3" onClick={() => setEditing(true)}>
-            Create Profile
+            {t("setup.cta")}
           </button>
         </div>
       );
@@ -503,12 +514,12 @@ export default function MyCompanyPage() {
     return (
       <div>
         {confirmModal}
-        <h2>Create Company Profile</h2>
+        <h2>{t("form.createTitle")}</h2>
         {error && <div className="alert alert-danger">{error}</div>}
         <form onSubmit={handleCreate}>
           <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label className="form-label">Company Name <span className="text-danger fw-bold">*</span><FieldTooltip text="Your legal or trading name. Used for internal reference only." /></label>
+              <label className="form-label">{t("form.fields.companyName")} <span className="text-danger fw-bold">{t("form.required")}</span><FieldTooltip text={t("form.tooltips.companyName")} /></label>
               <input
                 className={`form-control${submitted && !form.companyName.trim() ? " is-invalid" : ""}`}
                 required value={form.companyName}
@@ -516,24 +527,24 @@ export default function MyCompanyPage() {
               />
             </div>
             <div className="col-md-3">
-              <label className="form-label">Province <span className="text-danger fw-bold">*</span><FieldTooltip text="Your company's primary operating province." /></label>
+              <label className="form-label">{t("form.fields.province")} <span className="text-danger fw-bold">{t("form.required")}</span><FieldTooltip text={t("form.tooltips.province")} /></label>
               <select className={`form-select${submitted && !form.province ? " is-invalid" : ""}`} value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })}>
-                <option value="">Select...</option>
+                <option value="">{t("form.selectPlaceholder")}</option>
                 {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
-              {submitted && !form.province && <div className="text-danger small mt-1">Please select a province.</div>}
+              {submitted && !form.province && <div className="text-danger small mt-1">{t("form.validation.province")}</div>}
             </div>
             <div className="col-md-3">
-              <label className="form-label">Company Size <span className="text-danger fw-bold">*</span><FieldTooltip text="Your headcount range. Informational context for the AI scorer." /></label>
+              <label className="form-label">{t("form.fields.companySize")} <span className="text-danger fw-bold">{t("form.required")}</span><FieldTooltip text={t("form.tooltips.companySize")} /></label>
               <select className={`form-select${submitted && !form.companySize ? " is-invalid" : ""}`} value={form.companySize} onChange={(e) => setForm({ ...form, companySize: e.target.value })}>
-                <option value="">Select...</option>
+                <option value="">{t("form.selectPlaceholder")}</option>
                 {COMPANY_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
-              {submitted && !form.companySize && <div className="text-danger small mt-1">Please select a company size.</div>}
+              {submitted && !form.companySize && <div className="text-danger small mt-1">{t("form.validation.companySize")}</div>}
             </div>
           </div>
           <div className="mb-3">
-            <label className="form-label">Industries <span className="text-danger fw-bold">*</span><FieldTooltip text="NAICS classifications for your business. The AI uses these to assess whether a tender is in your domain." /></label>
+            <label className="form-label">{t("form.fields.industries")} <span className="text-danger fw-bold">{t("form.required")}</span><FieldTooltip text={t("form.tooltips.industries")} /></label>
             <IndustryPicker
               value={form.industryCodes}
               onChange={(codes) => setForm({ ...form, industryCodes: codes })}
@@ -541,86 +552,86 @@ export default function MyCompanyPage() {
               id="create-industries"
             />
             {submitted && form.industryCodes.length === 0 && (
-              <div className="text-danger small mt-1">Please select at least one industry.</div>
+              <div className="text-danger small mt-1">{t("form.validation.industries")}</div>
             )}
           </div>
           <div className="mb-3">
-            <label className="form-label">Services Description <span className="text-danger fw-bold">*</span><FieldTooltip text="Describe what your company does in specific terms. Domain keywords are extracted from this text. The more precise, the better your matches." /></label>
+            <label className="form-label">{t("form.fields.servicesDescription")} <span className="text-danger fw-bold">{t("form.required")}</span><FieldTooltip text={t("form.tooltips.servicesDescription")} /></label>
             <textarea
               className={`form-control${submitted && (form.servicesDescription?.length ?? 0) < 150 ? " is-invalid" : ""}`}
               rows={4}
               maxLength={2000}
               value={form.servicesDescription}
               onChange={(e) => setForm({ ...form, servicesDescription: e.target.value })}
-              placeholder="e.g. We implement and support SAP and Oracle ERP systems for mid-size manufacturers, including S/4HANA migrations, system integrations, and managed cloud hosting. Our team holds SAP Activate certification and has delivered 30+ projects across automotive and industrial sectors."
+              placeholder={t("form.placeholders.servicesDescription")}
             />
             <div className="d-flex justify-content-between mt-1">
               {submitted && (form.servicesDescription?.length ?? 0) < 150
-                ? <div className="text-danger small">At least 150 characters required. Be specific about technologies, platforms, and sectors you serve.</div>
-                : <div className="text-muted small">Be specific: name technologies, platforms, certifications, and sectors. Vague descriptions produce fewer keyword matches.</div>}
+                ? <div className="text-danger small">{t("form.validation.descriptionMin")}</div>
+                : <div className="text-muted small">{t("form.descriptionHelp")}</div>}
               <div className={`small ms-2 flex-shrink-0 ${
                 (form.servicesDescription?.length ?? 0) === 2000 ? "text-danger" :
                 (form.servicesDescription?.length ?? 0) >= 1800 ? "text-warning" :
                 (form.servicesDescription?.length ?? 0) >= 150 ? "text-success" : "text-muted"
               }`}>
-                {form.servicesDescription?.length ?? 0} / 2000
+                {t("form.descriptionCounter", { count: form.servicesDescription?.length ?? 0 })}
               </div>
             </div>
           </div>
           <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label className="form-label">Keywords<FieldTooltip text="Specific technologies, products, or platforms your company works with. Each keyword is matched word-for-word against every tender before AI scoring. Strong signal for relevance." /></label>
-              <TagInput value={form.keywords} onChange={(tags) => setForm({ ...form, keywords: tags })} placeholder="Type keyword and press Enter" />
+              <label className="form-label">{t("form.fields.keywords")}<FieldTooltip text={t("form.tooltips.keywords")} /></label>
+              <TagInput value={form.keywords} onChange={(tags) => setForm({ ...form, keywords: tags })} placeholder={t("form.placeholders.keyword")} />
             </div>
             <div className="col-md-6">
-              <label className="form-label">Certifications<FieldTooltip text="Professional or trade certifications your company holds. The AI references these when assessing whether a tender requires credentials you have." /></label>
-              <TagInput value={form.certifications} onChange={(tags) => setForm({ ...form, certifications: tags })} placeholder="Type certification and press Enter" />
+              <label className="form-label">{t("form.fields.certifications")}<FieldTooltip text={t("form.tooltips.certifications")} /></label>
+              <TagInput value={form.certifications} onChange={(tags) => setForm({ ...form, certifications: tags })} placeholder={t("form.placeholders.certification")} />
             </div>
           </div>
           <div className="mb-3">
-            <label className="form-label">Commodity Types <span className="text-danger fw-bold">*</span><FieldTooltip text="Whether your company sells goods, services, or both. Tenders whose category clearly conflicts with your selection are rejected before AI scoring." /></label>
-            <MultiSelectDropdown id="commodityTypes" options={COMMODITY_OPTIONS} value={form.commodityTypes} onChange={(sel) => setForm({ ...form, commodityTypes: sel })} placeholder="Select commodity types..." className={submitted && form.commodityTypes.length === 0 ? "is-invalid" : ""} />
-            {submitted && form.commodityTypes.length === 0 && <div className="text-danger small mt-1">Please select at least one commodity type.</div>}
+            <label className="form-label">{t("form.fields.commodityTypes")} <span className="text-danger fw-bold">{t("form.required")}</span><FieldTooltip text={t("form.tooltips.commodityTypes")} /></label>
+            <MultiSelectDropdown id="commodityTypes" options={COMMODITY_OPTIONS} value={form.commodityTypes} onChange={(sel) => setForm({ ...form, commodityTypes: sel })} placeholder={t("form.placeholders.commodityTypes")} className={submitted && form.commodityTypes.length === 0 ? "is-invalid" : ""} />
+            {submitted && form.commodityTypes.length === 0 && <div className="text-danger small mt-1">{t("form.validation.commodityTypes")}</div>}
           </div>
           <div className="mb-3">
             <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setShowPrefs(!showPrefs)}>
-              {showPrefs ? "▼ Hide" : "▶ Show"} Matching Preferences
+              {showPrefs ? t("form.prefsToggleHide") : t("form.prefsToggleShow")}
             </button>
           </div>
           {showPrefs && (
             <div className="card mb-3"><div className="card-body">
-              <h5 className="card-title">Matching Preferences</h5>
+              <h5 className="card-title">{t("form.prefsTitle")}</h5>
               <div className="alert alert-warning py-2 small mb-3 mt-4">
-                ⚠ <strong>These are hard filters.</strong> Tenders that don't match every active filter are rejected before the AI ever sees them. They will never appear in your results. Leave a filter empty to place no restriction on that field.
+                <Trans i18nKey="form.prefsWarning" t={t} components={{ 1: <strong /> }} />
               </div>
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
-                  <label className="form-label">Preferred Organizations<FieldTooltip text="Hard filter. Only tenders issued by these buying organizations will be scored. Leave empty to receive tenders from all organizations." /></label>
-                  <TagInput value={prefsForm.preferredOrgs} onChange={(tags) => setPrefsForm({ ...prefsForm, preferredOrgs: tags })} placeholder="Type organization and press Enter" />
+                  <label className="form-label">{t("form.prefsFields.preferredOrgs")}<FieldTooltip text={t("form.tooltips.preferredOrgs")} /></label>
+                  <TagInput value={prefsForm.preferredOrgs} onChange={(tags) => setPrefsForm({ ...prefsForm, preferredOrgs: tags })} placeholder={t("form.placeholders.organization")} />
                 </div>
               </div>
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
-                  <label className="form-label">Preferred Notice Types<FieldTooltip text="Hard filter. Only tenders of these types will be scored. Leave empty to receive all notice types." /></label>
-                  <MultiSelectDropdown id="prefNtTypes" options={NOTICE_TYPE_OPTIONS} value={prefsForm.preferredNtTypes} onChange={(sel) => setPrefsForm({ ...prefsForm, preferredNtTypes: sel })} placeholder="Select notice types..." />
+                  <label className="form-label">{t("form.prefsFields.preferredNtTypes")}<FieldTooltip text={t("form.tooltips.preferredNtTypes")} /></label>
+                  <MultiSelectDropdown id="prefNtTypes" options={NOTICE_TYPE_OPTIONS} value={prefsForm.preferredNtTypes} onChange={(sel) => setPrefsForm({ ...prefsForm, preferredNtTypes: sel })} placeholder={t("form.placeholders.noticeTypes")} />
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label">Preferred Provinces (Delivery)<FieldTooltip text="Hard filter on delivery region. Only applies when a tender specifies where work must be delivered. Tenders with no delivery region are always included." /></label>
-                  <MultiSelectDropdown id="prefProvinces" options={PROVINCE_OPTIONS} value={prefsForm.preferredProvinces} onChange={(sel) => setPrefsForm({ ...prefsForm, preferredProvinces: sel })} placeholder="Select provinces..." />
-                  <div className="text-muted small mt-1">Tenders with no specified delivery region are never filtered out by this setting.</div>
+                  <label className="form-label">{t("form.prefsFields.preferredProvinces")}<FieldTooltip text={t("form.tooltips.preferredProvinces")} /></label>
+                  <MultiSelectDropdown id="prefProvinces" options={PROVINCE_OPTIONS} value={prefsForm.preferredProvinces} onChange={(sel) => setPrefsForm({ ...prefsForm, preferredProvinces: sel })} placeholder={t("form.placeholders.provinces")} />
+                  <div className="text-muted small mt-1">{t("form.preferredProvincesNote")}</div>
                 </div>
               </div>
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
-                  <label className="form-label">Exclude Keywords<FieldTooltip text="Hard filter. Any tender containing these words anywhere in its title or description is rejected before scoring." /></label>
-                  <TagInput value={prefsForm.excludeKeywords} onChange={(tags) => setPrefsForm({ ...prefsForm, excludeKeywords: tags })} placeholder="Type keyword and press Enter" />
+                  <label className="form-label">{t("form.prefsFields.excludeKeywords")}<FieldTooltip text={t("form.tooltips.excludeKeywords")} /></label>
+                  <TagInput value={prefsForm.excludeKeywords} onChange={(tags) => setPrefsForm({ ...prefsForm, excludeKeywords: tags })} placeholder={t("form.placeholders.keyword")} />
                 </div>
               </div>
             </div></div>
           )}
           <div className="d-flex gap-2">
-            <button type="submit" className="btn btn-primary" disabled={saving}>Create Profile</button>
-            <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={saving}>{t("form.createSubmit")}</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)}>{t("form.cancel")}</button>
           </div>
         </form>
       </div>
@@ -632,9 +643,9 @@ export default function MyCompanyPage() {
       {confirmModal}
       <div className="pp-page-header">
         <div>
-          <h2>{profile.companyName || "My Company"}</h2>
+          <h2>{profile.companyName || t("header.fallbackName")}</h2>
           <span style={{ fontSize: ".85rem", color: "var(--pp-text-muted)" }}>
-            Last matched: {getTimeAgo(profile.lastMatchedAt)}
+            {t("header.lastMatched", { time: getTimeAgo(profile.lastMatchedAt) })}
           </span>
         </div>
         <div className="header-actions">
@@ -643,9 +654,9 @@ export default function MyCompanyPage() {
             className="pp-btn pp-btn-primary pp-btn-sm"
             onClick={handleTrigger}
             disabled={matchBusy || isMatchActive || locked}
-            title={locked ? "Your trial has ended — subscribe to run matching" : undefined}
+            title={locked ? t("header.runLockedTitle") : undefined}
           >
-            {locked ? "🔒 Run Matching" : matchBusy || isMatchActive ? "⟳ Matching..." : "🎯 Run Matching"}
+            {locked ? t("header.runMatchingLocked") : matchBusy || isMatchActive ? t("header.runMatchingBusy") : t("header.runMatching")}
           </button>
         </div>
       </div>
@@ -659,13 +670,13 @@ export default function MyCompanyPage() {
           className={`pp-tab ${tab === "profile" ? "active" : ""}`}
           onClick={() => setTab("profile")}
         >
-          Company Profile
+          {t("tabs.profile")}
         </button>
         <button
           className={`pp-tab ${tab === "matches" ? "active" : ""}`}
           onClick={() => setTab("matches")}
         >
-          Matches
+          {t("tabs.matches")}
           {stats && stats.newCount > 0 && (
             <span className="tab-count">{stats.newCount}</span>
           )}
@@ -677,29 +688,29 @@ export default function MyCompanyPage() {
         <div>
           <div className="d-flex justify-content-end mb-3">
             <button className="pp-btn pp-btn-primary pp-btn-sm" onClick={startEdit}>
-              ✎ Edit Profile
+              {t("profileView.editButton")}
             </button>
           </div>
           <div className="row g-3">
             <div className="col-md-6">
               <div className="pp-card">
                 <div className="pp-card-body">
-                  <h6 style={{ color: "var(--pp-text-muted)", fontSize: ".8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: ".75rem" }}>Company Details</h6>
-                  <p><strong>Name:</strong> {profile.companyName}</p>
-                  <p><strong>Industries:</strong></p>
+                  <h6 style={{ color: "var(--pp-text-muted)", fontSize: ".8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: ".75rem" }}>{t("profileView.companyDetails")}</h6>
+                  <p><strong>{t("profileView.labels.name")}</strong> {profile.companyName}</p>
+                  <p><strong>{t("profileView.labels.industries")}</strong></p>
                   <div className="d-flex flex-wrap gap-1 mb-2">
                     {profile.industries?.length
                       ? profile.industries.map((i) => (
                           <span key={i.code} className="pp-badge pp-badge-blue">{i.titleEn}</span>
                         ))
-                      : <span style={{ color: "var(--pp-text-muted)" }}>—</span>}
+                      : <span style={{ color: "var(--pp-text-muted)" }}>{t("profileView.dash")}</span>}
                   </div>
-                  <p><strong>Province:</strong> {profile.province || "—"}</p>
-                  <p><strong>Size:</strong> {profile.companySize || "—"}</p>
-                  <p><strong>Commodity Types:</strong>{" "}
+                  <p><strong>{t("profileView.labels.province")}</strong> {profile.province || t("profileView.dash")}</p>
+                  <p><strong>{t("profileView.labels.size")}</strong> {profile.companySize || t("profileView.dash")}</p>
+                  <p><strong>{t("profileView.labels.commodityTypes")}</strong>{" "}
                     {profile.commodityTypes?.length
                       ? profile.commodityTypes.map((c) => CATEGORY_MAP[c] || c).join(", ")
-                      : "—"}
+                      : t("profileView.dash")}
                   </p>
                 </div>
               </div>
@@ -707,22 +718,22 @@ export default function MyCompanyPage() {
             <div className="col-md-6">
               <div className="pp-card">
                 <div className="pp-card-body">
-                  <h6 style={{ color: "var(--pp-text-muted)", fontSize: ".8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: ".75rem" }}>Services & Keywords</h6>
-                  <p><strong>Description:</strong></p>
-                  <p style={{ color: "var(--pp-text-secondary)" }}>{profile.servicesDescription || "—"}</p>
-                  <p><strong>Keywords:</strong></p>
+                  <h6 style={{ color: "var(--pp-text-muted)", fontSize: ".8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: ".75rem" }}>{t("profileView.servicesKeywords")}</h6>
+                  <p><strong>{t("profileView.labels.description")}</strong></p>
+                  <p style={{ color: "var(--pp-text-secondary)" }}>{profile.servicesDescription || t("profileView.dash")}</p>
+                  <p><strong>{t("profileView.labels.keywords")}</strong></p>
                   <div>
                     {profile.keywords?.length ? (
                       profile.keywords.map((k) => (
                         <span key={k} className="pp-badge pp-badge-blue me-1 mb-1">{k}</span>
                       ))
                     ) : (
-                      <span style={{ color: "var(--pp-text-muted)" }}>None</span>
+                      <span style={{ color: "var(--pp-text-muted)" }}>{t("profileView.none")}</span>
                     )}
                   </div>
                   {profile.autoKeywords && profile.autoKeywords.length > 0 && (
                     <>
-                      <p className="mt-2"><strong>Auto Keywords:</strong></p>
+                      <p className="mt-2"><strong>{t("profileView.labels.autoKeywords")}</strong></p>
                       <div>
                         {profile.autoKeywords.map((k) => (
                           <span key={k} className="pp-badge pp-badge-teal me-1 mb-1">{k}</span>
@@ -732,23 +743,22 @@ export default function MyCompanyPage() {
                   )}
                   {!profile.lastMatchedAt && (
                     <div className="alert alert-info mt-3 mb-0 py-2 small">
-                      <strong>No match has run yet.</strong> Keywords will be extracted from your description when you run your first match. The more specific it is, the better your results.
+                      <Trans i18nKey="profileView.noMatchYet" t={t} components={{ 1: <strong /> }} />
                     </div>
                   )}
                   {profile.autoKeywords !== null && profile.autoKeywords !== undefined && profile.autoKeywords.length < 5 && (
                     <div className="alert alert-warning mt-3 mb-0 py-2 small">
-                      <strong>Weak keyword extraction:</strong> only {profile.autoKeywords.length} domain-specific term{profile.autoKeywords.length === 1 ? "" : "s"} were found in your description.
-                      Enrich it with specific technologies, platforms, certifications, and sectors to improve match quality before running a match.
+                      <Trans i18nKey="profileView.weakKeywords" t={t} count={profile.autoKeywords.length} components={{ 1: <strong /> }} />
                     </div>
                   )}
-                  <p className="mt-2"><strong>Certifications:</strong></p>
+                  <p className="mt-2"><strong>{t("profileView.labels.certifications")}</strong></p>
                   <div>
                     {profile.certifications?.length ? (
                       profile.certifications.map((c) => (
                         <span key={c} className="pp-badge pp-badge-gray me-1 mb-1">{c}</span>
                       ))
                     ) : (
-                      <span style={{ color: "var(--pp-text-muted)" }}>None</span>
+                      <span style={{ color: "var(--pp-text-muted)" }}>{t("profileView.none")}</span>
                     )}
                   </div>
                 </div>
@@ -758,21 +768,21 @@ export default function MyCompanyPage() {
           {profile.preferences && (
             <div className="pp-card mt-3">
               <div className="pp-card-body">
-                <h6 style={{ color: "var(--pp-text-muted)", fontSize: ".8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: ".75rem" }}>Matching Preferences</h6>
+                <h6 style={{ color: "var(--pp-text-muted)", fontSize: ".8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", marginBottom: ".75rem" }}>{t("profileView.preferencesTitle")}</h6>
                 <div className="row">
                   <div className="col-md-4">
-                    <p><strong>Preferred Provinces (Delivery):</strong>{" "}
-                      {profile.preferences.preferredProvinces?.join(", ") || "Any"}
+                    <p><strong>{t("profileView.labels.preferredProvinces")}</strong>{" "}
+                      {profile.preferences.preferredProvinces?.join(", ") || t("profileView.any")}
                     </p>
                   </div>
                   <div className="col-md-4">
-                    <p><strong>Notice Types:</strong>{" "}
-                      {profile.preferences.preferredNtTypes?.join(", ") || "Any"}
+                    <p><strong>{t("profileView.labels.noticeTypes")}</strong>{" "}
+                      {profile.preferences.preferredNtTypes?.join(", ") || t("profileView.any")}
                     </p>
                   </div>
                   <div className="col-md-4">
-                    <p><strong>Preferred Organizations:</strong>{" "}
-                      {profile.preferences.preferredOrgs?.join(", ") || "Any"}
+                    <p><strong>{t("profileView.labels.preferredOrgs")}</strong>{" "}
+                      {profile.preferences.preferredOrgs?.join(", ") || t("profileView.any")}
                     </p>
                   </div>
                 </div>
@@ -787,7 +797,7 @@ export default function MyCompanyPage() {
         <form onSubmit={handleSave}>
           <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label className="form-label">Company Name <span className="text-danger fw-bold">*</span><FieldTooltip text="Your legal or trading name. Used for internal reference only." /></label>
+              <label className="form-label">{t("form.fields.companyName")} <span className="text-danger fw-bold">{t("form.required")}</span><FieldTooltip text={t("form.tooltips.companyName")} /></label>
               <input
                 className={`form-control${submitted && !form.companyName.trim() ? " is-invalid" : ""}`}
                 required
@@ -796,25 +806,25 @@ export default function MyCompanyPage() {
               />
             </div>
             <div className="col-md-3">
-              <label className="form-label">Province <span className="text-danger fw-bold">*</span><FieldTooltip text="Your company's primary operating province." /></label>
+              <label className="form-label">{t("form.fields.province")} <span className="text-danger fw-bold">{t("form.required")}</span><FieldTooltip text={t("form.tooltips.province")} /></label>
               <select className={`form-select${submitted && !form.province ? " is-invalid" : ""}`} value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })}>
-                <option value="">Select...</option>
+                <option value="">{t("form.selectPlaceholder")}</option>
                 {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
-              {submitted && !form.province && <div className="text-danger small mt-1">Please select a province.</div>}
+              {submitted && !form.province && <div className="text-danger small mt-1">{t("form.validation.province")}</div>}
             </div>
             <div className="col-md-3">
-              <label className="form-label">Company Size <span className="text-danger fw-bold">*</span><FieldTooltip text="Your headcount range. Informational context for the AI scorer." /></label>
+              <label className="form-label">{t("form.fields.companySize")} <span className="text-danger fw-bold">{t("form.required")}</span><FieldTooltip text={t("form.tooltips.companySize")} /></label>
               <select className={`form-select${submitted && !form.companySize ? " is-invalid" : ""}`} value={form.companySize} onChange={(e) => setForm({ ...form, companySize: e.target.value })}>
-                <option value="">Select...</option>
+                <option value="">{t("form.selectPlaceholder")}</option>
                 {COMPANY_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
-              {submitted && !form.companySize && <div className="text-danger small mt-1">Please select a company size.</div>}
+              {submitted && !form.companySize && <div className="text-danger small mt-1">{t("form.validation.companySize")}</div>}
             </div>
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Industries <span className="text-danger fw-bold">*</span><FieldTooltip text="NAICS classifications for your business. The AI uses these to assess whether a tender is in your domain." /></label>
+            <label className="form-label">{t("form.fields.industries")} <span className="text-danger fw-bold">{t("form.required")}</span><FieldTooltip text={t("form.tooltips.industries")} /></label>
             <IndustryPicker
               value={form.industryCodes}
               onChange={(codes) => setForm({ ...form, industryCodes: codes })}
@@ -823,94 +833,94 @@ export default function MyCompanyPage() {
               id="edit-industries"
             />
             {submitted && form.industryCodes.length === 0 && (
-              <div className="text-danger small mt-1">Please select at least one industry.</div>
+              <div className="text-danger small mt-1">{t("form.validation.industries")}</div>
             )}
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Services Description <span className="text-danger fw-bold">*</span><FieldTooltip text="Describe what your company does in specific terms. Domain keywords are extracted from this text. The more precise, the better your matches." /></label>
+            <label className="form-label">{t("form.fields.servicesDescription")} <span className="text-danger fw-bold">{t("form.required")}</span><FieldTooltip text={t("form.tooltips.servicesDescription")} /></label>
             <textarea
               className={`form-control${submitted && (form.servicesDescription?.length ?? 0) < 150 ? " is-invalid" : ""}`}
               rows={4}
               maxLength={2000}
               value={form.servicesDescription}
               onChange={(e) => setForm({ ...form, servicesDescription: e.target.value })}
-              placeholder="e.g. We implement and support SAP and Oracle ERP systems for mid-size manufacturers, including S/4HANA migrations, system integrations, and managed cloud hosting. Our team holds SAP Activate certification and has delivered 30+ projects across automotive and industrial sectors."
+              placeholder={t("form.placeholders.servicesDescription")}
             />
             <div className="d-flex justify-content-between mt-1">
               {submitted && (form.servicesDescription?.length ?? 0) < 150
-                ? <div className="text-danger small">At least 150 characters required. Be specific about technologies, platforms, and sectors you serve.</div>
-                : <div className="text-muted small">Be specific: name technologies, platforms, certifications, and sectors. Vague descriptions produce fewer keyword matches.</div>}
+                ? <div className="text-danger small">{t("form.validation.descriptionMin")}</div>
+                : <div className="text-muted small">{t("form.descriptionHelp")}</div>}
               <div className={`small ms-2 flex-shrink-0 ${
                 (form.servicesDescription?.length ?? 0) === 2000 ? "text-danger" :
                 (form.servicesDescription?.length ?? 0) >= 1800 ? "text-warning" :
                 (form.servicesDescription?.length ?? 0) >= 150 ? "text-success" : "text-muted"
               }`}>
-                {form.servicesDescription?.length ?? 0} / 2000
+                {t("form.descriptionCounter", { count: form.servicesDescription?.length ?? 0 })}
               </div>
             </div>
           </div>
 
           <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label className="form-label">Keywords<FieldTooltip text="Specific technologies, products, or platforms your company works with. Each keyword is matched word-for-word against every tender before AI scoring. Strong signal for relevance." /></label>
-              <TagInput value={form.keywords} onChange={(tags) => setForm({ ...form, keywords: tags })} placeholder="Type keyword and press Enter" />
+              <label className="form-label">{t("form.fields.keywords")}<FieldTooltip text={t("form.tooltips.keywords")} /></label>
+              <TagInput value={form.keywords} onChange={(tags) => setForm({ ...form, keywords: tags })} placeholder={t("form.placeholders.keyword")} />
             </div>
             <div className="col-md-6">
-              <label className="form-label">Certifications<FieldTooltip text="Professional or trade certifications your company holds. The AI references these when assessing whether a tender requires credentials you have." /></label>
-              <TagInput value={form.certifications} onChange={(tags) => setForm({ ...form, certifications: tags })} placeholder="Type certification and press Enter" />
+              <label className="form-label">{t("form.fields.certifications")}<FieldTooltip text={t("form.tooltips.certifications")} /></label>
+              <TagInput value={form.certifications} onChange={(tags) => setForm({ ...form, certifications: tags })} placeholder={t("form.placeholders.certification")} />
             </div>
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Commodity Types <span className="text-danger fw-bold">*</span><FieldTooltip text="Whether your company sells goods, services, or both. Tenders whose category clearly conflicts with your selection are rejected before AI scoring." /></label>
+            <label className="form-label">{t("form.fields.commodityTypes")} <span className="text-danger fw-bold">{t("form.required")}</span><FieldTooltip text={t("form.tooltips.commodityTypes")} /></label>
             <MultiSelectDropdown
               id="commodityTypes"
               options={COMMODITY_OPTIONS}
               value={form.commodityTypes}
               onChange={(sel) => setForm({ ...form, commodityTypes: sel })}
-              placeholder="Select commodity types..."
+              placeholder={t("form.placeholders.commodityTypes")}
               className={submitted && form.commodityTypes.length === 0 ? "is-invalid" : ""}
             />
             {submitted && form.commodityTypes.length === 0 && (
-              <div className="text-danger small mt-1">Please select at least one commodity type.</div>
+              <div className="text-danger small mt-1">{t("form.validation.commodityTypes")}</div>
             )}
           </div>
 
           <div className="mb-3">
             <button type="button" className="pp-btn pp-btn-ghost pp-btn-sm" onClick={() => setShowPrefs(!showPrefs)}>
-              {showPrefs ? "▼ Hide" : "▶ Show"} Matching Preferences
+              {showPrefs ? t("form.prefsToggleHide") : t("form.prefsToggleShow")}
             </button>
           </div>
 
           {showPrefs && (
             <div className="pp-card mb-3">
               <div className="pp-card-body">
-                <h5 className="card-title">Matching Preferences</h5>
+                <h5 className="card-title">{t("form.prefsTitle")}</h5>
                 <div className="alert alert-warning py-2 small mb-3 mt-4">
-                  ⚠ <strong>These are hard filters.</strong> Tenders that don't match every active filter are rejected before the AI ever sees them. They will never appear in your results. Leave a filter empty to place no restriction on that field.
+                  <Trans i18nKey="form.prefsWarning" t={t} components={{ 1: <strong /> }} />
                 </div>
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label">Preferred Organizations<FieldTooltip text="Hard filter. Only tenders issued by these buying organizations will be scored. Leave empty to receive tenders from all organizations." /></label>
-                    <TagInput value={prefsForm.preferredOrgs} onChange={(tags) => setPrefsForm({ ...prefsForm, preferredOrgs: tags })} placeholder="Type organization and press Enter" />
+                    <label className="form-label">{t("form.prefsFields.preferredOrgs")}<FieldTooltip text={t("form.tooltips.preferredOrgs")} /></label>
+                    <TagInput value={prefsForm.preferredOrgs} onChange={(tags) => setPrefsForm({ ...prefsForm, preferredOrgs: tags })} placeholder={t("form.placeholders.organization")} />
                   </div>
                 </div>
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label">Preferred Notice Types<FieldTooltip text="Hard filter. Only tenders of these types will be scored. Leave empty to receive all notice types." /></label>
-                    <MultiSelectDropdown id="prefNtTypes" options={NOTICE_TYPE_OPTIONS} value={prefsForm.preferredNtTypes} onChange={(sel) => setPrefsForm({ ...prefsForm, preferredNtTypes: sel })} placeholder="Select notice types..." />
+                    <label className="form-label">{t("form.prefsFields.preferredNtTypes")}<FieldTooltip text={t("form.tooltips.preferredNtTypes")} /></label>
+                    <MultiSelectDropdown id="prefNtTypes" options={NOTICE_TYPE_OPTIONS} value={prefsForm.preferredNtTypes} onChange={(sel) => setPrefsForm({ ...prefsForm, preferredNtTypes: sel })} placeholder={t("form.placeholders.noticeTypes")} />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Preferred Provinces (Delivery)<FieldTooltip text="Hard filter on delivery region. Only applies when a tender specifies where work must be delivered. Tenders with no delivery region are always included." /></label>
-                    <MultiSelectDropdown id="prefProvinces" options={PROVINCE_OPTIONS} value={prefsForm.preferredProvinces} onChange={(sel) => setPrefsForm({ ...prefsForm, preferredProvinces: sel })} placeholder="Select provinces..." />
-                    <div className="text-muted small mt-1">Tenders with no specified delivery region are never filtered out by this setting.</div>
+                    <label className="form-label">{t("form.prefsFields.preferredProvinces")}<FieldTooltip text={t("form.tooltips.preferredProvinces")} /></label>
+                    <MultiSelectDropdown id="prefProvinces" options={PROVINCE_OPTIONS} value={prefsForm.preferredProvinces} onChange={(sel) => setPrefsForm({ ...prefsForm, preferredProvinces: sel })} placeholder={t("form.placeholders.provinces")} />
+                    <div className="text-muted small mt-1">{t("form.preferredProvincesNote")}</div>
                   </div>
                 </div>
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label">Exclude Keywords<FieldTooltip text="Hard filter. Any tender containing these words anywhere in its title or description is rejected before scoring." /></label>
-                    <TagInput value={prefsForm.excludeKeywords} onChange={(tags) => setPrefsForm({ ...prefsForm, excludeKeywords: tags })} placeholder="Type keyword and press Enter" />
+                    <label className="form-label">{t("form.prefsFields.excludeKeywords")}<FieldTooltip text={t("form.tooltips.excludeKeywords")} /></label>
+                    <TagInput value={prefsForm.excludeKeywords} onChange={(tags) => setPrefsForm({ ...prefsForm, excludeKeywords: tags })} placeholder={t("form.placeholders.keyword")} />
                   </div>
                 </div>
               </div>
@@ -918,8 +928,8 @@ export default function MyCompanyPage() {
           )}
 
           <div className="d-flex gap-2">
-            <button type="submit" className="pp-btn pp-btn-primary" disabled={saving}>Save Profile</button>
-            <button type="button" className="pp-btn pp-btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
+            <button type="submit" className="pp-btn pp-btn-primary" disabled={saving}>{t("form.saveSubmit")}</button>
+            <button type="button" className="pp-btn pp-btn-ghost" onClick={() => setEditing(false)}>{t("form.cancel")}</button>
           </div>
         </form>
       )}
@@ -930,12 +940,12 @@ export default function MyCompanyPage() {
           {stats && (
             <div className="row g-3 mb-4">
               {[
-                { label: "Total", value: stats.totalMatches, icon: "📊", color: "blue" },
-                { label: "New", value: stats.newCount, icon: "✨", color: "green" },
-                { label: "Saved", value: stats.savedCount, icon: "⭐", color: "amber" },
-                { label: "Viewed", value: stats.viewedCount, icon: "👁", color: "teal" },
-                { label: "Avg Score", value: stats.averageScore, icon: "📈", color: "blue" },
-                { label: "High Score", value: stats.highScoreCount, icon: "🎯", color: "green" },
+                { label: t("matches.stats.total"), value: stats.totalMatches, icon: "📊", color: "blue" },
+                { label: t("matches.stats.new"), value: stats.newCount, icon: "✨", color: "green" },
+                { label: t("matches.stats.saved"), value: stats.savedCount, icon: "⭐", color: "amber" },
+                { label: t("matches.stats.viewed"), value: stats.viewedCount, icon: "👁", color: "teal" },
+                { label: t("matches.stats.avgScore"), value: stats.averageScore, icon: "📈", color: "blue" },
+                { label: t("matches.stats.highScore"), value: stats.highScoreCount, icon: "🎯", color: "green" },
               ].map(({ label, value, icon, color }) => (
                 <div key={label} className="col-md-2 pp-animate-in">
                   <div className="pp-stat-card" style={{ flexDirection: "column", alignItems: "center", textAlign: "center" }}>
@@ -958,7 +968,7 @@ export default function MyCompanyPage() {
               onClick={handleExport}
               disabled={exportLoading || matchesLoading || matchTotalCount === 0}
             >
-              {exportLoading ? "Exporting..." : "↓ Export CSV"}
+              {exportLoading ? t("matches.exporting") : t("matches.exportCsv")}
             </button>
           </div>
           <MatchesSearchBar
@@ -971,7 +981,7 @@ export default function MyCompanyPage() {
           {matchesLoading ? (
             <div className="pp-loader"><div className="pp-spinner" /></div>
           ) : matches.length === 0 ? (
-            <p className="text-muted">No matches found. Try running matching first.</p>
+            <p className="text-muted">{t("matches.empty")}</p>
           ) : (
             <>
               <MatchesTable matches={matches} onStatusChange={handleStatusChange} />
@@ -980,7 +990,7 @@ export default function MyCompanyPage() {
                 totalPages={matchTotalPages}
                 totalCount={matchTotalCount}
                 onPageChange={setMatchPage}
-                label="match"
+                label={t("matches.paginationLabel")}
               />
             </>
           )}

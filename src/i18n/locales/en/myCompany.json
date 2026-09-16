@@ -1,0 +1,166 @@
+{
+  "header": {
+    "fallbackName": "My Company",
+    "lastMatched": "Last matched: {{time}}",
+    "runMatching": "🎯 Run Matching",
+    "runMatchingLocked": "🔒 Run Matching",
+    "runMatchingBusy": "⟳ Matching...",
+    "runLockedTitle": "Your trial has ended — subscribe to run matching"
+  },
+  "status": {
+    "matching": "⟳ Matching...",
+    "matched": "✓ Matched",
+    "failed": "✕ Failed",
+    "notMatched": "Not matched"
+  },
+  "timeAgo": {
+    "never": "Never",
+    "justNow": "Just now",
+    "mAgo": "{{count}}m ago",
+    "hAgo": "{{count}}h ago",
+    "dAgo": "{{count}}d ago"
+  },
+  "tabs": {
+    "profile": "Company Profile",
+    "matches": "Matches"
+  },
+  "setup": {
+    "title": "Set Up Your Company Profile",
+    "body": "Create your company profile to start matching with government tenders.",
+    "cta": "Create Profile"
+  },
+  "profileView": {
+    "editButton": "✎ Edit Profile",
+    "companyDetails": "Company Details",
+    "servicesKeywords": "Services & Keywords",
+    "preferencesTitle": "Matching Preferences",
+    "labels": {
+      "name": "Name:",
+      "industries": "Industries:",
+      "province": "Province:",
+      "size": "Size:",
+      "commodityTypes": "Commodity Types:",
+      "description": "Description:",
+      "keywords": "Keywords:",
+      "autoKeywords": "Auto Keywords:",
+      "certifications": "Certifications:",
+      "preferredProvinces": "Preferred Provinces (Delivery):",
+      "noticeTypes": "Notice Types:",
+      "preferredOrgs": "Preferred Organizations:"
+    },
+    "any": "Any",
+    "none": "None",
+    "dash": "—",
+    "noMatchYet": "<1>No match has run yet.</1> Keywords will be extracted from your description when you run your first match. The more specific it is, the better your results.",
+    "weakKeywords_one": "<1>Weak keyword extraction:</1> only {{count}} domain-specific term was found in your description. Enrich it with specific technologies, platforms, certifications, and sectors to improve match quality before running a match.",
+    "weakKeywords_other": "<1>Weak keyword extraction:</1> only {{count}} domain-specific terms were found in your description. Enrich it with specific technologies, platforms, certifications, and sectors to improve match quality before running a match."
+  },
+  "form": {
+    "createTitle": "Create Company Profile",
+    "required": "*",
+    "selectPlaceholder": "Select...",
+    "fields": {
+      "companyName": "Company Name",
+      "province": "Province",
+      "companySize": "Company Size",
+      "industries": "Industries",
+      "servicesDescription": "Services Description",
+      "keywords": "Keywords",
+      "certifications": "Certifications",
+      "commodityTypes": "Commodity Types"
+    },
+    "placeholders": {
+      "servicesDescription": "e.g. We implement and support SAP and Oracle ERP systems for mid-size manufacturers, including S/4HANA migrations, system integrations, and managed cloud hosting. Our team holds SAP Activate certification and has delivered 30+ projects across automotive and industrial sectors.",
+      "keyword": "Type keyword and press Enter",
+      "certification": "Type certification and press Enter",
+      "organization": "Type organization and press Enter",
+      "commodityTypes": "Select commodity types...",
+      "noticeTypes": "Select notice types...",
+      "provinces": "Select provinces..."
+    },
+    "tooltips": {
+      "companyName": "Your legal or trading name. Used for internal reference only.",
+      "province": "Your company's primary operating province.",
+      "companySize": "Your headcount range. Informational context for the AI scorer.",
+      "industries": "NAICS classifications for your business. The AI uses these to assess whether a tender is in your domain.",
+      "servicesDescription": "Describe what your company does in specific terms. Domain keywords are extracted from this text. The more precise, the better your matches.",
+      "keywords": "Specific technologies, products, or platforms your company works with. Each keyword is matched word-for-word against every tender before AI scoring. Strong signal for relevance.",
+      "certifications": "Professional or trade certifications your company holds. The AI references these when assessing whether a tender requires credentials you have.",
+      "commodityTypes": "Whether your company sells goods, services, or both. Tenders whose category clearly conflicts with your selection are rejected before AI scoring.",
+      "preferredOrgs": "Hard filter. Only tenders issued by these buying organizations will be scored. Leave empty to receive tenders from all organizations.",
+      "preferredNtTypes": "Hard filter. Only tenders of these types will be scored. Leave empty to receive all notice types.",
+      "preferredProvinces": "Hard filter on delivery region. Only applies when a tender specifies where work must be delivered. Tenders with no delivery region are always included.",
+      "excludeKeywords": "Hard filter. Any tender containing these words anywhere in its title or description is rejected before scoring."
+    },
+    "validation": {
+      "province": "Please select a province.",
+      "companySize": "Please select a company size.",
+      "industries": "Please select at least one industry.",
+      "commodityTypes": "Please select at least one commodity type.",
+      "descriptionMin": "At least 150 characters required. Be specific about technologies, platforms, and sectors you serve."
+    },
+    "descriptionHelp": "Be specific: name technologies, platforms, certifications, and sectors. Vague descriptions produce fewer keyword matches.",
+    "descriptionCounter": "{{count}} / 2000",
+    "prefsToggleShow": "▶ Show Matching Preferences",
+    "prefsToggleHide": "▼ Hide Matching Preferences",
+    "prefsWarning": "⚠ <1>These are hard filters.</1> Tenders that don't match every active filter are rejected before the AI ever sees them. They will never appear in your results. Leave a filter empty to place no restriction on that field.",
+    "prefsTitle": "Matching Preferences",
+    "prefsFields": {
+      "preferredOrgs": "Preferred Organizations",
+      "preferredNtTypes": "Preferred Notice Types",
+      "preferredProvinces": "Preferred Provinces (Delivery)",
+      "excludeKeywords": "Exclude Keywords"
+    },
+    "preferredProvincesNote": "Tenders with no specified delivery region are never filtered out by this setting.",
+    "createSubmit": "Create Profile",
+    "saveSubmit": "Save Profile",
+    "cancel": "Cancel"
+  },
+  "confirmModal": {
+    "createTitle": "Create Profile",
+    "saveTitle": "Save Changes",
+    "createBody": "Create your company profile? You can edit it at any time after creation.",
+    "saveBody": "Save changes to your profile? If your description changed, keywords will be re-extracted on your next match run.",
+    "goBack": "Go Back",
+    "confirm": "Confirm",
+    "saving": "Saving..."
+  },
+  "trigger": {
+    "queued": "Matching queued",
+    "cooldown": "Cooldown active. Retry in {{hours}}h {{minutes}}m",
+    "failed": "Failed"
+  },
+  "matches": {
+    "stats": {
+      "total": "Total",
+      "new": "New",
+      "saved": "Saved",
+      "viewed": "Viewed",
+      "avgScore": "Avg Score",
+      "highScore": "High Score"
+    },
+    "exporting": "Exporting...",
+    "exportCsv": "↓ Export CSV",
+    "empty": "No matches found. Try running matching first.",
+    "paginationLabel": "match",
+    "csvHeaders": {
+      "title": "Title",
+      "organization": "Organization",
+      "category": "Category",
+      "noticeType": "Notice Type",
+      "score": "Score",
+      "status": "Status",
+      "matchedOn": "Matched On",
+      "closingDate": "Closing Date",
+      "noticeLink": "Notice Link"
+    }
+  },
+  "errors": {
+    "loadProfile": "Failed to load profile",
+    "createProfile": "Failed to create profile",
+    "saveProfile": "Failed to save",
+    "loadMatches": "Failed to load matches",
+    "updateStatus": "Failed to update status",
+    "exportFailed": "Export failed"
+  }
+}
