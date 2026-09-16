@@ -990,7 +990,7 @@ export default function MyCompanyPage() {
                 totalPages={matchTotalPages}
                 totalCount={matchTotalCount}
                 onPageChange={setMatchPage}
-                label={t("matches.paginationLabel")}
+                foundLabel={t("pagination.matchesFound", { count: matchTotalCount, ns: "common" })}
               />
             </>
           )}

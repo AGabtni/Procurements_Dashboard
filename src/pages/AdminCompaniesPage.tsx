@@ -1164,7 +1164,7 @@ export default function AdminCompaniesPage() {
                 totalPages={matchTotalPages}
                 totalCount={matchTotalCount}
                 onPageChange={setMatchPage}
-                label="match"
+                foundLabel={`${matchTotalCount.toLocaleString()} match${matchTotalCount !== 1 ? "es" : ""} found`}
               />
             </>
           )}
