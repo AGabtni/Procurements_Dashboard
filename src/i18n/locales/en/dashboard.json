@@ -1,0 +1,57 @@
+{
+  "hero": {
+    "welcomeBack": "Welcome back, {{name}}",
+    "welcomeGuest": "Discover Government Procurements",
+    "subtitleLoggedIn": "Your procurement intelligence dashboard. New matches, closing deadlines, and opportunities await.",
+    "subtitleGuest": "Browse thousands of public tenders from across Canada. Sign in to get personalized matches.",
+    "getStarted": "Get Started Free",
+    "signIn": "Sign In"
+  },
+  "stats": {
+    "newToday": "New Opportunities Today",
+    "closingThisWeek": "Opportunities Closing This Week",
+    "newMatches": "New Matches For You"
+  },
+  "nudge": {
+    "title": "🎯 Get personalized tender matches",
+    "body": "Create your company profile and our AI will surface relevant opportunities automatically, every 6 hours.",
+    "cta": "Set up profile →"
+  },
+  "recentMatches": {
+    "title": "🎯 Recent Matches",
+    "viewAll": "View all →",
+    "setupTitle": "Set up your company profile",
+    "setupBody": "Tell us about your business and we'll find procurement opportunities that match your capabilities.",
+    "setupCta": "Create profile",
+    "emptyTitle": "No matches yet",
+    "emptyBody": "Run matching from your company page to discover relevant tenders.",
+    "emptyCta": "Run matching",
+    "teaserTitle": "Unlock personalized matches",
+    "teaserBody": "Stop manually searching. Get the right tenders delivered to you automatically."
+  },
+  "closingSoon": {
+    "title": "⏰ Closing Soon",
+    "viewAll": "View all →",
+    "emptyTitle": "No urgent deadlines",
+    "emptyBody": "No tenders closing within the next 7 days."
+  },
+  "recentlyViewed": {
+    "title": "🕑 Recently Viewed",
+    "browseAll": "Browse all →",
+    "emptyTitle": "No tenders viewed yet",
+    "emptyBody": "Tenders you open will appear here so you can pick up where you left off.",
+    "emptyCta": "Browse tenders"
+  },
+  "closing": {
+    "noDeadline": "No deadline",
+    "closed": "Closed",
+    "closesToday": "Closes today",
+    "closesTomorrow": "Closes tomorrow",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left"
+  },
+  "misc": {
+    "untitled": "Untitled",
+    "dash": "—"
+  }
+}

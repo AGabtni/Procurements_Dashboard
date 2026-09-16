@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 import { useAuth } from "../context/AuthContext";
 import { searchTenders, getTenderById, getTenderStats } from "../api/tenderApi";
 import {
@@ -41,15 +43,14 @@ function daysUntil(dateStr: string | null): number | null {
   return Math.ceil(diff / 86400000);
 }
 
-function closingLabel(dateStr: string | null) {
+function closingLabel(dateStr: string | null, t: (k: string, opts?: Record<string, unknown>) => string) {
   const days = daysUntil(dateStr);
-  if (days === null) return "No deadline";
-  if (days < 0) return "Closed";
-  if (days === 0) return "Closes today";
-  if (days === 1) return "Closes tomorrow";
-  if (days <= 3) return `${days} days left`;
-  if (days <= 7) return `${days} days left`;
-  return new Date(dateStr!).toLocaleDateString("en-CA");
+  if (days === null) return t("closing.noDeadline");
+  if (days < 0) return t("closing.closed");
+  if (days === 0) return t("closing.closesToday");
+  if (days === 1) return t("closing.closesTomorrow");
+  if (days <= 7) return t("closing.daysLeft", { count: days });
+  return new Date(dateStr!).toLocaleDateString(i18n.language);
 }
 
 function closingBadgeClass(dateStr: string | null) {
@@ -63,6 +64,7 @@ function closingBadgeClass(dateStr: string | null) {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { t } = useTranslation("dashboard");
   const [profile, setProfile] = useState<CompanyProfileDto | null>(null);
   const [stats, setStats] = useState<MatchStatsDto | null>(null);
   const [recentMatches, setRecentMatches] = useState<CompanyMatchDto[]>([]);
@@ -162,20 +164,18 @@ export default function DashboardPage() {
       {/* Hero */}
       <div className="pp-dashboard-hero">
         <h1>
-          {user ? `Welcome back, ${user.fullName.split(" ")[0]}` : "Discover Government Procurements"}
+          {user ? t("hero.welcomeBack", { name: user.fullName.split(" ")[0] }) : t("hero.welcomeGuest")}
         </h1>
         <p>
-          {user
-            ? "Your procurement intelligence dashboard. New matches, closing deadlines, and opportunities await."
-            : "Browse thousands of public tenders from across Canada. Sign in to get personalized matches."}
+          {user ? t("hero.subtitleLoggedIn") : t("hero.subtitleGuest")}
         </p>
         {!user && (
           <div className="mt-3 d-flex gap-2 flex-wrap">
             <Link to="/register" className="pp-btn pp-btn-primary">
-              Get Started Free
+              {t("hero.getStarted")}
             </Link>
             <Link to="/login" className="pp-btn" style={{ color: "rgba(255,255,255,.85)", border: "1px solid rgba(255,255,255,.25)", background: "rgba(255,255,255,.06)" }}>
-              Sign In
+              {t("hero.signIn")}
             </Link>
           </div>
         )}
@@ -184,15 +184,15 @@ export default function DashboardPage() {
       {/* Stats Bar */}
       <div className="pp-stats-bar pp-animate-in">
         <span className="pp-stats-bar-item">
-          <span className="stat-num blue">{newToday}</span> New Opportunities Today
+          <span className="stat-num blue">{newToday}</span> {t("stats.newToday")}
         </span>
         <span className="pp-stats-bar-item">
-          <span className="stat-num amber">{closingThisWeek}</span> Opportunities Closing This Week
+          <span className="stat-num amber">{closingThisWeek}</span> {t("stats.closingThisWeek")}
         </span>
         {user && stats && stats.newCount > 0 && (
           <>
             <span className="pp-stats-bar-item">
-              <span className="stat-num green">{stats.newCount}</span> New Matches For You
+              <span className="stat-num green">{stats.newCount}</span> {t("stats.newMatches")}
             </span>
           </>
         )}
@@ -202,11 +202,11 @@ export default function DashboardPage() {
       {user && !profile && (
         <div className="pp-nudge-banner pp-animate-in">
           <div>
-            <strong>🎯 Get personalized tender matches</strong>
-            <span>Create your company profile and our AI will surface relevant opportunities automatically, every 6 hours.</span>
+            <strong>{t("nudge.title")}</strong>
+            <span>{t("nudge.body")}</span>
           </div>
           <Link to="/my-company" className="pp-btn pp-btn-primary pp-btn-sm" style={{ whiteSpace: "nowrap" }}>
-            Set up profile →
+            {t("nudge.cta")}
           </Link>
         </div>
       )}
@@ -257,24 +257,24 @@ export default function DashboardPage() {
               }}>
                 <span style={{ fontSize: "1.875rem" }}>🔒</span>
                 <p style={{ margin: 0, fontWeight: 700, fontSize: "1.15rem", color: "#f1f5f9", textAlign: "center" }}>
-                  Unlock personalized matches
+                  {t("recentMatches.teaserTitle")}
                 </p>
                 <p style={{ margin: 0, fontSize: ".88rem", color: "#f1f5f9", textAlign: "center", maxWidth: 260 }}>
-                  Stop manually searching. Get the right tenders delivered to you automatically.
+                  {t("recentMatches.teaserBody")}
                 </p>
                 <div className="d-flex gap-2 mt-1">
-                  <Link to="/register" className="pp-btn pp-btn-primary pp-btn-sm" style={{ fontSize: "1rem", padding: ".45rem 1rem" }}>Get Started Free</Link>
-                  <Link to="/login" className="pp-btn pp-btn-ghost pp-btn-sm" style={{ color: "#f1f5f9", border: "1px solid rgba(255,255,255,.4)", fontSize: "1rem", padding: ".45rem 1rem" }}>Sign In</Link>
+                  <Link to="/register" className="pp-btn pp-btn-primary pp-btn-sm" style={{ fontSize: "1rem", padding: ".45rem 1rem" }}>{t("hero.getStarted")}</Link>
+                  <Link to="/login" className="pp-btn pp-btn-ghost pp-btn-sm" style={{ color: "#f1f5f9", border: "1px solid rgba(255,255,255,.4)", fontSize: "1rem", padding: ".45rem 1rem" }}>{t("hero.signIn")}</Link>
                 </div>
               </div>
             </div>
           ) : (
           <div className="pp-card h-100 pp-animate-in">
             <div className="pp-card-header">
-              <span>🎯 Recent Matches</span>
+              <span>{t("recentMatches.title")}</span>
               {profile && recentMatches.length > 0 && (
                 <Link to="/my-company" className="pp-btn pp-btn-ghost pp-btn-sm">
-                  View all →
+                  {t("recentMatches.viewAll")}
                 </Link>
               )}
             </div>
@@ -282,10 +282,10 @@ export default function DashboardPage() {
               {!profile ? (
                 <div className="pp-empty-state" style={{ padding: "2rem 1.5rem" }}>
                   <div className="empty-icon">🏢</div>
-                  <h3>Set up your company profile</h3>
-                  <p>Tell us about your business and we'll find procurement opportunities that match your capabilities.</p>
+                  <h3>{t("recentMatches.setupTitle")}</h3>
+                  <p>{t("recentMatches.setupBody")}</p>
                   <Link to="/my-company" className="pp-btn pp-btn-primary pp-btn-sm mt-2">
-                    Create profile
+                    {t("recentMatches.setupCta")}
                   </Link>
                 </div>
               ) : user?.subscriptionStatus === "expired" ? (
@@ -293,10 +293,10 @@ export default function DashboardPage() {
               ) : recentMatches.length === 0 ? (
                 <div className="pp-empty-state" style={{ padding: "2rem 1.5rem" }}>
                   <div className="empty-icon">🔍</div>
-                  <h3>No matches yet</h3>
-                  <p>Run matching from your company page to discover relevant tenders.</p>
+                  <h3>{t("recentMatches.emptyTitle")}</h3>
+                  <p>{t("recentMatches.emptyBody")}</p>
                   <Link to="/my-company" className="pp-btn pp-btn-primary pp-btn-sm mt-2">
-                    Run matching
+                    {t("recentMatches.emptyCta")}
                   </Link>
                 </div>
               ) : (
@@ -314,7 +314,7 @@ export default function DashboardPage() {
                           {m.tenderTitle ?? `#${m.tenderId}`}
                         </div>
                         <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)" }}>
-                          {m.buyingOrganization ?? "—"}
+                          {m.buyingOrganization ?? t("misc.dash")}
                         </div>
                       </div>
                     </div>
@@ -331,23 +331,23 @@ export default function DashboardPage() {
         <div className="col-lg-6">
           <div className="pp-card h-100 pp-animate-in">
             <div className="pp-card-header">
-              <span>⏰ Closing Soon</span>
+              <span>{t("closingSoon.title")}</span>
               <Link to="/tenders" className="pp-btn pp-btn-ghost pp-btn-sm">
-                View all →
+                {t("closingSoon.viewAll")}
               </Link>
             </div>
             <div className="pp-card-body p-0">
               {closingSoon.length === 0 ? (
                 <div className="pp-empty-state" style={{ padding: "2rem 1.5rem" }}>
                   <div className="empty-icon">✅</div>
-                  <h3>No urgent deadlines</h3>
-                  <p>No tenders closing within the next 7 days.</p>
+                  <h3>{t("closingSoon.emptyTitle")}</h3>
+                  <p>{t("closingSoon.emptyBody")}</p>
                 </div>
               ) : (
-                closingSoon.map((t) => (
+                closingSoon.map((t2) => (
                   <Link
-                    key={t.id}
-                    to={`/tenders/${t.id}`}
+                    key={t2.id}
+                    to={`/tenders/${t2.id}`}
                     className="pp-doc-item"
                     style={{ textDecoration: "none", color: "inherit" }}
                   >
@@ -363,15 +363,15 @@ export default function DashboardPage() {
                       </div>
                       <div style={{ minWidth: 0 }}>
                         <div className="pp-truncate-title">
-                          {t.title ?? "Untitled"}
+                          {t2.title ?? t("misc.untitled")}
                         </div>
                         <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)" }}>
-                          {t.buyingOrganization ?? "—"}
+                          {t2.buyingOrganization ?? t("misc.dash")}
                         </div>
                       </div>
                     </div>
-                    <span className={`pp-badge ${closingBadgeClass(t.closingDate)}`}>
-                      {closingLabel(t.closingDate)}
+                    <span className={`pp-badge ${closingBadgeClass(t2.closingDate)}`}>
+                      {closingLabel(t2.closingDate, t)}
                     </span>
                   </Link>
                 ))
@@ -384,26 +384,26 @@ export default function DashboardPage() {
       {/* Recently Viewed */}
       <div className="pp-card mt-2 pp-animate-in">
         <div className="pp-card-header">
-          <span>🕑 Recently Viewed</span>
+          <span>{t("recentlyViewed.title")}</span>
           <Link to="/tenders" className="pp-btn pp-btn-ghost pp-btn-sm">
-            Browse all →
+            {t("recentlyViewed.browseAll")}
           </Link>
         </div>
         <div className="pp-card-body p-0">
           {recentlyViewed.length === 0 ? (
             <div className="pp-empty-state" style={{ padding: "2rem 1.5rem" }}>
               <div className="empty-icon">👀</div>
-              <h3>No tenders viewed yet</h3>
-              <p>Tenders you open will appear here so you can pick up where you left off.</p>
+              <h3>{t("recentlyViewed.emptyTitle")}</h3>
+              <p>{t("recentlyViewed.emptyBody")}</p>
               <Link to="/tenders" className="pp-btn pp-btn-primary pp-btn-sm mt-2">
-                Browse tenders
+                {t("recentlyViewed.emptyCta")}
               </Link>
             </div>
           ) : (
-            recentlyViewed.map((t) => (
+            recentlyViewed.map((tender) => (
               <Link
-                key={t.id}
-                to={`/tenders/${t.id}`}
+                key={tender.id}
+                to={`/tenders/${tender.id}`}
                 className="pp-doc-item"
                 style={{ textDecoration: "none", color: "inherit" }}
               >
@@ -419,15 +419,15 @@ export default function DashboardPage() {
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div className="pp-truncate-title">
-                      {t.title ?? "Untitled"}
+                      {tender.title ?? t("misc.untitled")}
                     </div>
                     <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)" }}>
-                      {t.buyingOrganization ?? "—"}
+                      {tender.buyingOrganization ?? t("misc.dash")}
                     </div>
                   </div>
                 </div>
-                <span className={`pp-badge ${closingBadgeClass(t.closingDate)}`}>
-                  {closingLabel(t.closingDate)}
+                <span className={`pp-badge ${closingBadgeClass(tender.closingDate)}`}>
+                  {closingLabel(tender.closingDate, t)}
                 </span>
               </Link>
             ))

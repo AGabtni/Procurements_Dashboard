@@ -1,0 +1,57 @@
+{
+  "hero": {
+    "welcomeBack": "Bon retour, {{name}}",
+    "welcomeGuest": "Découvrez les marchés publics",
+    "subtitleLoggedIn": "Votre tableau de bord d'intelligence d'approvisionnement. De nouvelles correspondances, des échéances et des opportunités vous attendent.",
+    "subtitleGuest": "Parcourez des milliers d'appels d'offres publics à travers le Canada. Connectez-vous pour obtenir des correspondances personnalisées.",
+    "getStarted": "Commencer gratuitement",
+    "signIn": "Se connecter"
+  },
+  "stats": {
+    "newToday": "Nouvelles opportunités aujourd'hui",
+    "closingThisWeek": "Opportunités se terminant cette semaine",
+    "newMatches": "Nouvelles correspondances pour vous"
+  },
+  "nudge": {
+    "title": "🎯 Recevez des correspondances personnalisées",
+    "body": "Créez le profil de votre entreprise et notre IA fera remonter automatiquement les opportunités pertinentes, toutes les 6 heures.",
+    "cta": "Configurer le profil →"
+  },
+  "recentMatches": {
+    "title": "🎯 Correspondances récentes",
+    "viewAll": "Voir tout →",
+    "setupTitle": "Configurez le profil de votre entreprise",
+    "setupBody": "Parlez-nous de votre entreprise et nous trouverons des opportunités d'approvisionnement qui correspondent à vos capacités.",
+    "setupCta": "Créer le profil",
+    "emptyTitle": "Aucune correspondance pour l'instant",
+    "emptyBody": "Lancez la mise en correspondance depuis la page de votre entreprise pour découvrir des appels d'offres pertinents.",
+    "emptyCta": "Lancer la mise en correspondance",
+    "teaserTitle": "Débloquez les correspondances personnalisées",
+    "teaserBody": "Cessez de chercher manuellement. Recevez automatiquement les bons appels d'offres."
+  },
+  "closingSoon": {
+    "title": "⏰ Fermeture imminente",
+    "viewAll": "Voir tout →",
+    "emptyTitle": "Aucune échéance urgente",
+    "emptyBody": "Aucun appel d'offres ne se termine dans les 7 prochains jours."
+  },
+  "recentlyViewed": {
+    "title": "🕑 Consultés récemment",
+    "browseAll": "Tout parcourir →",
+    "emptyTitle": "Aucun appel d'offres consulté",
+    "emptyBody": "Les appels d'offres que vous ouvrez apparaîtront ici pour reprendre là où vous vous êtes arrêté.",
+    "emptyCta": "Parcourir les appels d'offres"
+  },
+  "closing": {
+    "noDeadline": "Aucune échéance",
+    "closed": "Fermé",
+    "closesToday": "Ferme aujourd'hui",
+    "closesTomorrow": "Ferme demain",
+    "daysLeft_one": "{{count}} jour restant",
+    "daysLeft_other": "{{count}} jours restants"
+  },
+  "misc": {
+    "untitled": "Sans titre",
+    "dash": "—"
+  }
+}
