@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { CompanyMatchDto } from "../types/company";
 import { categoryLabel } from "../utils/categoryMap";
 import { decodeHtml } from "../utils/html";
@@ -33,6 +34,7 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 export default function MatchesTable({ matches, showReason, onStatusChange }: Props) {
+  const { t, i18n } = useTranslation("tenders");
   const [sortCol, setSortCol] = useState<SortCol>("matchedAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
@@ -66,8 +68,8 @@ export default function MatchesTable({ matches, showReason, onStatusChange }: Pr
     return (
       <div className="pp-empty-state">
         <div className="empty-icon">🎯</div>
-        <h3>No matches yet</h3>
-        <p>Run matching to discover tenders that fit your company profile.</p>
+        <h3>{t("matchesTable.emptyTitle")}</h3>
+        <p>{t("matchesTable.emptyBody")}</p>
       </div>
     );
   }
@@ -78,21 +80,21 @@ export default function MatchesTable({ matches, showReason, onStatusChange }: Pr
         <thead>
           <tr>
             <th role="button" onClick={() => toggleSort("matchScore")} style={{ width: "70px" }}>
-              Score{sortIcon("matchScore")}
+              {t("matchesTable.headers.score")}{sortIcon("matchScore")}
             </th>
-            <th style={{ width: "35%" }}>Tender</th>
+            <th style={{ width: "35%" }}>{t("matchesTable.headers.tender")}</th>
             <th role="button" onClick={() => toggleSort("organization")} style={{ width: "18%" }}>
-              Organization{sortIcon("organization")}
+              {t("matchesTable.headers.organization")}{sortIcon("organization")}
             </th>
-            <th style={{ width: "10%" }}>Category</th>
+            <th style={{ width: "10%" }}>{t("matchesTable.headers.category")}</th>
             <th role="button" onClick={() => toggleSort("matchedAt")}>
-              Matched{sortIcon("matchedAt")}
+              {t("matchesTable.headers.matched")}{sortIcon("matchedAt")}
             </th>
             <th role="button" onClick={() => toggleSort("closingDate")}>
-              Closing{sortIcon("closingDate")}
+              {t("matchesTable.headers.closing")}{sortIcon("closingDate")}
             </th>
-            <th>Status</th>
-            <th style={{ width: "70px" }}>Actions</th>
+            <th>{t("matchesTable.headers.status")}</th>
+            <th style={{ width: "70px" }}>{t("matchesTable.headers.actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -118,13 +120,13 @@ export default function MatchesTable({ matches, showReason, onStatusChange }: Pr
                 <span className="pp-badge pp-badge-blue">{categoryLabel(m.procurementCategory)}</span>
               </td>
               <td style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
-                {new Date(m.matchedAt).toLocaleDateString()}
+                {new Date(m.matchedAt).toLocaleDateString(i18n.language)}
               </td>
               <td style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
-                {m.closingDate ? new Date(m.closingDate).toLocaleDateString() : "—"}
+                {m.closingDate ? new Date(m.closingDate).toLocaleDateString(i18n.language) : "—"}
               </td>
               <td>
-                <span className={`pp-match-status ${m.status}`}>{m.status}</span>
+                <span className={`pp-match-status ${m.status}`}>{t(`matchesTable.statuses.${m.status}`)}</span>
               </td>
               <td>
                 <div className="dropdown">
@@ -135,7 +137,7 @@ export default function MatchesTable({ matches, showReason, onStatusChange }: Pr
                     {(["new", "viewed", "saved", "dismissed"] as const).map((s) => (
                       <li key={s}>
                         <button className="dropdown-item" onClick={() => onStatusChange(m.id, s)}>
-                          {s.charAt(0).toUpperCase() + s.slice(1)}
+                          {t(`matchesTable.statuses.${s}`)}
                         </button>
                       </li>
                     ))}

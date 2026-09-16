@@ -11,6 +11,8 @@ import enDashboard from "./locales/en/dashboard.json";
 import frDashboard from "./locales/fr/dashboard.json";
 import enMyCompany from "./locales/en/myCompany.json";
 import frMyCompany from "./locales/fr/myCompany.json";
+import enTenders from "./locales/en/tenders.json";
+import frTenders from "./locales/fr/tenders.json";
 
 export const SUPPORTED_LOCALES = ["en-CA", "fr-CA"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -39,13 +41,13 @@ void i18n
   .use(initReactI18next)
   .init({
     resources: {
-      "en-CA": { common: enCommon, settings: enSettings, auth: enAuth, dashboard: enDashboard, myCompany: enMyCompany },
-      "fr-CA": { common: frCommon, settings: frSettings, auth: frAuth, dashboard: frDashboard, myCompany: frMyCompany },
+      "en-CA": { common: enCommon, settings: enSettings, auth: enAuth, dashboard: enDashboard, myCompany: enMyCompany, tenders: enTenders },
+      "fr-CA": { common: frCommon, settings: frSettings, auth: frAuth, dashboard: frDashboard, myCompany: frMyCompany, tenders: frTenders },
     },
     lng: initialLang,
     fallbackLng: "en-CA",
     supportedLngs: [...SUPPORTED_LOCALES],
-    ns: ["common", "settings", "auth", "dashboard", "myCompany"],
+    ns: ["common", "settings", "auth", "dashboard", "myCompany", "tenders"],
     defaultNS: "common",
     interpolation: { escapeValue: false },
     returnNull: false,

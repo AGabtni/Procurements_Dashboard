@@ -1,0 +1,117 @@
+{
+  "list": {
+    "title": "Procurement Tenders",
+    "available_one": "{{count}} tender available",
+    "available_other": "{{count}} tenders available",
+    "exportCsv": "↓ Export CSV",
+    "loadFailed": "Failed to load tenders",
+    "csvHeaders": {
+      "noticeId": "Notice ID",
+      "title": "Title",
+      "organization": "Organization",
+      "category": "Category",
+      "noticeType": "Notice Type",
+      "published": "Published",
+      "closing": "Closing",
+      "hasDocuments": "Has Documents"
+    },
+    "yes": "Yes",
+    "no": "No"
+  },
+  "searchBar": {
+    "search": "Search",
+    "keywordPlaceholder": "Title, organization, or notice ID…",
+    "keywordPlaceholderShort": "Title or notice ID…",
+    "category": "Category",
+    "all": "All",
+    "noticeType": "Notice Type",
+    "openOnly": "Open only",
+    "searchButton": "Search",
+    "reset": "Reset",
+    "organization": "Organization",
+    "allOrganizations": "All organizations",
+    "allTypes": "All types",
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "statuses": {
+      "new": "New",
+      "viewed": "Viewed",
+      "saved": "Saved",
+      "dismissed": "Dismissed"
+    }
+  },
+  "table": {
+    "headers": {
+      "title": "Title",
+      "organization": "Organization",
+      "type": "Type",
+      "published": "Published",
+      "closing": "Closing"
+    },
+    "emptyTitle": "No tenders found",
+    "emptyBody": "Try adjusting your search filters or broadening your criteria.",
+    "untitled": "Untitled",
+    "dash": "—",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "daysLeft_one": "{{count}}d left",
+    "daysLeft_other": "{{count}}d left"
+  },
+  "matchesTable": {
+    "headers": {
+      "score": "Score",
+      "tender": "Tender",
+      "organization": "Organization",
+      "category": "Category",
+      "matched": "Matched",
+      "closing": "Closing",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "emptyTitle": "No matches yet",
+    "emptyBody": "Run matching to discover tenders that fit your company profile.",
+    "statuses": {
+      "new": "New",
+      "viewed": "Viewed",
+      "saved": "Saved",
+      "dismissed": "Dismissed"
+    }
+  },
+  "detail": {
+    "back": "← Back",
+    "notFound": "Tender not found.",
+    "loadFailed": "Failed to load tender",
+    "closesToday": "Closes today",
+    "tomorrow": "Tomorrow",
+    "daysLeft_one": "{{count}}d left",
+    "daysLeft_other": "{{count}}d left",
+    "meta": {
+      "published": "Published {{date}}",
+      "closing": "Closing {{date}}"
+    },
+    "viewOriginal": "View Original Notice →",
+    "externalLink": "External Link",
+    "sections": {
+      "description": "📝 Description",
+      "selectionCriteria": "🎯 Selection Criteria",
+      "documents": "📎 Documents",
+      "details": "ℹ️ Details",
+      "contact": "📞 Contact",
+      "contactPlural": "📞 Contacts"
+    },
+    "documentTitleFallback": "Untitled",
+    "documentDownload": "Download",
+    "detailsFields": {
+      "procurementMethod": "Procurement Method",
+      "regionOfDelivery": "Region of Delivery",
+      "regionOfOpportunity": "Region of Opportunity",
+      "unspsc": "UNSPSC Codes",
+      "gsin": "GSIN Codes"
+    },
+    "contactFields": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { searchTenders, getCategories, getNoticeTypes } from "../api/tenderApi";
 import type { TenderListDto, TenderSearchParams, PagedResult } from "../types/tender";
 import SearchBar from "../components/SearchBar";
@@ -15,6 +16,7 @@ const DEFAULT_PARAMS: TenderSearchParams = {
 };
 
 export default function TenderListPage() {
+  const { t, i18n } = useTranslation("tenders");
   const [params, setParams] = useState<TenderSearchParams>(DEFAULT_PARAMS);
   const [result, setResult] = useState<PagedResult<TenderListDto> | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
@@ -41,7 +43,7 @@ export default function TenderListPage() {
       const data = await searchTenders(p);
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load tenders");
+      setError(err instanceof Error ? err.message : t("list.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -72,24 +74,27 @@ export default function TenderListPage() {
     if (!result?.items.length) return;
 
     const headers = [
-      "Notice ID",
-      "Title",
-      "Organization",
-      "Category",
-      "Notice Type",
-      "Published",
-      "Closing",
-      "Has Documents",
+      t("list.csvHeaders.noticeId"),
+      t("list.csvHeaders.title"),
+      t("list.csvHeaders.organization"),
+      t("list.csvHeaders.category"),
+      t("list.csvHeaders.noticeType"),
+      t("list.csvHeaders.published"),
+      t("list.csvHeaders.closing"),
+      t("list.csvHeaders.hasDocuments"),
     ];
-    const rows = result.items.map((t) => [
-      t.noticeId ?? "",
-      `"${(t.title ?? "").replace(/"/g, '""')}"`,
-      `"${(t.buyingOrganization ?? "").replace(/"/g, '""')}"`,
-      categoryLabel(t.procurementCategory),
-      t.noticeType ?? "",
-      t.publicationDate ? new Date(t.publicationDate).toLocaleDateString("en-CA") : "",
-      t.closingDate ? new Date(t.closingDate).toLocaleDateString("en-CA") : "",
-      t.hasDocuments ? "Yes" : "No",
+    const yes = t("list.yes");
+    const no = t("list.no");
+    const dateLocale = i18n.language;
+    const rows = result.items.map((tender) => [
+      tender.noticeId ?? "",
+      `"${(tender.title ?? "").replace(/"/g, '""')}"`,
+      `"${(tender.buyingOrganization ?? "").replace(/"/g, '""')}"`,
+      categoryLabel(tender.procurementCategory),
+      tender.noticeType ?? "",
+      tender.publicationDate ? new Date(tender.publicationDate).toLocaleDateString(dateLocale) : "",
+      tender.closingDate ? new Date(tender.closingDate).toLocaleDateString(dateLocale) : "",
+      tender.hasDocuments ? yes : no,
     ]);
 
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -106,10 +111,10 @@ export default function TenderListPage() {
     <>
       <div className="pp-page-header">
         <div>
-          <h2>Procurement Tenders</h2>
+          <h2>{t("list.title")}</h2>
           {result && (
             <span style={{ fontSize: ".85rem", color: "var(--pp-text-muted)" }}>
-              {result.totalCount.toLocaleString()} tenders available
+              {t("list.available", { count: result.totalCount })}
             </span>
           )}
         </div>
@@ -119,7 +124,7 @@ export default function TenderListPage() {
             onClick={handleExportCsv}
             disabled={!result?.items.length}
           >
-            ↓ Export CSV
+            {t("list.exportCsv")}
           </button>
         </div>
       </div>
@@ -154,6 +159,7 @@ export default function TenderListPage() {
               totalPages={result.totalPages}
               totalCount={result.totalCount}
               onPageChange={handlePageChange}
+              foundLabel={t("pagination.tendersFound", { count: result.totalCount, ns: "common" })}
             />
           </>
         )

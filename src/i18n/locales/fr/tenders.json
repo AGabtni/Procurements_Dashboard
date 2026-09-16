@@ -1,0 +1,117 @@
+{
+  "list": {
+    "title": "Appels d'offres publics",
+    "available_one": "{{count}} appel d'offres disponible",
+    "available_other": "{{count}} appels d'offres disponibles",
+    "exportCsv": "↓ Exporter CSV",
+    "loadFailed": "Échec du chargement des appels d'offres",
+    "csvHeaders": {
+      "noticeId": "Numéro d'avis",
+      "title": "Titre",
+      "organization": "Organisation",
+      "category": "Catégorie",
+      "noticeType": "Type d'avis",
+      "published": "Publié",
+      "closing": "Clôture",
+      "hasDocuments": "Documents"
+    },
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "searchBar": {
+    "search": "Rechercher",
+    "keywordPlaceholder": "Titre, organisation ou numéro d'avis…",
+    "keywordPlaceholderShort": "Titre ou numéro d'avis…",
+    "category": "Catégorie",
+    "all": "Toutes",
+    "noticeType": "Type d'avis",
+    "openOnly": "Ouverts seulement",
+    "searchButton": "Rechercher",
+    "reset": "Réinitialiser",
+    "organization": "Organisation",
+    "allOrganizations": "Toutes les organisations",
+    "allTypes": "Tous les types",
+    "status": "Statut",
+    "allStatuses": "Tous les statuts",
+    "statuses": {
+      "new": "Nouveau",
+      "viewed": "Consulté",
+      "saved": "Sauvegardé",
+      "dismissed": "Rejeté"
+    }
+  },
+  "table": {
+    "headers": {
+      "title": "Titre",
+      "organization": "Organisation",
+      "type": "Type",
+      "published": "Publié",
+      "closing": "Clôture"
+    },
+    "emptyTitle": "Aucun appel d'offres trouvé",
+    "emptyBody": "Essayez d'ajuster vos filtres de recherche ou d'élargir vos critères.",
+    "untitled": "Sans titre",
+    "dash": "—",
+    "today": "Aujourd'hui",
+    "tomorrow": "Demain",
+    "daysLeft_one": "{{count}}j restant",
+    "daysLeft_other": "{{count}}j restants"
+  },
+  "matchesTable": {
+    "headers": {
+      "score": "Score",
+      "tender": "Appel d'offres",
+      "organization": "Organisation",
+      "category": "Catégorie",
+      "matched": "Correspondance",
+      "closing": "Clôture",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "emptyTitle": "Aucune correspondance pour l'instant",
+    "emptyBody": "Lancez la mise en correspondance pour découvrir les appels d'offres qui correspondent au profil de votre entreprise.",
+    "statuses": {
+      "new": "Nouveau",
+      "viewed": "Consulté",
+      "saved": "Sauvegardé",
+      "dismissed": "Rejeté"
+    }
+  },
+  "detail": {
+    "back": "← Retour",
+    "notFound": "Appel d'offres introuvable.",
+    "loadFailed": "Échec du chargement de l'appel d'offres",
+    "closesToday": "Ferme aujourd'hui",
+    "tomorrow": "Demain",
+    "daysLeft_one": "{{count}}j restant",
+    "daysLeft_other": "{{count}}j restants",
+    "meta": {
+      "published": "Publié le {{date}}",
+      "closing": "Clôture le {{date}}"
+    },
+    "viewOriginal": "Voir l'avis original →",
+    "externalLink": "Lien externe",
+    "sections": {
+      "description": "📝 Description",
+      "selectionCriteria": "🎯 Critères de sélection",
+      "documents": "📎 Documents",
+      "details": "ℹ️ Détails",
+      "contact": "📞 Contact",
+      "contactPlural": "📞 Contacts"
+    },
+    "documentTitleFallback": "Sans titre",
+    "documentDownload": "Télécharger",
+    "detailsFields": {
+      "procurementMethod": "Méthode d'approvisionnement",
+      "regionOfDelivery": "Région de livraison",
+      "regionOfOpportunity": "Région de l'opportunité",
+      "unspsc": "Codes UNSPSC",
+      "gsin": "Codes NIBS"
+    },
+    "contactFields": {
+      "name": "Nom",
+      "email": "Courriel",
+      "phone": "Téléphone"
+    }
+  }
+}

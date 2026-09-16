@@ -1,16 +1,10 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import MultiSelectDropdown from "./MultiSelectDropdown";
 import type { DropdownOption } from "./MultiSelectDropdown";
 import type { MatchSearchParams } from "../api/companyApi";
 
 export type { MatchSearchParams };
-
-const STATUS_OPTIONS: DropdownOption[] = [
-  { value: "new", label: "New" },
-  { value: "viewed", label: "Viewed" },
-  { value: "saved", label: "Saved" },
-  { value: "dismissed", label: "Dismissed" },
-];
 
 interface Props {
   params: MatchSearchParams;
@@ -20,6 +14,13 @@ interface Props {
 }
 
 export default function MatchesSearchBar({ params, organizations, noticeTypes, onSearch }: Props) {
+  const { t } = useTranslation("tenders");
+  const STATUS_OPTIONS: DropdownOption[] = [
+    { value: "new", label: t("searchBar.statuses.new") },
+    { value: "viewed", label: t("searchBar.statuses.viewed") },
+    { value: "saved", label: t("searchBar.statuses.saved") },
+    { value: "dismissed", label: t("searchBar.statuses.dismissed") },
+  ];
   const [keyword, setKeyword] = useState(params.keyword ?? "");
   const [selectedOrgs, setSelectedOrgs] = useState<string[]>(params.organizations ?? []);
   const [selectedTypes, setSelectedTypes] = useState<string[]>(params.noticeTypes ?? []);
@@ -92,53 +93,53 @@ export default function MatchesSearchBar({ params, organizations, noticeTypes, o
     <form onSubmit={handleSubmit} className="pp-search-bar">
       <div className="row g-3 align-items-end">
         <div className="col-md-3">
-          <label htmlFor="m-keyword" className="form-label">Search</label>
+          <label htmlFor="m-keyword" className="form-label">{t("searchBar.search")}</label>
           <input
             id="m-keyword"
             type="text"
             className="form-control"
-            placeholder="Title or notice ID…"
+            placeholder={t("searchBar.keywordPlaceholderShort")}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
           />
         </div>
 
         <div className="col-md-3">
-          <label className="form-label">Organization</label>
+          <label className="form-label">{t("searchBar.organization")}</label>
           <MultiSelectDropdown
             id="m-orgs"
             options={orgOptions}
             value={selectedOrgs}
             onChange={setSelectedOrgs}
-            placeholder="All organizations"
+            placeholder={t("searchBar.allOrganizations")}
           />
         </div>
 
         <div className="col-md-2">
-          <label className="form-label">Notice Type</label>
+          <label className="form-label">{t("searchBar.noticeType")}</label>
           <MultiSelectDropdown
             id="m-types"
             options={typeOptions}
             value={selectedTypes}
             onChange={setSelectedTypes}
-            placeholder="All types"
+            placeholder={t("searchBar.allTypes")}
           />
         </div>
 
         <div className="col-md-2">
-          <label className="form-label">Status</label>
+          <label className="form-label">{t("searchBar.status")}</label>
           <MultiSelectDropdown
             id="m-statuses"
             options={STATUS_OPTIONS}
             value={selectedStatuses}
             onChange={setSelectedStatuses}
-            placeholder="All statuses"
+            placeholder={t("searchBar.allStatuses")}
           />
         </div>
 
         <div className="col-md-2 d-flex gap-2">
-          <button type="submit" className="pp-btn pp-btn-primary">Search</button>
-          <button type="button" className="pp-btn pp-btn-ghost" onClick={handleReset}>Reset</button>
+          <button type="submit" className="pp-btn pp-btn-primary">{t("searchBar.searchButton")}</button>
+          <button type="button" className="pp-btn pp-btn-ghost" onClick={handleReset}>{t("searchBar.reset")}</button>
         </div>
       </div>
     </form>

@@ -28,5 +28,13 @@
     "headlineForCompany": "{{headline}} pour {{company}}",
     "description": "Votre essai gratuit est terminé. Abonnez-vous pour débloquer vos correspondances et continuer à recevoir de nouvelles opportunités.",
     "cta": "S'abonner pour débloquer →"
+  },
+  "pagination": {
+    "tendersFound_one": "{{count}} appel d'offres trouvé",
+    "tendersFound_other": "{{count}} appels d'offres trouvés",
+    "matchesFound_one": "{{count}} correspondance trouvée",
+    "matchesFound_other": "{{count}} correspondances trouvées",
+    "companiesFound_one": "{{count}} entreprise trouvée",
+    "companiesFound_other": "{{count}} entreprises trouvées"
   }
 }

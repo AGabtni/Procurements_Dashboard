@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { TenderSearchParams } from "../types/tender";
 import { categoryLabel } from "../utils/categoryMap";
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function SearchBar({ params, categories, noticeTypes, onSearch }: Props) {
+  const { t } = useTranslation("tenders");
   const [keyword, setKeyword] = useState(params.keyword ?? "");
   const [category, setCategory] = useState(params.category ?? "");
   const [noticeType, setNoticeType] = useState(params.noticeType ?? "");
@@ -75,20 +77,20 @@ export default function SearchBar({ params, categories, noticeTypes, onSearch }:
     <form onSubmit={handleSubmit} className="pp-search-bar">
       <div className="row g-3 align-items-end">
         <div className="col-md-4">
-          <label htmlFor="keyword" className="form-label">Search</label>
+          <label htmlFor="keyword" className="form-label">{t("searchBar.search")}</label>
           <input
             id="keyword"
             name="keyword"
             type="text"
             className="form-control"
-            placeholder="Title, organization, or notice ID…"
+            placeholder={t("searchBar.keywordPlaceholder")}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
           />
         </div>
 
         <div className="col-md-2">
-          <label htmlFor="category" className="form-label">Category</label>
+          <label htmlFor="category" className="form-label">{t("searchBar.category")}</label>
           <select
             id="category"
             name="category"
@@ -96,7 +98,7 @@ export default function SearchBar({ params, categories, noticeTypes, onSearch }:
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
-            <option value="">All</option>
+            <option value="">{t("searchBar.all")}</option>
             {categories.map((c) => (
               <option key={c} value={c}>{categoryLabel(c)}</option>
             ))}
@@ -104,7 +106,7 @@ export default function SearchBar({ params, categories, noticeTypes, onSearch }:
         </div>
 
         <div className="col-md-2">
-          <label htmlFor="noticeType" className="form-label">Notice Type</label>
+          <label htmlFor="noticeType" className="form-label">{t("searchBar.noticeType")}</label>
           <select
             id="noticeType"
             name="noticeType"
@@ -112,9 +114,9 @@ export default function SearchBar({ params, categories, noticeTypes, onSearch }:
             value={noticeType}
             onChange={(e) => setNoticeType(e.target.value)}
           >
-            <option value="">All</option>
-            {noticeTypes.map((t) => (
-              <option key={t} value={t}>{t}</option>
+            <option value="">{t("searchBar.all")}</option>
+            {noticeTypes.map((nt) => (
+              <option key={nt} value={nt}>{nt}</option>
             ))}
           </select>
         </div>
@@ -130,14 +132,14 @@ export default function SearchBar({ params, categories, noticeTypes, onSearch }:
               onChange={(e) => setOpenOnly(e.target.checked)}
             />
             <label htmlFor="openOnly" className="form-check-label" style={{ fontSize: ".9rem" }}>
-              Open only
+              {t("searchBar.openOnly")}
             </label>
           </div>
         </div>
 
         <div className="col-md-2 d-flex gap-2">
-          <button type="submit" className="pp-btn pp-btn-primary">Search</button>
-          <button type="button" className="pp-btn pp-btn-ghost" onClick={handleReset}>Reset</button>
+          <button type="submit" className="pp-btn pp-btn-primary">{t("searchBar.searchButton")}</button>
+          <button type="button" className="pp-btn pp-btn-ghost" onClick={handleReset}>{t("searchBar.reset")}</button>
         </div>
       </div>
     </form>

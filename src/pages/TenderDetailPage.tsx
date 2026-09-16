@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Components } from "react-markdown";
@@ -43,15 +44,6 @@ function normalizeBullets(text: string): string {
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5009";
 
-function formatDate(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-CA", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 function fullUrl(link: string): string {
   if (link.startsWith("http://") || link.startsWith("https://")) return link;
   if (link.startsWith("/api/") || link.startsWith("api/")) {
@@ -61,25 +53,35 @@ function fullUrl(link: string): string {
 }
 
 export default function TenderDetailPage() {
+  const { t, i18n } = useTranslation("tenders");
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [tender, setTender] = useState<TenderDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const formatDate = (iso: string | null) => {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleDateString(i18n.language, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     getTenderById(Number(id))
-      .then((t) => {
-        setTender(t);
-        recordView(t.id);
+      .then((tenderData) => {
+        setTender(tenderData);
+        recordView(tenderData.id);
       })
       .catch((err) =>
-        setError(err instanceof Error ? err.message : "Failed to load tender")
+        setError(err instanceof Error ? err.message : t("detail.loadFailed"))
       )
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, t]);
 
   if (loading) {
     return (
@@ -99,7 +101,7 @@ export default function TenderDetailPage() {
 
   if (!tender) {
     return (
-      <div className="alert alert-warning">Tender not found.</div>
+      <div className="alert alert-warning">{t("detail.notFound")}</div>
     );
   }
 
@@ -125,7 +127,7 @@ export default function TenderDetailPage() {
         className="pp-btn pp-btn-ghost pp-btn-sm mb-3"
         onClick={() => navigate(-1)}
       >
-        ← Back
+        {t("detail.back")}
       </button>
 
       {/* Header */}
@@ -145,7 +147,7 @@ export default function TenderDetailPage() {
             )}
             {daysLeft !== null && daysLeft >= 0 && daysLeft <= 7 && (
               <span className={`pp-badge ${daysLeft <= 3 ? "pp-badge-red pp-closing-soon" : "pp-badge-amber"}`}>
-                {daysLeft === 0 ? "Closes today" : daysLeft === 1 ? "Tomorrow" : `${daysLeft}d left`}
+                {daysLeft === 0 ? t("detail.closesToday") : daysLeft === 1 ? t("detail.tomorrow") : t("detail.daysLeft", { count: daysLeft })}
               </span>
             )}
           </div>
@@ -161,11 +163,11 @@ export default function TenderDetailPage() {
           </div>
           <div className="pp-detail-meta-item">
             <span className="icon">📅</span>
-            Published {formatDate(tender.publicationDate)}
+            {t("detail.meta.published", { date: formatDate(tender.publicationDate) })}
           </div>
           <div className="pp-detail-meta-item">
             <span className="icon">⏰</span>
-            Closing {formatDate(tender.closingDate)}
+            {t("detail.meta.closing", { date: formatDate(tender.closingDate) })}
           </div>
         </div>
         <div className="mt-3 d-flex gap-2">
@@ -176,7 +178,7 @@ export default function TenderDetailPage() {
               rel="noopener noreferrer"
               className="pp-btn pp-btn-primary pp-btn-sm"
             >
-              View Original Notice →
+              {t("detail.viewOriginal")}
             </a>
           )}
           {tender.externalLink && (
@@ -186,7 +188,7 @@ export default function TenderDetailPage() {
               rel="noopener noreferrer"
               className="pp-btn pp-btn-ghost pp-btn-sm"
             >
-              External Link
+              {t("detail.externalLink")}
             </a>
           )}
         </div>
@@ -199,7 +201,7 @@ export default function TenderDetailPage() {
           {(tender.descriptionMd || tender.description) && (
             <div className="pp-detail-section pp-animate-in">
               <div className="pp-detail-section-header">
-                📝 Description
+                {t("detail.sections.description")}
               </div>
               <div className="pp-detail-section-body">
                 {tender.descriptionMd ? (
@@ -228,7 +230,7 @@ export default function TenderDetailPage() {
           {/* Selection Criteria */}
           {tender.selectionCriteria && (
             <div className="pp-detail-section pp-animate-in">
-              <div className="pp-detail-section-header">🎯 Selection Criteria</div>
+              <div className="pp-detail-section-header">{t("detail.sections.selectionCriteria")}</div>
               <div className="pp-detail-section-body">
                 <div className="pp-markdown">
                   <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
@@ -243,7 +245,7 @@ export default function TenderDetailPage() {
           {tender.documents.length > 0 && (
             <div className="pp-detail-section pp-animate-in">
               <div className="pp-detail-section-header">
-                📎 Documents
+                {t("detail.sections.documents")}
                 <span className="pp-badge pp-badge-blue ms-2">{tender.documents.length}</span>
               </div>
               <div style={{ padding: 0 }}>
@@ -252,7 +254,7 @@ export default function TenderDetailPage() {
                     <div className="d-flex align-items-center">
                       <div className="doc-icon">📄</div>
                       <div>
-                        <span style={{ fontWeight: 600, fontSize: ".9rem" }}>{doc.title ?? "Untitled"}</span>
+                        <span style={{ fontWeight: 600, fontSize: ".9rem" }}>{doc.title ?? t("detail.documentTitleFallback")}</span>
                         {doc.type && (
                           <span className="pp-badge pp-badge-gray ms-2">{doc.type}</span>
                         )}
@@ -268,7 +270,7 @@ export default function TenderDetailPage() {
                         rel="noopener noreferrer"
                         className="pp-btn pp-btn-ghost pp-btn-sm"
                       >
-                        Download
+                        {t("detail.documentDownload")}
                       </a>
                     )}
                   </div>
@@ -282,29 +284,29 @@ export default function TenderDetailPage() {
         <div className="col-lg-4">
           {/* Details */}
           <div className="pp-detail-section pp-animate-in">
-            <div className="pp-detail-section-header">ℹ️ Details</div>
+            <div className="pp-detail-section-header">{t("detail.sections.details")}</div>
             <div className="pp-detail-section-body">
               <dl style={{ fontSize: ".9rem" }} className="mb-0">
-                <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Procurement Method</dt>
+                <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>{t("detail.detailsFields.procurementMethod")}</dt>
                 <dd className="mb-3">{tender.procurementMethod ?? "—"}</dd>
 
                 {tender.regionOfDelivery && (
                   <>
-                    <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Region of Delivery</dt>
+                    <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>{t("detail.detailsFields.regionOfDelivery")}</dt>
                     <dd className="mb-3">{tender.regionOfDelivery}</dd>
                   </>
                 )}
 
                 {tender.regionOfOpportunity && (
                   <>
-                    <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Region of Opportunity</dt>
+                    <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>{t("detail.detailsFields.regionOfOpportunity")}</dt>
                     <dd className="mb-3">{tender.regionOfOpportunity}</dd>
                   </>
                 )}
 
                 {tender.unspsc && tender.unspsc.length > 0 && (
                   <>
-                    <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>UNSPSC Codes</dt>
+                    <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>{t("detail.detailsFields.unspsc")}</dt>
                     <dd className="mb-3 d-flex flex-wrap gap-1">
                       {tender.unspsc.map((code) => (
                         <span key={code} className="pp-badge pp-badge-gray">{code}</span>
@@ -315,7 +317,7 @@ export default function TenderDetailPage() {
 
                 {tender.gsin && tender.gsin.length > 0 && (
                   <>
-                    <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>GSIN Codes</dt>
+                    <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>{t("detail.detailsFields.gsin")}</dt>
                     <dd className="mb-0 d-flex flex-wrap gap-1">
                       {tender.gsin.map((code) => (
                         <span key={code} className="pp-badge pp-badge-gray">{code}</span>
@@ -331,7 +333,7 @@ export default function TenderDetailPage() {
           {hasContacts && (
             <div className="pp-detail-section pp-animate-in">
               <div className="pp-detail-section-header">
-                📞 Contact{contactCount > 1 ? "s" : ""}
+                {contactCount > 1 ? t("detail.sections.contactPlural") : t("detail.sections.contact")}
                 {contactCount > 1 && (
                   <span className="pp-badge pp-badge-blue ms-2">{contactCount}</span>
                 )}
@@ -341,13 +343,13 @@ export default function TenderDetailPage() {
                   <dl style={{ fontSize: ".9rem" }} className="mb-0">
                     {contactNames[0] && (
                       <>
-                        <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Name</dt>
+                        <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>{t("detail.contactFields.name")}</dt>
                         <dd className="mb-2">{contactNames[0]}</dd>
                       </>
                     )}
                     {contactEmails[0] && (
                       <>
-                        <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Email</dt>
+                        <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>{t("detail.contactFields.email")}</dt>
                         <dd className="mb-2">
                           <a href={`mailto:${contactEmails[0]}`}>{contactEmails[0]}</a>
                         </dd>
@@ -355,7 +357,7 @@ export default function TenderDetailPage() {
                     )}
                     {contactPhones[0] && (
                       <>
-                        <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>Phone</dt>
+                        <dt style={{ color: "var(--pp-text-muted)", fontWeight: 500, fontSize: ".8rem" }}>{t("detail.contactFields.phone")}</dt>
                         <dd className="mb-0">
                           <a href={`tel:${contactPhones[0]}`}>{contactPhones[0]}</a>
                         </dd>
