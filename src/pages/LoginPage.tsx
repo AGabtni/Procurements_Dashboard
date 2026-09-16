@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { t } = useTranslation("auth");
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,7 +20,7 @@ export default function LoginPage() {
       await login({ email, password });
       navigate("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : t("login.failed"));
     } finally {
       setLoading(false);
     }
@@ -29,13 +31,13 @@ export default function LoginPage() {
       <div className="pp-auth-card">
         <div className="auth-brand">
           <div className="auth-brand-icon">◆</div>
-          <h2>ProcurePortal</h2>
-          <p>Sign in to your account</p>
+          <h2>{t("brand")}</h2>
+          <p>{t("login.subtitle")}</p>
         </div>
         {error && <div className="alert alert-danger py-2">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label htmlFor="email" className="form-label">Email</label>
+            <label htmlFor="email" className="form-label">{t("login.emailLabel")}</label>
             <input
               id="email"
               type="email"
@@ -44,11 +46,11 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
-              placeholder="you@company.com"
+              placeholder={t("login.emailPlaceholder")}
             />
           </div>
           <div className="mb-3">
-            <label htmlFor="password" className="form-label">Password</label>
+            <label htmlFor="password" className="form-label">{t("login.passwordLabel")}</label>
             <input
               id="password"
               type="password"
@@ -65,12 +67,12 @@ export default function LoginPage() {
             disabled={loading}
             style={{ padding: ".7rem" }}
           >
-            {loading ? "Signing in…" : "Sign In"}
+            {loading ? t("login.submitting") : t("login.submit")}
           </button>
         </form>
         <p className="text-center mt-3 mb-0" style={{ fontSize: ".9rem" }}>
-          Don't have an account?{" "}
-          <Link to="/register" style={{ fontWeight: 600 }}>Sign Up</Link>
+          {t("login.noAccount")}{" "}
+          <Link to="/register" style={{ fontWeight: 600 }}>{t("login.signUpLink")}</Link>
         </p>
       </div>
     </div>

@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { register } from "../api/authApi";
 import { Link } from "react-router-dom";
 
 export default function RegisterPage() {
+  const { t } = useTranslation("auth");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +18,7 @@ export default function RegisterPage() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("register.passwordMismatch"));
       return;
     }
 
@@ -25,7 +27,7 @@ export default function RegisterPage() {
       await register({ email, fullName, password });
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      setError(err instanceof Error ? err.message : t("register.failed"));
     } finally {
       setLoading(false);
     }
@@ -37,11 +39,11 @@ export default function RegisterPage() {
         <div className="pp-auth-card text-center">
           <div className="auth-brand">
             <div className="auth-brand-icon">✓</div>
-            <h2>Account Created</h2>
-            <p>Your account is pending admin activation. You'll be able to sign in once approved.</p>
+            <h2>{t("register.success.title")}</h2>
+            <p>{t("register.success.message")}</p>
           </div>
           <Link to="/login" className="pp-btn pp-btn-primary w-100 justify-content-center">
-            Back to Sign In
+            {t("register.success.backToLogin")}
           </Link>
         </div>
       </div>
@@ -53,13 +55,13 @@ export default function RegisterPage() {
       <div className="pp-auth-card">
         <div className="auth-brand">
           <div className="auth-brand-icon">◆</div>
-          <h2>Create Account</h2>
-          <p>Start discovering procurement opportunities</p>
+          <h2>{t("register.title")}</h2>
+          <p>{t("register.subtitle")}</p>
         </div>
         {error && <div className="alert alert-danger py-2">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label htmlFor="fullName" className="form-label">Full Name</label>
+            <label htmlFor="fullName" className="form-label">{t("register.fullNameLabel")}</label>
             <input
               id="fullName"
               type="text"
@@ -68,11 +70,11 @@ export default function RegisterPage() {
               onChange={(e) => setFullName(e.target.value)}
               required
               autoFocus
-              placeholder="John Smith"
+              placeholder={t("register.fullNamePlaceholder")}
             />
           </div>
           <div className="mb-3">
-            <label htmlFor="email" className="form-label">Email</label>
+            <label htmlFor="email" className="form-label">{t("register.emailLabel")}</label>
             <input
               id="email"
               type="email"
@@ -80,11 +82,11 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="you@company.com"
+              placeholder={t("register.emailPlaceholder")}
             />
           </div>
           <div className="mb-3">
-            <label htmlFor="password" className="form-label">Password</label>
+            <label htmlFor="password" className="form-label">{t("register.passwordLabel")}</label>
             <input
               id="password"
               type="password"
@@ -95,10 +97,10 @@ export default function RegisterPage() {
               minLength={8}
               placeholder="••••••••"
             />
-            <div className="form-text">Minimum 8 characters</div>
+            <div className="form-text">{t("register.passwordHelp")}</div>
           </div>
           <div className="mb-3">
-            <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="form-label">{t("register.confirmPasswordLabel")}</label>
             <input
               id="confirmPassword"
               type="password"
@@ -115,12 +117,12 @@ export default function RegisterPage() {
             style={{ padding: ".7rem" }}
               disabled={loading}
             >
-              {loading ? "Creating account…" : "Sign Up"}
+              {loading ? t("register.submitting") : t("register.submit")}
             </button>
         </form>
         <p className="text-center mt-3 mb-0" style={{ fontSize: ".9rem" }}>
-          Already have an account?{" "}
-          <Link to="/login" style={{ fontWeight: 600 }}>Sign In</Link>
+          {t("register.haveAccount")}{" "}
+          <Link to="/login" style={{ fontWeight: 600 }}>{t("register.signInLink")}</Link>
         </p>
       </div>
     </div>

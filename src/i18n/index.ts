@@ -5,6 +5,8 @@ import enCommon from "./locales/en/common.json";
 import frCommon from "./locales/fr/common.json";
 import enSettings from "./locales/en/settings.json";
 import frSettings from "./locales/fr/settings.json";
+import enAuth from "./locales/en/auth.json";
+import frAuth from "./locales/fr/auth.json";
 
 export const SUPPORTED_LOCALES = ["en-CA", "fr-CA"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -33,13 +35,13 @@ void i18n
   .use(initReactI18next)
   .init({
     resources: {
-      "en-CA": { common: enCommon, settings: enSettings },
-      "fr-CA": { common: frCommon, settings: frSettings },
+      "en-CA": { common: enCommon, settings: enSettings, auth: enAuth },
+      "fr-CA": { common: frCommon, settings: frSettings, auth: frAuth },
     },
     lng: initialLang,
     fallbackLng: "en-CA",
     supportedLngs: [...SUPPORTED_LOCALES],
-    ns: ["common", "settings"],
+    ns: ["common", "settings", "auth"],
     defaultNS: "common",
     interpolation: { escapeValue: false },
     returnNull: false,

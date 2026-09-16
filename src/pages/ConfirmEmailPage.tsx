@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams, Link } from "react-router-dom";
 import { confirmEmail } from "../api/authApi";
 
 export default function ConfirmEmailPage() {
+  const { t } = useTranslation("auth");
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
@@ -15,7 +17,7 @@ export default function ConfirmEmailPage() {
     const token = searchParams.get("token");
     if (!token) {
       setStatus("error");
-      setErrorMsg("No confirmation token provided.");
+      setErrorMsg(t("confirmEmail.noToken"));
       return;
     }
 
@@ -23,9 +25,9 @@ export default function ConfirmEmailPage() {
       .then(() => setStatus("success"))
       .catch((err) => {
         setStatus("error");
-        setErrorMsg(err instanceof Error ? err.message : "Confirmation failed");
+        setErrorMsg(err instanceof Error ? err.message : t("confirmEmail.failed"));
       });
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   return (
     <div className="container py-5">
@@ -34,21 +36,21 @@ export default function ConfirmEmailPage() {
           {status === "loading" && (
             <>
               <div className="spinner-border text-primary mb-3" role="status" />
-              <p>Confirming your email...</p>
+              <p>{t("confirmEmail.loading")}</p>
             </>
           )}
           {status === "success" && (
             <>
-              <h2 className="text-success mb-3">Email Confirmed!</h2>
-              <p>Your email address has been confirmed. You can now receive notifications.</p>
-              <Link to="/settings" className="btn btn-primary">Go to Settings</Link>
+              <h2 className="text-success mb-3">{t("confirmEmail.successTitle")}</h2>
+              <p>{t("confirmEmail.successMessage")}</p>
+              <Link to="/settings" className="btn btn-primary">{t("confirmEmail.goToSettings")}</Link>
             </>
           )}
           {status === "error" && (
             <>
-              <h2 className="text-danger mb-3">Confirmation Failed</h2>
+              <h2 className="text-danger mb-3">{t("confirmEmail.failedTitle")}</h2>
               <p>{errorMsg}</p>
-              <Link to="/settings" className="btn btn-outline-primary">Go to Settings</Link>
+              <Link to="/settings" className="btn btn-outline-primary">{t("confirmEmail.goToSettings")}</Link>
             </>
           )}
         </div>
