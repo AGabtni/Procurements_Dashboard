@@ -16,24 +16,24 @@
     "toggle": "Ouvrir la navigation"
   },
   "trial": {
-    "endedBanner": "Votre essai gratuit est terminé. <1>Abonnez-vous</1> pour débloquer vos correspondances.",
+    "endedBanner": "Votre essai gratuit est terminé. <1>Abonnez-vous</1> pour débloquer vos appels d'offres.",
     "questions": "Des questions ?",
     "daysLeftBanner_one": "Il vous reste <1>{{count}} jour</1> dans votre essai gratuit.",
     "daysLeftBanner_other": "Il vous reste <1>{{count}} jours</1> dans votre essai gratuit."
   },
   "locked": {
     "headlineEnded": "Votre essai est terminé",
-    "headlineWithCount_one": "{{count}} nouvelle correspondance",
-    "headlineWithCount_other": "{{count}} nouvelles correspondances",
+    "headlineWithCount_one": "{{count}} nouvel appel d'offres",
+    "headlineWithCount_other": "{{count}} nouveaux appels d'offres",
     "headlineForCompany": "{{headline}} pour {{company}}",
-    "description": "Votre essai gratuit est terminé. Abonnez-vous pour débloquer vos correspondances et continuer à recevoir de nouvelles opportunités.",
-    "cta": "S'abonner pour débloquer →"
+    "description": "Votre essai gratuit est terminé. Abonnez-vous pour débloquer vos appels d'offres et continuer à recevoir de nouvelles opportunités.",
+    "cta": "Débloquer mes appels d'offres"
   },
   "pagination": {
     "tendersFound_one": "{{count}} appel d'offres trouvé",
     "tendersFound_other": "{{count}} appels d'offres trouvés",
-    "matchesFound_one": "{{count}} correspondance trouvée",
-    "matchesFound_other": "{{count}} correspondances trouvées",
+    "matchesFound_one": "{{count}} appel d'offres trouvé",
+    "matchesFound_other": "{{count}} appels d'offres trouvés",
     "companiesFound_one": "{{count}} entreprise trouvée",
     "companiesFound_other": "{{count}} entreprises trouvées"
   }

@@ -1,12 +1,57 @@
 {
+  "title": "Paramètres",
+  "messages": {
+    "loadFailed": "Échec du chargement des paramètres",
+    "saved": "Paramètres enregistrés.",
+    "savedEmailConfirm": "Paramètres enregistrés. Veuillez confirmer votre nouvelle adresse courriel.",
+    "saveFailed": "Échec de l'enregistrement",
+    "confirmationSent": "Courriel de confirmation envoyé! Vérifiez votre boîte de réception.",
+    "confirmationFailed": "Échec de l'envoi"
+  },
+  "email": {
+    "sectionTitle": "Courriel",
+    "label": "Adresse courriel",
+    "confirmed": "Confirmée",
+    "notConfirmed": "Non confirmée",
+    "sendConfirmation": "Envoyer le courriel de confirmation",
+    "sending": "Envoi…",
+    "pendingChangeHint": "Enregistrez pour mettre à jour votre courriel. Vous devrez confirmer la nouvelle adresse."
+  },
   "language": {
     "title": "Langue",
     "interfaceLabel": "Langue de l'interface",
     "commsLabel": "Langue des communications",
-    "commsHelp": "S'applique aux résumés de correspondances, résumés de scrapes et courriels de compte.",
+    "commsHelp": "S'applique aux résumés d'appels d'offres, résumés de scrapes et courriels de compte.",
     "saving": "Enregistrement...",
     "savedInterface": "Langue de l'interface mise à jour.",
     "savedComms": "Langue des communications mise à jour.",
     "failed": "Échec de la mise à jour de la langue."
+  },
+  "notifications": {
+    "sectionTitle": "Notifications",
+    "toggleLabel": "Notifications courriel pour les nouveaux appels d'offres",
+    "toggleHelp": "Lorsque cette option est activée, vous recevrez un courriel dès que de nouveaux appels d'offres sont trouvés pour votre entreprise."
+  },
+  "account": {
+    "sectionTitle": "Compte",
+    "name": "Nom",
+    "role": "Rôle"
+  },
+  "actions": {
+    "save": "Enregistrer les paramètres",
+    "saving": "Enregistrement…"
+  },
+  "password": {
+    "sectionTitle": "Changer le mot de passe",
+    "current": "Mot de passe actuel",
+    "new": "Nouveau mot de passe",
+    "confirm": "Confirmer le nouveau mot de passe",
+    "minHelp": "Minimum 8 caractères.",
+    "mismatch": "Les mots de passe ne correspondent pas.",
+    "tooShort": "Le nouveau mot de passe doit contenir au moins 8 caractères.",
+    "changed": "Mot de passe modifié avec succès.",
+    "changeFailed": "Échec du changement de mot de passe",
+    "submit": "Changer le mot de passe",
+    "submitting": "Modification…"
   }
 }

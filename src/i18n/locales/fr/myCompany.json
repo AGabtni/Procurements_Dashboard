@@ -1,15 +1,15 @@
 {
   "header": {
     "fallbackName": "Mon entreprise",
-    "lastMatched": "Dernière mise en correspondance : {{time}}",
-    "runMatching": "🎯 Lancer la mise en correspondance",
-    "runMatchingLocked": "🔒 Lancer la mise en correspondance",
-    "runMatchingBusy": "⟳ Mise en correspondance...",
-    "runLockedTitle": "Votre essai est terminé — abonnez-vous pour lancer la mise en correspondance"
+    "lastMatched": "Dernière analyse : {{time}}",
+    "runMatching": "🎯 Trouver les opportunités",
+    "runMatchingLocked": "🔒 Trouver les opportunités",
+    "runMatchingBusy": "⟳ Analyse en cours...",
+    "runLockedTitle": "Votre essai est terminé — abonnez-vous pour trouver les opportunités"
   },
   "status": {
-    "matching": "⟳ Mise en correspondance...",
-    "matched": "✓ Mise en correspondance effectuée",
+    "matching": "⟳ Analyse en cours...",
+    "matched": "✓ Profil analysé",
     "failed": "✕ Échec",
     "notMatched": "Non traité"
   },
@@ -22,18 +22,18 @@
   },
   "tabs": {
     "profile": "Profil de l'entreprise",
-    "matches": "Correspondances"
+    "matches": "Mes alertes"
   },
   "setup": {
     "title": "Configurez le profil de votre entreprise",
-    "body": "Créez le profil de votre entreprise pour commencer à faire correspondre les appels d'offres gouvernementaux.",
+    "body": "Créez le profil de votre entreprise pour commencer à recevoir des appels d'offres gouvernementaux pertinents.",
     "cta": "Créer le profil"
   },
   "profileView": {
     "editButton": "✎ Modifier le profil",
     "companyDetails": "Détails de l'entreprise",
     "servicesKeywords": "Services et mots-clés",
-    "preferencesTitle": "Préférences de mise en correspondance",
+    "preferencesTitle": "Préférences de recherche",
     "labels": {
       "name": "Nom :",
       "industries": "Industries :",
@@ -51,9 +51,9 @@
     "any": "Toutes",
     "none": "Aucun",
     "dash": "—",
-    "noMatchYet": "<1>Aucune mise en correspondance n'a encore été effectuée.</1> Les mots-clés seront extraits de votre description lors de votre première exécution. Plus elle est précise, meilleurs sont vos résultats.",
-    "weakKeywords_one": "<1>Extraction de mots-clés faible :</1> seulement {{count}} terme spécifique à votre domaine a été trouvé dans votre description. Enrichissez-la avec des technologies, plateformes, certifications et secteurs précis pour améliorer la qualité des correspondances avant de lancer une mise en correspondance.",
-    "weakKeywords_other": "<1>Extraction de mots-clés faible :</1> seulement {{count}} termes spécifiques à votre domaine ont été trouvés dans votre description. Enrichissez-la avec des technologies, plateformes, certifications et secteurs précis pour améliorer la qualité des correspondances avant de lancer une mise en correspondance."
+    "noMatchYet": "<1>Aucune analyse n'a encore été effectuée.</1> Les mots-clés seront extraits de votre description lors de votre première exécution. Plus elle est précise, meilleurs sont vos résultats.",
+    "weakKeywords_one": "<1>Extraction de mots-clés faible :</1> seulement {{count}} terme spécifique à votre domaine a été trouvé dans votre description. Enrichissez-la avec des technologies, plateformes, certifications et secteurs précis pour améliorer la qualité des appels d'offres avant de lancer une analyse.",
+    "weakKeywords_other": "<1>Extraction de mots-clés faible :</1> seulement {{count}} termes spécifiques à votre domaine ont été trouvés dans votre description. Enrichissez-la avec des technologies, plateformes, certifications et secteurs précis pour améliorer la qualité des appels d'offres avant de lancer une analyse."
   },
   "form": {
     "createTitle": "Créer le profil de l'entreprise",
@@ -83,7 +83,7 @@
       "province": "La province principale d'exploitation de votre entreprise.",
       "companySize": "Votre tranche d'effectif. Contexte informatif pour l'évaluateur IA.",
       "industries": "Classifications SCIAN de votre entreprise. L'IA les utilise pour évaluer si un appel d'offres relève de votre domaine.",
-      "servicesDescription": "Décrivez précisément ce que fait votre entreprise. Les mots-clés du domaine sont extraits de ce texte. Plus c'est précis, meilleures sont vos correspondances.",
+      "servicesDescription": "Décrivez précisément ce que fait votre entreprise. Les mots-clés du domaine sont extraits de ce texte. Plus c'est précis, meilleurs sont vos appels d'offres.",
       "keywords": "Technologies, produits ou plateformes spécifiques que votre entreprise utilise. Chaque mot-clé est comparé mot pour mot à chaque appel d'offres avant l'évaluation IA. Signal fort de pertinence.",
       "certifications": "Certifications professionnelles ou commerciales de votre entreprise. L'IA s'y réfère pour évaluer si un appel d'offres exige des accréditations que vous possédez.",
       "commodityTypes": "Si votre entreprise vend des biens, des services, ou les deux. Les appels d'offres dont la catégorie contredit clairement votre sélection sont rejetés avant l'évaluation IA.",
@@ -99,12 +99,12 @@
       "commodityTypes": "Veuillez sélectionner au moins un type de biens/services.",
       "descriptionMin": "Au moins 150 caractères requis. Soyez précis sur les technologies, plateformes et secteurs que vous desservez."
     },
-    "descriptionHelp": "Soyez précis : nommez les technologies, plateformes, certifications et secteurs. Les descriptions vagues produisent moins de correspondances par mot-clé.",
+    "descriptionHelp": "Soyez précis : nommez les technologies, plateformes, certifications et secteurs. Les descriptions vagues produisent moins d'appels d'offres par mot-clé.",
     "descriptionCounter": "{{count}} / 2000",
-    "prefsToggleShow": "▶ Afficher les préférences de mise en correspondance",
-    "prefsToggleHide": "▼ Masquer les préférences de mise en correspondance",
+    "prefsToggleShow": "▶ Afficher les préférences de recherche",
+    "prefsToggleHide": "▼ Masquer les préférences de recherche",
     "prefsWarning": "⚠ <1>Ce sont des filtres stricts.</1> Les appels d'offres qui ne correspondent pas à chaque filtre actif sont rejetés avant que l'IA ne les voie. Ils n'apparaîtront jamais dans vos résultats. Laissez un filtre vide pour ne poser aucune restriction sur ce champ.",
-    "prefsTitle": "Préférences de mise en correspondance",
+    "prefsTitle": "Préférences de recherche",
     "prefsFields": {
       "preferredOrgs": "Organisations préférées",
       "preferredNtTypes": "Types d'avis préférés",
@@ -120,13 +120,13 @@
     "createTitle": "Créer le profil",
     "saveTitle": "Enregistrer les modifications",
     "createBody": "Créer le profil de votre entreprise ? Vous pouvez le modifier à tout moment après la création.",
-    "saveBody": "Enregistrer les modifications ? Si votre description a changé, les mots-clés seront réextraits lors de votre prochaine mise en correspondance.",
+    "saveBody": "Enregistrer les modifications ? Si votre description a changé, les mots-clés seront réextraits lors de votre prochaine analyse.",
     "goBack": "Retour",
     "confirm": "Confirmer",
     "saving": "Enregistrement..."
   },
   "trigger": {
-    "queued": "Mise en correspondance en file d'attente",
+    "queued": "Analyse en file d'attente",
     "cooldown": "Période d'attente active. Réessayez dans {{hours}} h {{minutes}} m",
     "failed": "Échec"
   },
@@ -141,8 +141,8 @@
     },
     "exporting": "Exportation...",
     "exportCsv": "↓ Exporter CSV",
-    "empty": "Aucune correspondance trouvée. Essayez d'abord de lancer la mise en correspondance.",
-    "paginationLabel": "correspondance",
+    "empty": "Aucun appel d'offres trouvé. Essayez d'abord de lancer une analyse.",
+    "paginationLabel": "appel d'offres",
     "csvHeaders": {
       "title": "Titre",
       "organization": "Organisation",
@@ -150,7 +150,7 @@
       "noticeType": "Type d'avis",
       "score": "Score",
       "status": "Statut",
-      "matchedOn": "Mis en correspondance le",
+      "matchedOn": "Analysé le",
       "closingDate": "Date de clôture",
       "noticeLink": "Lien de l'avis"
     }
@@ -159,7 +159,7 @@
     "loadProfile": "Échec du chargement du profil",
     "createProfile": "Échec de la création du profil",
     "saveProfile": "Échec de l'enregistrement",
-    "loadMatches": "Échec du chargement des correspondances",
+    "loadMatches": "Échec du chargement des appels d'offres",
     "updateStatus": "Échec de la mise à jour du statut",
     "exportFailed": "Échec de l'exportation"
   }

@@ -1,4 +1,22 @@
 {
+  "title": "Settings",
+  "messages": {
+    "loadFailed": "Failed to load settings",
+    "saved": "Settings saved.",
+    "savedEmailConfirm": "Settings saved. Please confirm your new email address.",
+    "saveFailed": "Failed to save",
+    "confirmationSent": "Confirmation email sent! Check your inbox.",
+    "confirmationFailed": "Failed to send"
+  },
+  "email": {
+    "sectionTitle": "Email",
+    "label": "Email Address",
+    "confirmed": "Confirmed",
+    "notConfirmed": "Not Confirmed",
+    "sendConfirmation": "Send Confirmation Email",
+    "sending": "Sending...",
+    "pendingChangeHint": "Save to update your email. You'll need to confirm the new address."
+  },
   "language": {
     "title": "Language",
     "interfaceLabel": "Interface language",
@@ -8,5 +26,32 @@
     "savedInterface": "Interface language updated.",
     "savedComms": "Communications language updated.",
     "failed": "Failed to update language."
+  },
+  "notifications": {
+    "sectionTitle": "Notifications",
+    "toggleLabel": "Email notifications for new matches",
+    "toggleHelp": "When enabled, you'll receive an email when new tender matches are found for your company."
+  },
+  "account": {
+    "sectionTitle": "Account",
+    "name": "Name",
+    "role": "Role"
+  },
+  "actions": {
+    "save": "Save Settings",
+    "saving": "Saving..."
+  },
+  "password": {
+    "sectionTitle": "Change Password",
+    "current": "Current Password",
+    "new": "New Password",
+    "confirm": "Confirm New Password",
+    "minHelp": "Minimum 8 characters.",
+    "mismatch": "Passwords do not match.",
+    "tooShort": "New password must be at least 8 characters.",
+    "changed": "Password changed successfully.",
+    "changeFailed": "Failed to change password",
+    "submit": "Change Password",
+    "submitting": "Changing..."
   }
 }

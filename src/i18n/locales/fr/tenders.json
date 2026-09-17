@@ -63,13 +63,13 @@
       "tender": "Appel d'offres",
       "organization": "Organisation",
       "category": "Catégorie",
-      "matched": "Correspondance",
+      "matched": "Analysé le",
       "closing": "Clôture",
       "status": "Statut",
       "actions": "Actions"
     },
-    "emptyTitle": "Aucune correspondance pour l'instant",
-    "emptyBody": "Lancez la mise en correspondance pour découvrir les appels d'offres qui correspondent au profil de votre entreprise.",
+    "emptyTitle": "Aucun appel d'offres pour l'instant",
+    "emptyBody": "Lancez une analyse pour découvrir les appels d'offres qui correspondent au profil de votre entreprise.",
     "statuses": {
       "new": "Nouveau",
       "viewed": "Consulté",

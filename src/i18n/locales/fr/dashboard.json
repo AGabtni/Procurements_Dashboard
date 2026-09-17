@@ -2,31 +2,31 @@
   "hero": {
     "welcomeBack": "Bon retour, {{name}}",
     "welcomeGuest": "Découvrez les marchés publics",
-    "subtitleLoggedIn": "Votre tableau de bord d'intelligence d'approvisionnement. De nouvelles correspondances, des échéances et des opportunités vous attendent.",
-    "subtitleGuest": "Parcourez des milliers d'appels d'offres publics à travers le Canada. Connectez-vous pour obtenir des correspondances personnalisées.",
+    "subtitleLoggedIn": "Votre tableau de bord d'intelligence d'approvisionnement. De nouveaux appels d'offres, des échéances et des opportunités vous attendent.",
+    "subtitleGuest": "Parcourez des milliers d'appels d'offres publics de partout au Canada. Connectez-vous pour obtenir des offres sur mesure.",
     "getStarted": "Commencer gratuitement",
     "signIn": "Se connecter"
   },
   "stats": {
-    "newToday": "Nouvelles opportunités aujourd'hui",
-    "closingThisWeek": "Opportunités se terminant cette semaine",
-    "newMatches": "Nouvelles correspondances pour vous"
+    "newToday": "Nouveaux appels d'offres aujourd'hui",
+    "closingThisWeek": "Appels d'offres se terminant cette semaine",
+    "newMatches": "Nouveaux appels d'offres pour vous"
   },
   "nudge": {
-    "title": "🎯 Recevez des correspondances personnalisées",
+    "title": "🎯 Recevez des appels d'offres personnalisés",
     "body": "Créez le profil de votre entreprise et notre IA fera remonter automatiquement les opportunités pertinentes, toutes les 6 heures.",
     "cta": "Configurer le profil →"
   },
   "recentMatches": {
-    "title": "🎯 Correspondances récentes",
+    "title": "🎯 Appels d'offres récentes",
     "viewAll": "Voir tout →",
     "setupTitle": "Configurez le profil de votre entreprise",
     "setupBody": "Parlez-nous de votre entreprise et nous trouverons des opportunités d'approvisionnement qui correspondent à vos capacités.",
     "setupCta": "Créer le profil",
-    "emptyTitle": "Aucune correspondance pour l'instant",
-    "emptyBody": "Lancez la mise en correspondance depuis la page de votre entreprise pour découvrir des appels d'offres pertinents.",
-    "emptyCta": "Lancer la mise en correspondance",
-    "teaserTitle": "Débloquez les correspondances personnalisées",
+    "emptyTitle": "Aucun appel d'offres pour l'instant",
+    "emptyBody": "Lancez une analyse depuis la page de votre entreprise pour découvrir des appels d'offres pertinents.",
+    "emptyCta": "Trouver les opportunités",
+    "teaserTitle": "Débloquez les appels d'offres personnalisées",
     "teaserBody": "Cessez de chercher manuellement. Recevez automatiquement les bons appels d'offres."
   },
   "closingSoon": {

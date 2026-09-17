@@ -35,7 +35,7 @@ export default function SettingsPage() {
       setEmail(s.email);
       setNotifications(s.notificationsEnabled);
     } catch {
-      setMessage({ type: "danger", text: "Failed to load settings" });
+      setMessage({ type: "danger", text: t("messages.loadFailed") });
     } finally {
       setLoading(false);
     }
@@ -52,10 +52,10 @@ export default function SettingsPage() {
       });
       setSettings(updated);
       setMessage({ type: "success", text: email !== settings?.email
-        ? "Settings saved. Please confirm your new email address."
-        : "Settings saved." });
+        ? t("messages.savedEmailConfirm")
+        : t("messages.saved") });
     } catch (err) {
-      setMessage({ type: "danger", text: err instanceof Error ? err.message : "Failed to save" });
+      setMessage({ type: "danger", text: err instanceof Error ? err.message : t("messages.saveFailed") });
     } finally {
       setSaving(false);
     }
@@ -66,9 +66,9 @@ export default function SettingsPage() {
     setMessage(null);
     try {
       await sendConfirmationEmail();
-      setMessage({ type: "success", text: "Confirmation email sent! Check your inbox." });
+      setMessage({ type: "success", text: t("messages.confirmationSent") });
     } catch (err) {
-      setMessage({ type: "danger", text: err instanceof Error ? err.message : "Failed to send" });
+      setMessage({ type: "danger", text: err instanceof Error ? err.message : t("messages.confirmationFailed") });
     } finally {
       setSendingConfirm(false);
     }
@@ -96,11 +96,11 @@ export default function SettingsPage() {
     e.preventDefault();
     setPasswordMessage(null);
     if (newPassword.length < 8) {
-      setPasswordMessage({ type: "danger", text: "New password must be at least 8 characters." });
+      setPasswordMessage({ type: "danger", text: t("password.tooShort") });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordMessage({ type: "danger", text: "Passwords do not match." });
+      setPasswordMessage({ type: "danger", text: t("password.mismatch") });
       return;
     }
     setChangingPassword(true);
@@ -109,9 +109,9 @@ export default function SettingsPage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordMessage({ type: "success", text: "Password changed successfully." });
+      setPasswordMessage({ type: "success", text: t("password.changed") });
     } catch (err) {
-      setPasswordMessage({ type: "danger", text: err instanceof Error ? err.message : "Failed to change password" });
+      setPasswordMessage({ type: "danger", text: err instanceof Error ? err.message : t("password.changeFailed") });
     } finally {
       setChangingPassword(false);
     }
@@ -128,7 +128,7 @@ export default function SettingsPage() {
   return (
     <div className="row justify-content-center">
       <div className="col-md-8 col-lg-6">
-        <h2 className="mb-4">Settings</h2>
+        <h2 className="mb-4">{t("title")}</h2>
 
         {message && (
           <div className={`alert alert-${message.type} alert-dismissible`}>
@@ -141,11 +141,11 @@ export default function SettingsPage() {
           {/* Email Section */}
           <div className="card mb-4">
             <div className="card-header">
-              <h5 className="mb-0">Email</h5>
+              <h5 className="mb-0">{t("email.sectionTitle")}</h5>
             </div>
             <div className="card-body">
               <div className="mb-3">
-                <label className="form-label">Email Address</label>
+                <label className="form-label">{t("email.label")}</label>
                 <input
                   type="email"
                   className="form-control"
@@ -157,25 +157,25 @@ export default function SettingsPage() {
               <div className="d-flex align-items-center gap-2">
                 {settings?.emailConfirmed ? (
                   <span className="badge bg-success">
-                    <i className="bi bi-check-circle me-1" />Confirmed
+                    <i className="bi bi-check-circle me-1" />{t("email.confirmed")}
                   </span>
                 ) : (
                   <>
-                    <span className="badge bg-warning text-dark">Not Confirmed</span>
+                    <span className="badge bg-warning text-dark">{t("email.notConfirmed")}</span>
                     <button
                       type="button"
                       className="btn btn-sm btn-outline-primary"
                       onClick={handleSendConfirmation}
                       disabled={sendingConfirm || email !== settings?.email}
                     >
-                      {sendingConfirm ? "Sending..." : "Send Confirmation Email"}
+                      {sendingConfirm ? t("email.sending") : t("email.sendConfirmation")}
                     </button>
                   </>
                 )}
               </div>
               {email !== settings?.email && (
                 <div className="form-text text-info mt-2">
-                  Save to update your email. You'll need to confirm the new address.
+                  {t("email.pendingChangeHint")}
                 </div>
               )}
             </div>
@@ -214,7 +214,7 @@ export default function SettingsPage() {
           {/* Notifications Section */}
           <div className="card mb-4">
             <div className="card-header">
-              <h5 className="mb-0">Notifications</h5>
+              <h5 className="mb-0">{t("notifications.sectionTitle")}</h5>
             </div>
             <div className="card-body">
               <div className="form-check form-switch">
@@ -226,11 +226,11 @@ export default function SettingsPage() {
                   onChange={(e) => setNotifications(e.target.checked)}
                 />
                 <label className="form-check-label" htmlFor="notificationsEnabled">
-                  Email notifications for new matches
+                  {t("notifications.toggleLabel")}
                 </label>
               </div>
               <p className="form-text mt-2 mb-3">
-                When enabled, you'll receive an email when new tender matches are found for your company.
+                {t("notifications.toggleHelp")}
               </p>
               <div className="mb-1">
                 <label className="form-label">{t("language.commsLabel")}</label>
@@ -254,16 +254,16 @@ export default function SettingsPage() {
           {/* Account Info */}
           <div className="card mb-4">
             <div className="card-header">
-              <h5 className="mb-0">Account</h5>
+              <h5 className="mb-0">{t("account.sectionTitle")}</h5>
             </div>
             <div className="card-body">
-              <p className="mb-1"><strong>Name:</strong> {user?.fullName}</p>
-              <p className="mb-0"><strong>Role:</strong> {user?.role}</p>
+              <p className="mb-1"><strong>{t("account.name")}:</strong> {user?.fullName}</p>
+              <p className="mb-0"><strong>{t("account.role")}:</strong> {user?.role}</p>
             </div>
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? "Saving..." : "Save Settings"}
+            {saving ? t("actions.saving") : t("actions.save")}
           </button>
         </form>
 
@@ -271,7 +271,7 @@ export default function SettingsPage() {
         <form onSubmit={handleChangePassword} className="mt-4">
           <div className="card mb-4">
             <div className="card-header">
-              <h5 className="mb-0">Change Password</h5>
+              <h5 className="mb-0">{t("password.sectionTitle")}</h5>
             </div>
             <div className="card-body">
               {passwordMessage && (
@@ -281,18 +281,18 @@ export default function SettingsPage() {
                 </div>
               )}
               <div className="mb-3">
-                <label className="form-label">Current Password</label>
+                <label className="form-label">{t("password.current")}</label>
                 <input type="password" className="form-control" value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)} required />
               </div>
               <div className="mb-3">
-                <label className="form-label">New Password</label>
+                <label className="form-label">{t("password.new")}</label>
                 <input type="password" className="form-control" value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)} required minLength={8} />
-                <div className="form-text">Minimum 8 characters.</div>
+                <div className="form-text">{t("password.minHelp")}</div>
               </div>
               <div className="mb-3">
-                <label className="form-label">Confirm New Password</label>
+                <label className="form-label">{t("password.confirm")}</label>
                 <input type="password" className="form-control"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -300,11 +300,11 @@ export default function SettingsPage() {
                   style={confirmPassword && confirmPassword !== newPassword ? { borderColor: "var(--bs-danger)" } : {}}
                 />
                 {confirmPassword && confirmPassword !== newPassword && (
-                  <div className="form-text text-danger">Passwords do not match.</div>
+                  <div className="form-text text-danger">{t("password.mismatch")}</div>
                 )}
               </div>
               <button type="submit" className="btn btn-primary" disabled={changingPassword}>
-                {changingPassword ? "Changing..." : "Change Password"}
+                {changingPassword ? t("password.submitting") : t("password.submit")}
               </button>
             </div>
           </div>

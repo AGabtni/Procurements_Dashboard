@@ -27,7 +27,7 @@
     "headlineWithCount_other": "{{count}} new matches",
     "headlineForCompany": "{{headline}} for {{company}}",
     "description": "Your free trial has ended. Subscribe to unlock your matches and keep receiving new tender opportunities.",
-    "cta": "Subscribe to unlock →"
+    "cta": "Unlock my tenders"
   },
   "pagination": {
     "tendersFound_one": "{{count}} tender found",
