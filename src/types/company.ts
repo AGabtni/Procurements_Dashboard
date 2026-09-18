@@ -67,6 +67,8 @@ export interface CompanyMatchDto {
   noticeLink: string | null;
   matchScore: number;
   matchReason: string | null;
+  matchReasonEn: string | null;
+  matchReasonFr: string | null;
   matchedAt: string;
   status: "new" | "viewed" | "saved" | "dismissed";
 }

@@ -7,6 +7,9 @@ import { decodeHtml } from "../utils/html";
 interface Props {
   matches: CompanyMatchDto[];
   showReason?: boolean;
+  // Admin view: show English and French reasons side by side instead of the
+  // single locale-resolved reason.
+  bilingualReason?: boolean;
   onStatusChange: (matchId: number, status: "new" | "viewed" | "saved" | "dismissed") => void;
 }
 
@@ -33,7 +36,7 @@ function ScoreRing({ score }: { score: number }) {
   );
 }
 
-export default function MatchesTable({ matches, showReason, onStatusChange }: Props) {
+export default function MatchesTable({ matches, showReason, bilingualReason, onStatusChange }: Props) {
   const { t, i18n } = useTranslation("tenders");
   const [sortCol, setSortCol] = useState<SortCol>("matchScore");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -107,7 +110,20 @@ export default function MatchesTable({ matches, showReason, onStatusChange }: Pr
                 <a href={`/tenders/${m.tenderId}`} className="tender-title-link">
                   {m.tenderTitle ?? m.noticeId ?? `#${m.tenderId}`}
                 </a>
-                {showReason && m.matchReason && (
+                {showReason && bilingualReason ? (
+                  <>
+                    {m.matchReasonEn && (
+                      <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)", marginTop: ".2rem" }}>
+                        <strong>EN:</strong> {m.matchReasonEn}
+                      </div>
+                    )}
+                    {m.matchReasonFr && (
+                      <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)", marginTop: ".2rem" }}>
+                        <strong>FR:</strong> {m.matchReasonFr}
+                      </div>
+                    )}
+                  </>
+                ) : showReason && m.matchReason && (
                   <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)", marginTop: ".2rem" }}>
                     {m.matchReason}
                   </div>

@@ -1158,7 +1158,7 @@ export default function AdminCompaniesPage() {
             <p className="text-muted">No matches found.</p>
           ) : (
             <>
-              <MatchesTable matches={matches} showReason onStatusChange={handleStatusChange} />
+              <MatchesTable matches={matches} showReason bilingualReason onStatusChange={handleStatusChange} />
               <Pagination
                 page={matchPage}
                 totalPages={matchTotalPages}
