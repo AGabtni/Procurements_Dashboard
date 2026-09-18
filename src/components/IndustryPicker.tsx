@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { IndustryNode, IndustrySearchResult, IndustryElements } from "../types/industry";
 import { getIndustryChildren, searchIndustries } from "../api/industriesApi";
 
@@ -67,6 +68,23 @@ export default function IndustryPicker({
   const hoverClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mousePos        = useRef({ x: 0, y: 0 });
 
+  const { i18n } = useTranslation();
+  const fr = i18n.language.toLowerCase().startsWith("fr");
+
+  // Titles and element lists arrive bilingually; pick the current-locale variant
+  // (falling back to English when a French value is missing).
+  const displayTitle = (n: { titleEn: string; titleFr: string | null }) =>
+    fr && n.titleFr ? n.titleFr : n.titleEn;
+  const localizeElements = (e: IndustryElements | null): IndustryElements | null => {
+    if (!e || !fr) return e;
+    return {
+      ...e,
+      examples: e.examplesFr?.length ? e.examplesFr : e.examples,
+      inclusions: e.inclusionsFr?.length ? e.inclusionsFr : e.inclusions,
+      exclusions: e.exclusionsFr?.length ? e.exclusionsFr : e.exclusions,
+    };
+  };
+
   const isSearching = query.trim().length > 0;
 
   const showDetailPanel =
@@ -130,10 +148,10 @@ export default function IndustryPicker({
     searchTimer.current = setTimeout(async () => {
       setSearchLoading(true);
       try {
-        const results = await searchIndustries(query.trim());
+        const results = await searchIndustries(query.trim(), i18n.language);
         setSearchResults(results);
         const newLabels: Record<string, string> = {};
-        results.forEach((r) => { newLabels[r.code] = r.titleEn; });
+        results.forEach((r) => { newLabels[r.code] = displayTitle(r); });
         setLabelMap((prev) => ({ ...prev, ...newLabels }));
       } catch {
         setSearchResults([]);
@@ -149,7 +167,7 @@ export default function IndustryPicker({
       const children = await getIndustryChildren(parentCode);
       const items: TreeItem[] = children.map((c) => ({ ...c, depth }));
       const newLabels: Record<string, string> = {};
-      children.forEach((c) => { newLabels[c.code] = c.titleEn; });
+      children.forEach((c) => { newLabels[c.code] = displayTitle(c); });
       setLabelMap((prev) => ({ ...prev, ...newLabels }));
       if (parentCode === undefined) {
         setTreeItems(items);
@@ -266,7 +284,7 @@ export default function IndustryPicker({
               ) : (
                 searchResults.map((r) => {
                   const sel  = value.includes(r.code);
-                  const hint = buildHint(r.elements);
+                  const hint = buildHint(localizeElements(r.elements));
                   return (
                     <div
                       key={r.code}
@@ -290,9 +308,9 @@ export default function IndustryPicker({
                           <span
                             onMouseEnter={(e) => {
                               const { x, y } = textEndAnchor(e.currentTarget);
-                              startHover(r.titleEn, r.elements, x, y);
+                              startHover(displayTitle(r), localizeElements(r.elements), x, y);
                             }}
-                          >{r.titleEn}</span>
+                          >{displayTitle(r)}</span>
                         </div>
                         {r.ancestorTitles.length > 0 && (
                           <div className="text-muted" style={{ fontSize: "0.72em" }}>
@@ -315,7 +333,7 @@ export default function IndustryPicker({
               treeItems.map((node) => {
                 const sel    = value.includes(node.code);
                 const hasSel = !sel && hasSelectedDescendant(node.code);
-                const hint   = node.level >= 4 ? buildHint(node.elements) : null;
+                const hint   = node.level >= 4 ? buildHint(localizeElements(node.elements)) : null;
                 return (
                   <div
                     key={node.code}
@@ -348,9 +366,9 @@ export default function IndustryPicker({
                       <span
                         onMouseEnter={(e) => {
                           const { x, y } = textEndAnchor(e.currentTarget);
-                          startHover(node.titleEn, node.elements, x, y);
+                          startHover(displayTitle(node), localizeElements(node.elements), x, y);
                         }}
-                      >{node.titleEn}</span>
+                      >{displayTitle(node)}</span>
                       {hasSel && (
                         <span className="ms-1" style={{ color: "#0d6efd", fontSize: "0.6em", verticalAlign: "middle" }} title="Contains selected sub-industries">●</span>
                       )}

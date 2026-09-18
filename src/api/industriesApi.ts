@@ -24,9 +24,10 @@ export async function getIndustryChildren(parent?: string): Promise<IndustryNode
   return res.json();
 }
 
-export async function searchIndustries(q: string): Promise<IndustrySearchResult[]> {
+export async function searchIndustries(q: string, locale?: string): Promise<IndustrySearchResult[]> {
+  const localeParam = locale ? `&locale=${encodeURIComponent(locale)}` : "";
   const res = await fetch(
-    `${API_BASE}/api/industries/search?q=${encodeURIComponent(q)}`,
+    `${API_BASE}/api/industries/search?q=${encodeURIComponent(q)}${localeParam}`,
     { headers: authHeaders() }
   );
   if (!res.ok) throw await httpError(res);
