@@ -1,4 +1,5 @@
 import type { IndustryNode, IndustrySearchResult } from "../types/industry";
+import { httpError } from "./apiError";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5009";
 const STORAGE_KEY = "procureportal_auth";
@@ -19,7 +20,7 @@ export async function getIndustryChildren(parent?: string): Promise<IndustryNode
     ? `${API_BASE}/api/industries?parent=${encodeURIComponent(parent)}`
     : `${API_BASE}/api/industries`;
   const res = await fetch(url, { headers: authHeaders() });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  if (!res.ok) throw await httpError(res);
   return res.json();
 }
 
@@ -28,6 +29,6 @@ export async function searchIndustries(q: string): Promise<IndustrySearchResult[
     `${API_BASE}/api/industries/search?q=${encodeURIComponent(q)}`,
     { headers: authHeaders() }
   );
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  if (!res.ok) throw await httpError(res);
   return res.json();
 }

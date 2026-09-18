@@ -1,0 +1,20 @@
+{
+  "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter.",
+  "network": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
+  "server": "Une erreur est survenue de notre côté. Veuillez réessayer dans un instant.",
+  "notFound": "L'élément demandé est introuvable.",
+  "generic": "Une erreur est survenue. Veuillez réessayer.",
+
+  "invalidCredentials": "Adresse courriel ou mot de passe incorrect.",
+  "accountInactive": "Votre compte est inactif. Veuillez contacter un administrateur.",
+  "emailRegistered": "Cette adresse courriel est déjà enregistrée.",
+  "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères.",
+  "unsupportedLocale": "Langue non prise en charge.",
+  "userNotFound": "Utilisateur introuvable.",
+  "emailAlreadyConfirmed": "Cette adresse courriel est déjà confirmée.",
+  "emailInUse": "Cette adresse courriel est déjà utilisée.",
+  "currentPasswordIncorrect": "Votre mot de passe actuel est incorrect.",
+  "newPasswordSameAsCurrent": "Le nouveau mot de passe doit être différent de votre mot de passe actuel.",
+  "tokenRequired": "Un jeton de confirmation est requis.",
+  "invalidOrExpiredToken": "Ce lien de confirmation est invalide ou a expiré."
+}

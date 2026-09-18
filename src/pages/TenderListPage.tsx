@@ -6,6 +6,7 @@ import SearchBar from "../components/SearchBar";
 import TenderTable from "../components/TenderTable";
 import Pagination from "../components/Pagination";
 import { categoryLabel } from "../utils/categoryMap";
+import { resolveError } from "../utils/resolveError";
 
 const DEFAULT_PARAMS: TenderSearchParams = {
   page: 1,
@@ -43,7 +44,7 @@ export default function TenderListPage() {
       const data = await searchTenders(p);
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("list.loadFailed"));
+      setError(resolveError(err, t, "list.loadFailed"));
     } finally {
       setLoading(false);
     }

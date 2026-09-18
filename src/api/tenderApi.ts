@@ -6,13 +6,14 @@ import type {
   TenderStatsDto,
 } from "../types/tender";
 import { decodeHtml } from "../utils/html";
+import { httpError } from "./apiError";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5009";
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`API error: ${res.status} ${res.statusText}`);
+    throw await httpError(res);
   }
   return res.json();
 }

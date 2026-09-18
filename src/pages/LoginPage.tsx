@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
+import { resolveError } from "../utils/resolveError";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -20,7 +21,7 @@ export default function LoginPage() {
       await login({ email, password });
       navigate("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("login.failed"));
+      setError(resolveError(err, t, "login.failed"));
     } finally {
       setLoading(false);
     }

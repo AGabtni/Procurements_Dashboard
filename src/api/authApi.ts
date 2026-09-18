@@ -1,4 +1,16 @@
 import type { LoginRequest, RegisterRequest, AuthResponse, SettingsDto, UpdateSettingsRequest, UserDto } from "../types/auth";
+import { ApiError } from "./apiError";
+
+// Turn a failed response (whose JSON body may have already been read) into an
+// ApiError. Auth endpoints return a stable { code } the frontend localizes;
+// any { message } is kept as a fallback for resolveError to surface.
+function bodyError(status: number, body?: { code?: unknown; message?: unknown } | null): ApiError {
+  return new ApiError(status >= 500 ? "server" : "generic", {
+    status,
+    errorKey: typeof body?.code === "string" && body.code.trim() ? body.code : undefined,
+    serverMessage: typeof body?.message === "string" && body.message.trim() ? body.message : undefined,
+  });
+}
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5009";
 
@@ -17,7 +29,7 @@ export async function login(request: LoginRequest): Promise<AuthResponse> {
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.message || "Login failed");
+    throw bodyError(res.status, body);
   }
   return res.json();
 }
@@ -30,13 +42,13 @@ export async function register(request: RegisterRequest): Promise<void> {
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.message || "Registration failed");
+    throw bodyError(res.status, body);
   }
 }
 
 export async function getSettings(): Promise<SettingsDto> {
   const res = await fetch(`${API_BASE}/api/auth/settings`, { headers: authHeaders() });
-  if (!res.ok) throw new Error("Failed to load settings");
+  if (!res.ok) throw bodyError(res.status);
   return res.json();
 }
 
@@ -48,7 +60,7 @@ export async function updateSettings(request: UpdateSettingsRequest): Promise<Se
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.message || "Failed to update settings");
+    throw bodyError(res.status, body);
   }
   return res.json();
 }
@@ -61,7 +73,7 @@ export async function changePassword(currentPassword: string, newPassword: strin
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.message || "Failed to change password");
+    throw bodyError(res.status, body);
   }
 }
 
@@ -72,7 +84,7 @@ export async function sendConfirmationEmail(): Promise<void> {
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.message || "Failed to send confirmation email");
+    throw bodyError(res.status, body);
   }
 }
 
@@ -80,7 +92,7 @@ export async function confirmEmail(token: string): Promise<void> {
   const res = await fetch(`${API_BASE}/api/auth/confirm-email?token=${encodeURIComponent(token)}`);
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.message || "Email confirmation failed");
+    throw bodyError(res.status, body);
   }
 }
 
@@ -88,7 +100,7 @@ export async function confirmEmail(token: string): Promise<void> {
 
 export async function refreshSession(): Promise<{ activatedAt: string | null; trialDays: number; subscriptionStatus: string | null; trialEndsAt: string | null; companyId: number | null; locale: string; commsLocale: string }> {
   const res = await fetch(`${API_BASE}/api/auth/me`, { headers: authHeaders() });
-  if (!res.ok) throw new Error("Failed to refresh session");
+  if (!res.ok) throw bodyError(res.status);
   return res.json();
 }
 
@@ -100,7 +112,7 @@ export async function updateLocale(locale: string): Promise<{ locale: string }> 
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.message || "Failed to update locale");
+    throw bodyError(res.status, body);
   }
   return res.json();
 }
@@ -113,7 +125,7 @@ export async function updateCommsLocale(commsLocale: string): Promise<{ commsLoc
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.message || "Failed to update comms locale");
+    throw bodyError(res.status, body);
   }
   return res.json();
 }

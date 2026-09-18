@@ -1,0 +1,20 @@
+{
+  "sessionExpired": "Your session has expired. Please sign in again.",
+  "network": "Unable to reach the server. Check your connection and try again.",
+  "server": "Something went wrong on our end. Please try again in a moment.",
+  "notFound": "The requested item could not be found.",
+  "generic": "Something went wrong. Please try again.",
+
+  "invalidCredentials": "Incorrect email or password.",
+  "accountInactive": "Your account is inactive. Please contact an administrator.",
+  "emailRegistered": "This email address is already registered.",
+  "passwordTooShort": "Password must be at least 8 characters.",
+  "unsupportedLocale": "Unsupported language.",
+  "userNotFound": "User not found.",
+  "emailAlreadyConfirmed": "This email address is already confirmed.",
+  "emailInUse": "This email address is already in use.",
+  "currentPasswordIncorrect": "Your current password is incorrect.",
+  "newPasswordSameAsCurrent": "The new password must be different from your current password.",
+  "tokenRequired": "A confirmation token is required.",
+  "invalidOrExpiredToken": "This confirmation link is invalid or has expired."
+}

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { register } from "../api/authApi";
 import { Link } from "react-router-dom";
+import { resolveError } from "../utils/resolveError";
 
 export default function RegisterPage() {
   const { t } = useTranslation("auth");
@@ -27,7 +28,7 @@ export default function RegisterPage() {
       await register({ email, fullName, password });
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("register.failed"));
+      setError(resolveError(err, t, "register.failed"));
     } finally {
       setLoading(false);
     }

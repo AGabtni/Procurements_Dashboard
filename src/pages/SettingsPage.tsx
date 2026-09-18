@@ -4,6 +4,7 @@ import { getSettings, updateSettings, sendConfirmationEmail, changePassword } fr
 import type { SettingsDto } from "../types/auth";
 import { useAuth } from "../context/AuthContext";
 import { SUPPORTED_LOCALES, normalizeLocale, type SupportedLocale } from "../i18n";
+import { resolveError } from "../utils/resolveError";
 
 export default function SettingsPage() {
   const { user, setLocale, setCommsLocale } = useAuth();
@@ -55,7 +56,7 @@ export default function SettingsPage() {
         ? t("messages.savedEmailConfirm")
         : t("messages.saved") });
     } catch (err) {
-      setMessage({ type: "danger", text: err instanceof Error ? err.message : t("messages.saveFailed") });
+      setMessage({ type: "danger", text: resolveError(err, t, "messages.saveFailed") });
     } finally {
       setSaving(false);
     }
@@ -68,7 +69,7 @@ export default function SettingsPage() {
       await sendConfirmationEmail();
       setMessage({ type: "success", text: t("messages.confirmationSent") });
     } catch (err) {
-      setMessage({ type: "danger", text: err instanceof Error ? err.message : t("messages.confirmationFailed") });
+      setMessage({ type: "danger", text: resolveError(err, t, "messages.confirmationFailed") });
     } finally {
       setSendingConfirm(false);
     }
@@ -86,7 +87,7 @@ export default function SettingsPage() {
         setLangMessage({ type: "success", text: t("language.savedComms") });
       }
     } catch (err) {
-      setLangMessage({ type: "danger", text: err instanceof Error ? err.message : t("language.failed") });
+      setLangMessage({ type: "danger", text: resolveError(err, t, "language.failed") });
     } finally {
       setSavingLocale(null);
     }
@@ -111,7 +112,7 @@ export default function SettingsPage() {
       setConfirmPassword("");
       setPasswordMessage({ type: "success", text: t("password.changed") });
     } catch (err) {
-      setPasswordMessage({ type: "danger", text: err instanceof Error ? err.message : t("password.changeFailed") });
+      setPasswordMessage({ type: "danger", text: resolveError(err, t, "password.changeFailed") });
     } finally {
       setChangingPassword(false);
     }

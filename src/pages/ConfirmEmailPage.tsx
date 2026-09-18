@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams, Link } from "react-router-dom";
 import { confirmEmail } from "../api/authApi";
+import { resolveError } from "../utils/resolveError";
 
 export default function ConfirmEmailPage() {
   const { t } = useTranslation("auth");
@@ -25,7 +26,7 @@ export default function ConfirmEmailPage() {
       .then(() => setStatus("success"))
       .catch((err) => {
         setStatus("error");
-        setErrorMsg(err instanceof Error ? err.message : t("confirmEmail.failed"));
+        setErrorMsg(resolveError(err, t, "confirmEmail.failed"));
       });
   }, [searchParams, t]);
 

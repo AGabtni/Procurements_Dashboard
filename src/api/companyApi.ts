@@ -11,6 +11,7 @@ import type {
   AdminCreateCompanyRequest,
 } from "../types/company";
 import { decodeHtml } from "../utils/html";
+import { ApiError, httpError, sessionExpiredError } from "./apiError";
 
 function normalizeMatch(m: CompanyMatchDto): CompanyMatchDto {
   return { ...m, tenderTitle: decodeHtml(m.tenderTitle) };
@@ -38,10 +39,10 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   if (res.status === 401) {
     localStorage.removeItem(STORAGE_KEY);
     window.location.href = "/login";
-    throw new Error("Session expired");
+    throw sessionExpiredError();
   }
   if (!res.ok) {
-    throw new Error(`API error: ${res.status} ${res.statusText}`);
+    throw await httpError(res);
   }
   return res.json();
 }
@@ -54,10 +55,10 @@ async function fetchVoid(url: string, init?: RequestInit): Promise<void> {
   if (res.status === 401) {
     localStorage.removeItem(STORAGE_KEY);
     window.location.href = "/login";
-    throw new Error("Session expired");
+    throw sessionExpiredError();
   }
   if (!res.ok) {
-    throw new Error(`API error: ${res.status} ${res.statusText}`);
+    throw await httpError(res);
   }
 }
 
@@ -77,9 +78,9 @@ export async function getMyProfile(): Promise<CompanyProfileDto | null> {
   if (res.status === 401) {
     localStorage.removeItem(STORAGE_KEY);
     window.location.href = "/login";
-    throw new Error("Session expired");
+    throw sessionExpiredError();
   }
-  if (!res.ok) throw new Error(`API error: ${res.status} ${res.statusText}`);
+  if (!res.ok) throw await httpError(res);
   return res.json();
 }
 
@@ -322,7 +323,7 @@ async function handleTriggerResponse(res: Response): Promise<TriggerMatchResult>
   if (res.status === 401) {
     localStorage.removeItem(STORAGE_KEY);
     window.location.href = "/login";
-    throw new Error("Session expired");
+    throw sessionExpiredError();
   }
 
   let body: Record<string, unknown> = {};
@@ -348,7 +349,10 @@ async function handleTriggerResponse(res: Response): Promise<TriggerMatchResult>
     return { started: false, message: (body.message as string) ?? "Already in progress" };
   }
 
-  throw new Error(`API error: ${res.status} ${res.statusText}`);
+  throw new ApiError(res.status >= 500 ? "server" : "generic", {
+    status: res.status,
+    serverMessage: typeof body.message === "string" ? body.message : undefined,
+  });
 }
 
 export async function sendManualNotification(
@@ -360,7 +364,10 @@ export async function sendManualNotification(
   });
   let body: Record<string, unknown> = {};
   try { body = await res.json(); } catch { /* empty body */ }
-  if (!res.ok) throw new Error((body.message as string) ?? `HTTP ${res.status}`);
+  if (!res.ok) throw new ApiError(res.status >= 500 ? "server" : "generic", {
+    status: res.status,
+    serverMessage: typeof body.message === "string" ? body.message : undefined,
+  });
   return body as { message: string; matchCount: number };
 }
 
@@ -374,6 +381,9 @@ export async function sendNotificationToUser(
   });
   let body: Record<string, unknown> = {};
   try { body = await res.json(); } catch { /* empty body */ }
-  if (!res.ok) throw new Error((body.message as string) ?? `HTTP ${res.status}`);
+  if (!res.ok) throw new ApiError(res.status >= 500 ? "server" : "generic", {
+    status: res.status,
+    serverMessage: typeof body.message === "string" ? body.message : undefined,
+  });
   return body as { message: string; matchCount: number };
 }

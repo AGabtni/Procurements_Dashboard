@@ -8,6 +8,7 @@ import { getTenderById } from "../api/tenderApi";
 import type { TenderDetailDto } from "../types/tender";
 import { categoryLabel } from "../utils/categoryMap";
 import { recordView } from "../utils/recentlyViewed";
+import { resolveError } from "../utils/resolveError";
 
 // Convert LLM title-case headings ("Scope Of Work") to sentence case ("Scope of work")
 const toSentenceCase = (s: string) =>
@@ -78,7 +79,7 @@ export default function TenderDetailPage() {
         recordView(tenderData.id);
       })
       .catch((err) =>
-        setError(err instanceof Error ? err.message : t("detail.loadFailed"))
+        setError(resolveError(err, t, "detail.loadFailed"))
       )
       .finally(() => setLoading(false));
   }, [id, t]);

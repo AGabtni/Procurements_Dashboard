@@ -15,6 +15,7 @@ import {
 } from "../api/companyApi";
 import type { MatchSearchParams } from "../api/companyApi";
 import MatchesSearchBar from "../components/MatchesSearchBar";
+import { resolveError } from "../utils/resolveError";
 import type {
   CompanyProfileDto,
   CompanyMatchDto,
@@ -142,7 +143,7 @@ export default function MyCompanyPage() {
       setProfile(data);
       if (s) setStats(s);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("errors.loadProfile"));
+      setError(resolveError(err, t, "errors.loadProfile"));
     } finally {
       setLoading(false);
     }
@@ -178,7 +179,7 @@ export default function MyCompanyPage() {
       setSubmitted(false);
       await loadProfile();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("errors.createProfile"));
+      setError(resolveError(err, t, "errors.createProfile"));
     } finally {
       setSaving(false);
     }
@@ -247,7 +248,7 @@ export default function MyCompanyPage() {
       setMatchTotalCount(result.totalCount);
       setStats(s);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("errors.loadMatches"));
+      setError(resolveError(err, t, "errors.loadMatches"));
     } finally {
       setMatchesLoading(false);
     }
@@ -311,7 +312,7 @@ export default function MyCompanyPage() {
       setSubmitted(false);
       await loadProfile();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("errors.saveProfile"));
+      setError(resolveError(err, t, "errors.saveProfile"));
     } finally {
       setSaving(false);
     }
@@ -368,7 +369,7 @@ export default function MyCompanyPage() {
         setMatchMsg(result.message);
       }
     } catch (err) {
-      setMatchMsg(err instanceof Error ? err.message : t("trigger.failed"));
+      setMatchMsg(resolveError(err, t, "trigger.failed"));
     } finally {
       setMatchBusy(false);
     }
@@ -379,7 +380,7 @@ export default function MyCompanyPage() {
       await updateMyMatchStatus(matchId, { status: newStatus });
       await loadMatches();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("errors.updateStatus"));
+      setError(resolveError(err, t, "errors.updateStatus"));
     }
   }
 
@@ -431,7 +432,7 @@ export default function MyCompanyPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("errors.exportFailed"));
+      setError(resolveError(err, t, "errors.exportFailed"));
     } finally {
       setExportLoading(false);
     }
