@@ -76,7 +76,7 @@ export default function SearchBar({ params, categories, noticeTypes, onSearch }:
   return (
     <form onSubmit={handleSubmit} className="pp-search-bar">
       <div className="row g-3 align-items-end">
-        <div className="col-md-4">
+        <div className="col">
           <label htmlFor="keyword" className="form-label">{t("searchBar.search")}</label>
           <input
             id="keyword"
@@ -137,9 +137,9 @@ export default function SearchBar({ params, categories, noticeTypes, onSearch }:
           </div>
         </div>
 
-        <div className="col-md-2 d-flex gap-2">
-          <button type="submit" className="pp-btn pp-btn-primary">{t("searchBar.searchButton")}</button>
-          <button type="button" className="pp-btn pp-btn-ghost" onClick={handleReset}>{t("searchBar.reset")}</button>
+        <div className="col-md-auto d-flex gap-2 justify-content-end">
+          <button type="submit" className="pp-btn pp-btn-primary" style={{ width: 100, justifyContent: "center", paddingInline: ".5rem" }}>{t("searchBar.searchButton")}</button>
+          <button type="button" className="pp-btn pp-btn-ghost" style={{ width: 100, justifyContent: "center", paddingInline: ".5rem" }} onClick={handleReset}>{t("searchBar.reset")}</button>
         </div>
       </div>
     </form>

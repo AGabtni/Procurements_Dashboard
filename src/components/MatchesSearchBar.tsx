@@ -92,7 +92,7 @@ export default function MatchesSearchBar({ params, organizations, noticeTypes, o
   return (
     <form onSubmit={handleSubmit} className="pp-search-bar">
       <div className="row g-3 align-items-end">
-        <div className="col-md-3">
+        <div className="col">
           <label htmlFor="m-keyword" className="form-label">{t("searchBar.search")}</label>
           <input
             id="m-keyword"
@@ -104,7 +104,7 @@ export default function MatchesSearchBar({ params, organizations, noticeTypes, o
           />
         </div>
 
-        <div className="col-md-3">
+        <div className="col">
           <label className="form-label">{t("searchBar.organization")}</label>
           <MultiSelectDropdown
             id="m-orgs"
@@ -137,9 +137,9 @@ export default function MatchesSearchBar({ params, organizations, noticeTypes, o
           />
         </div>
 
-        <div className="col-md-2 d-flex gap-2">
-          <button type="submit" className="pp-btn pp-btn-primary">{t("searchBar.searchButton")}</button>
-          <button type="button" className="pp-btn pp-btn-ghost" onClick={handleReset}>{t("searchBar.reset")}</button>
+        <div className="col-md-auto d-flex gap-2 justify-content-end">
+          <button type="submit" className="pp-btn pp-btn-primary" style={{ width: 100, justifyContent: "center", paddingInline: ".5rem" }}>{t("searchBar.searchButton")}</button>
+          <button type="button" className="pp-btn pp-btn-ghost" style={{ width: 100, justifyContent: "center", paddingInline: ".5rem" }} onClick={handleReset}>{t("searchBar.reset")}</button>
         </div>
       </div>
     </form>
