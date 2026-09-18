@@ -35,7 +35,10 @@ export async function httpError(res: Response): Promise<ApiError> {
   try {
     const body = await res.clone().json();
     if (typeof body?.code === "string" && body.code.trim()) errorKey = body.code;
-    const msg = body?.message ?? body?.error ?? body?.title;
+    // Note: ProblemDetails `title` is generic framework text ("One or more
+    // validation errors occurred.") — intentionally not used as a message so
+    // validation 400s fall through to the caller's localized fallback.
+    const msg = body?.message ?? body?.error;
     if (typeof msg === "string" && msg.trim()) serverMessage = msg;
   } catch {
     // Body was not JSON — leave serverMessage/errorKey undefined.

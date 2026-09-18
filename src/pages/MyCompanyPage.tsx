@@ -366,7 +366,7 @@ export default function MyCompanyPage() {
         const m = Math.ceil((result.retryAfterSeconds % 3600) / 60);
         setMatchMsg(t("trigger.cooldown", { hours: h, minutes: m }));
       } else {
-        setMatchMsg(result.message);
+        setMatchMsg(t("trigger.inProgress"));
       }
     } catch (err) {
       setMatchMsg(resolveError(err, t, "trigger.failed"));

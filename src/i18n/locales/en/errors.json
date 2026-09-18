@@ -16,5 +16,10 @@
   "currentPasswordIncorrect": "Your current password is incorrect.",
   "newPasswordSameAsCurrent": "The new password must be different from your current password.",
   "tokenRequired": "A confirmation token is required.",
-  "invalidOrExpiredToken": "This confirmation link is invalid or has expired."
+  "invalidOrExpiredToken": "This confirmation link is invalid or has expired.",
+
+  "profileExists": "You already have a company profile.",
+  "descriptionTooShort": "The description must be at least 150 characters.",
+  "industryRequired": "Select at least one industry.",
+  "invalidStatus": "Invalid status value."
 }

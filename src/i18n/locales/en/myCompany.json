@@ -128,6 +128,7 @@
   "trigger": {
     "queued": "Matching queued",
     "cooldown": "Cooldown active. Retry in {{hours}}h {{minutes}}m",
+    "inProgress": "Matching is already in progress or pending.",
     "failed": "Failed"
   },
   "matches": {

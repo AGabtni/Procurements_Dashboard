@@ -128,6 +128,7 @@
   "trigger": {
     "queued": "Analyse en file d'attente",
     "cooldown": "Période d'attente active. Réessayez dans {{hours}} h {{minutes}} m",
+    "inProgress": "Une analyse est déjà en cours ou en attente.",
     "failed": "Échec"
   },
   "matches": {
