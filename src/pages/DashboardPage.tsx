@@ -139,13 +139,15 @@ export default function DashboardPage() {
       if (user) {
         await Promise.allSettled([
           getMyMatchStats().then(setStats).catch(() => null),
-          getMyMatches(1, 5).then((r) => setRecentMatches(r.items)).catch(() => {}),
+          getMyMatches(1, 5, undefined, i18n.language).then((r) => setRecentMatches(r.items)).catch(() => {}),
         ]);
       }
     } finally {
       setLoading(false);
     }
-  }, [user]);
+    // Refetch when the UI language changes so match reasons re-localize.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, i18n.language]);
 
   useEffect(() => {
     loadDashboard();

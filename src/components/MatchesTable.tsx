@@ -35,7 +35,7 @@ function ScoreRing({ score }: { score: number }) {
 
 export default function MatchesTable({ matches, showReason, onStatusChange }: Props) {
   const { t, i18n } = useTranslation("tenders");
-  const [sortCol, setSortCol] = useState<SortCol>("matchedAt");
+  const [sortCol, setSortCol] = useState<SortCol>("matchScore");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   function toggleSort(col: SortCol) {

@@ -130,7 +130,7 @@ export interface MatchSearchParams {
   statuses?: string[];
 }
 
-function buildMatchQuery(page: number, pageSize: number, filters?: MatchSearchParams): URLSearchParams {
+function buildMatchQuery(page: number, pageSize: number, filters?: MatchSearchParams, locale?: string): URLSearchParams {
   const q = new URLSearchParams();
   if (filters?.keyword) q.set("search", filters.keyword.trim());
   (filters?.statuses ?? []).forEach((s) => q.append("statuses", s));
@@ -138,6 +138,7 @@ function buildMatchQuery(page: number, pageSize: number, filters?: MatchSearchPa
   (filters?.noticeTypes ?? []).forEach((t) => q.append("noticeTypes", t));
   q.set("page", String(page));
   q.set("pageSize", String(pageSize));
+  if (locale) q.set("locale", locale);
   return q;
 }
 
@@ -145,9 +146,10 @@ export async function getMyMatches(
   page = 1,
   pageSize = 25,
   filters?: MatchSearchParams,
+  locale?: string,
 ): Promise<PagedResult<CompanyMatchDto>> {
   const result = await fetchJson<PagedResult<CompanyMatchDto>>(
-    `${API_BASE}/api/company/me/matches?${buildMatchQuery(page, pageSize, filters)}`
+    `${API_BASE}/api/company/me/matches?${buildMatchQuery(page, pageSize, filters, locale)}`
   );
   return { ...result, items: result.items.map(normalizeMatch) };
 }

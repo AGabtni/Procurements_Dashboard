@@ -223,12 +223,14 @@ export default function MyCompanyPage() {
     }
   }, [tab, profile]);
 
-  // Load matches when switching to matches tab, changing search, or changing page
+  // Load matches when switching to matches tab, changing search, page, or language
+  // (match reasons are localized server-side by the UI locale).
   useEffect(() => {
     if (tab === "matches" && profile) {
       loadMatches(matchPage);
     }
-  }, [tab, matchSearch, matchPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, matchSearch, matchPage, i18n.language]);
 
   // Reset to page 1 when search changes
   useEffect(() => {
@@ -239,7 +241,7 @@ export default function MyCompanyPage() {
     setMatchesLoading(true);
     try {
       const [result, s] = await Promise.all([
-        getMyMatches(page, 25, matchSearch),
+        getMyMatches(page, 25, matchSearch, i18n.language),
         getMyMatchStats(),
       ]);
       setMatches(result.items);
@@ -387,7 +389,7 @@ export default function MyCompanyPage() {
   async function handleExport() {
     setExportLoading(true);
     try {
-      const result = await getMyMatches(1, 1000, matchSearch);
+      const result = await getMyMatches(1, 1000, matchSearch, i18n.language);
       const rows = result.items;
       if (rows.length === 0) return;
       const esc = (v: unknown) => {
@@ -985,7 +987,7 @@ export default function MyCompanyPage() {
             <p className="text-muted">{t("matches.empty")}</p>
           ) : (
             <>
-              <MatchesTable matches={matches} onStatusChange={handleStatusChange} />
+              <MatchesTable matches={matches} showReason onStatusChange={handleStatusChange} />
               <Pagination
                 page={matchPage}
                 totalPages={matchTotalPages}
