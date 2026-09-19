@@ -69,6 +69,7 @@ export interface CompanyMatchDto {
   matchReason: string | null;
   matchReasonEn: string | null;
   matchReasonFr: string | null;
+  tenderDescription: string | null;
   matchedAt: string;
   status: "new" | "viewed" | "saved" | "dismissed";
 }

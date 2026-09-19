@@ -481,7 +481,7 @@ export default function AdminCompaniesPage() {
       const fmt = (d: string | null | undefined) =>
         d ? new Date(d).toLocaleDateString("en-CA") : "";
       const lines = [
-        ["Title", "Organization", "Category", "Notice Type", "Score", "Status", "Matched On", "Closing Date", "Notice Link"].join(","),
+        ["Title", "Organization", "Category", "Notice Type", "Score", "Status", "Matched On", "Closing Date", "Notice Link", "Reason (EN)", "Reason (FR)", "Description"].join(","),
         ...rows.map((m) =>
           [
             esc(m.tenderTitle),
@@ -493,6 +493,9 @@ export default function AdminCompaniesPage() {
             fmt(m.matchedAt),
             fmt(m.closingDate),
             esc(m.noticeLink),
+            esc(m.matchReasonEn),
+            esc(m.matchReasonFr),
+            esc(m.tenderDescription),
           ].join(",")
         ),
       ];
