@@ -65,7 +65,6 @@
       "category": "Category",
       "matched": "Matched",
       "closing": "Closing",
-      "status": "Status",
       "actions": "Actions"
     },
     "emptyTitle": "No matches yet",
@@ -75,6 +74,18 @@
       "viewed": "Viewed",
       "saved": "Saved",
       "dismissed": "Dismissed"
+    },
+    "thumbs": {
+      "save": "Interested",
+      "undoSave": "Remove from interested",
+      "dismiss": "Ignore",
+      "undoDismiss": "Restore"
+    },
+    "viewFilter": {
+      "all": "All",
+      "new": "New",
+      "interested": "Interested",
+      "ignored": "Ignored"
     }
   },
   "detail": {

@@ -22,7 +22,8 @@
   },
   "tabs": {
     "profile": "Profil de l'entreprise",
-    "matches": "Mes alertes"
+    "matches": "Mes alertes",
+    "newLabel": "nouveaux"
   },
   "setup": {
     "title": "Configurez le profil de votre entreprise",
@@ -135,8 +136,8 @@
     "stats": {
       "total": "Total",
       "new": "Nouveau",
-      "saved": "Sauvegardé",
-      "viewed": "Consulté",
+      "saved": "Intéressé",
+      "viewed": "Ouverts",
       "avgScore": "Score moyen",
       "highScore": "Score élevé"
     },

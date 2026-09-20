@@ -65,7 +65,6 @@
       "category": "Catégorie",
       "matched": "Analysé le",
       "closing": "Clôture",
-      "status": "Statut",
       "actions": "Actions"
     },
     "emptyTitle": "Aucun appel d'offres pour l'instant",
@@ -75,6 +74,18 @@
       "viewed": "Consulté",
       "saved": "Sauvegardé",
       "dismissed": "Rejeté"
+    },
+    "thumbs": {
+      "save": "Intéressé",
+      "undoSave": "Retirer des intéressés",
+      "dismiss": "Ignorer",
+      "undoDismiss": "Restaurer"
+    },
+    "viewFilter": {
+      "all": "Tous",
+      "new": "Nouveau",
+      "interested": "Intéressé",
+      "ignored": "Ignoré"
     }
   },
   "detail": {

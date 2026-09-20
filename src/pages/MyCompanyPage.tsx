@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { Trans, useTranslation } from "react-i18next";
 import i18n from "../i18n";
@@ -15,6 +16,8 @@ import {
 } from "../api/companyApi";
 import type { MatchSearchParams } from "../api/companyApi";
 import MatchesSearchBar from "../components/MatchesSearchBar";
+import type { ViewFilter } from "../components/MatchesSearchBar";
+import { statusesFromFilter } from "../components/MatchesSearchBar";
 import { resolveError } from "../utils/resolveError";
 import type {
   CompanyProfileDto,
@@ -90,7 +93,10 @@ export default function MyCompanyPage() {
   const { user } = useAuth();
   const { t } = useTranslation("myCompany");
   const locked = user?.subscriptionStatus === "expired";
-  const [tab, setTab] = useState<Tab>("profile");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(() =>
+    searchParams.get("tab") === "matches" ? "matches" : "profile"
+  );
   const [profile, setProfile] = useState<CompanyProfileDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -127,6 +133,7 @@ export default function MyCompanyPage() {
   const [matchTotalCount, setMatchTotalCount] = useState(0);
   const [stats, setStats] = useState<MatchStatsDto | null>(null);
   const [matchesLoading, setMatchesLoading] = useState(false);
+  const [viewFilter, setViewFilter] = useState<ViewFilter>("all");
   const [matchSearch, setMatchSearch] = useState<MatchSearchParams>({});
   const [matchOrgs, setMatchOrgs] = useState<string[]>([]);
   const [matchNoticeTypes, setMatchNoticeTypes] = useState<string[]>([]);
@@ -223,25 +230,25 @@ export default function MyCompanyPage() {
     }
   }, [tab, profile]);
 
-  // Load matches when switching to matches tab, changing search, page, or language
+  // Load matches when switching to matches tab, changing search/filter, page, or language
   // (match reasons are localized server-side by the UI locale).
   useEffect(() => {
     if (tab === "matches" && profile) {
       loadMatches(matchPage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, matchSearch, matchPage, i18n.language]);
+  }, [tab, matchSearch, viewFilter, matchPage, i18n.language]);
 
-  // Reset to page 1 when search changes
+  // Reset to page 1 when search or filter changes
   useEffect(() => {
     setMatchPage(1);
-  }, [matchSearch]);
+  }, [matchSearch, viewFilter]);
 
   async function loadMatches(page = 1) {
     setMatchesLoading(true);
     try {
       const [result, s] = await Promise.all([
-        getMyMatches(page, 25, matchSearch, i18n.language),
+        getMyMatches(page, 25, { ...matchSearch, statuses: statusesFromFilter(viewFilter) }, i18n.language),
         getMyMatchStats(),
       ]);
       setMatches(result.items);
@@ -378,12 +385,22 @@ export default function MyCompanyPage() {
   }
 
   async function handleStatusChange(matchId: number, newStatus: "new" | "viewed" | "saved" | "dismissed") {
+    // Optimistic badge decrement when an unviewed match is actioned
+    const match = matches.find((m) => m.id === matchId);
+    if (match?.viewedAt === null) {
+      setStats((s) => s ? { ...s, newCount: Math.max(0, s.newCount - 1) } : s);
+    }
     try {
       await updateMyMatchStatus(matchId, { status: newStatus });
       await loadMatches();
     } catch (err) {
       setError(resolveError(err, t, "errors.updateStatus"));
     }
+  }
+
+  function handleAutoView(matchId: number) {
+    setStats((s) => s ? { ...s, newCount: Math.max(0, s.newCount - 1) } : s);
+    updateMyMatchStatus(matchId, { status: "viewed" }).catch(() => { /* ignore — best-effort */ });
   }
 
   async function handleExport() {
@@ -671,17 +688,17 @@ export default function MyCompanyPage() {
       <div className="pp-tabs">
         <button
           className={`pp-tab ${tab === "profile" ? "active" : ""}`}
-          onClick={() => setTab("profile")}
+          onClick={() => { setTab("profile"); setSearchParams({}, { replace: true }); }}
         >
           {t("tabs.profile")}
         </button>
         <button
           className={`pp-tab ${tab === "matches" ? "active" : ""}`}
-          onClick={() => setTab("matches")}
+          onClick={() => { setTab("matches"); setSearchParams({ tab: "matches" }, { replace: true }); }}
         >
           {t("tabs.matches")}
           {stats && stats.newCount > 0 && (
-            <span className="tab-count">{stats.newCount}</span>
+            <span className="tab-count">{stats.newCount} {t("tabs.newLabel")}</span>
           )}
         </button>
       </div>
@@ -942,16 +959,29 @@ export default function MyCompanyPage() {
         <div>
           {stats && (
             <div className="row g-3 mb-4">
-              {[
-                { label: t("matches.stats.total"), value: stats.totalMatches, icon: "📊", color: "blue" },
-                { label: t("matches.stats.new"), value: stats.newCount, icon: "✨", color: "green" },
-                { label: t("matches.stats.saved"), value: stats.savedCount, icon: "⭐", color: "amber" },
-                { label: t("matches.stats.viewed"), value: stats.viewedCount, icon: "👁", color: "teal" },
-                { label: t("matches.stats.avgScore"), value: stats.averageScore, icon: "📈", color: "blue" },
-                { label: t("matches.stats.highScore"), value: stats.highScoreCount, icon: "🎯", color: "green" },
-              ].map(({ label, value, icon, color }) => (
+              {(
+                [
+                  { label: t("matches.stats.total"),     value: stats.totalMatches,  icon: "📊", color: "blue",  filter: "all"        },
+                  { label: t("matches.stats.new"),       value: stats.newCount,       icon: "✨", color: "green", filter: "new"        },
+                  { label: t("matches.stats.saved"),     value: stats.savedCount,     icon: "👍", color: "amber", filter: "interested" },
+                  { label: t("matches.stats.viewed"),    value: stats.viewedCount,    icon: "👁", color: "teal",  filter: null         },
+                  { label: t("matches.stats.avgScore"),  value: stats.averageScore,   icon: "📈", color: "blue",  filter: null         },
+                  { label: t("matches.stats.highScore"), value: stats.highScoreCount, icon: "🎯", color: "green", filter: null         },
+                ] as { label: string; value: number; icon: string; color: string; filter: ViewFilter | null }[]
+              ).map(({ label, value, icon, color, filter }) => (
                 <div key={label} className="col-md-2 pp-animate-in">
-                  <div className="pp-stat-card" style={{ flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+                  <div
+                    className="pp-stat-card"
+                    style={{
+                      flexDirection: "column",
+                      alignItems: "center",
+                      textAlign: "center",
+                      cursor: filter ? "pointer" : "default",
+                      outline: filter && viewFilter === filter ? "2px solid var(--pp-primary)" : "none",
+                      outlineOffset: "2px",
+                    }}
+                    onClick={filter ? () => setViewFilter(filter) : undefined}
+                  >
                     <div className={`pp-stat-icon ${color}`} style={{ width: 40, height: 40, fontSize: "1.1rem" }}>{icon}</div>
                     <div className="pp-stat-value" style={{ fontSize: "1.4rem" }}>{value}</div>
                     <div className="pp-stat-label">{label}</div>
@@ -979,6 +1009,8 @@ export default function MyCompanyPage() {
             organizations={matchOrgs}
             noticeTypes={matchNoticeTypes}
             onSearch={(p) => setMatchSearch(p)}
+            viewFilter={viewFilter}
+            onViewFilterChange={setViewFilter}
           />
 
           {matchesLoading ? (
@@ -987,7 +1019,7 @@ export default function MyCompanyPage() {
             <p className="text-muted">{t("matches.empty")}</p>
           ) : (
             <>
-              <MatchesTable matches={matches} showReason onStatusChange={handleStatusChange} />
+              <MatchesTable matches={matches} showReason onStatusChange={handleStatusChange} onAutoView={handleAutoView} />
               <Pagination
                 page={matchPage}
                 totalPages={matchTotalPages}

@@ -22,7 +22,8 @@
   },
   "tabs": {
     "profile": "Company Profile",
-    "matches": "Matches"
+    "matches": "Matches",
+    "newLabel": "new"
   },
   "setup": {
     "title": "Set Up Your Company Profile",
@@ -135,8 +136,8 @@
     "stats": {
       "total": "Total",
       "new": "New",
-      "saved": "Saved",
-      "viewed": "Viewed",
+      "saved": "Interested",
+      "viewed": "Opened",
       "avgScore": "Avg Score",
       "highScore": "High Score"
     },

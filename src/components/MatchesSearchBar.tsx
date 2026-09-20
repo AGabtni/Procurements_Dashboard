@@ -6,63 +6,60 @@ import type { MatchSearchParams } from "../api/companyApi";
 
 export type { MatchSearchParams };
 
+export type ViewFilter = "all" | "new" | "interested" | "ignored";
+
+export function statusesFromFilter(f: ViewFilter): string[] {
+  if (f === "new")        return ["new"];
+  if (f === "interested") return ["saved"];
+  if (f === "ignored")    return ["dismissed"];
+  return ["new", "viewed", "saved"];
+}
+
 interface Props {
   params: MatchSearchParams;
   organizations: string[];
   noticeTypes: string[];
   onSearch: (params: MatchSearchParams) => void;
+  viewFilter: ViewFilter;
+  onViewFilterChange: (f: ViewFilter) => void;
 }
 
-export default function MatchesSearchBar({ params, organizations, noticeTypes, onSearch }: Props) {
+export default function MatchesSearchBar({ params, organizations, noticeTypes, onSearch, viewFilter, onViewFilterChange }: Props) {
   const { t } = useTranslation("tenders");
-  const STATUS_OPTIONS: DropdownOption[] = [
-    { value: "new", label: t("searchBar.statuses.new") },
-    { value: "viewed", label: t("searchBar.statuses.viewed") },
-    { value: "saved", label: t("searchBar.statuses.saved") },
-    { value: "dismissed", label: t("searchBar.statuses.dismissed") },
-  ];
   const [keyword, setKeyword] = useState(params.keyword ?? "");
   const [selectedOrgs, setSelectedOrgs] = useState<string[]>(params.organizations ?? []);
   const [selectedTypes, setSelectedTypes] = useState<string[]>(params.noticeTypes ?? []);
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(params.statuses ?? []);
 
-  // Keep onSearch stable in effects without adding it to deps
   const onSearchRef = useRef(onSearch);
   onSearchRef.current = onSearch;
 
-  // mounted ref — stays false until after all initial effects have run.
-  // Defined AFTER the auto-apply effects so its useEffect runs last on mount,
-  // which means auto-apply effects see mounted=false on the very first render.
   const mounted = useRef(false);
 
-  // Auto-apply immediately when any dropdown selection changes
-  useEffect(() => {
-    if (!mounted.current) return;
-    onSearchRef.current({
+  function buildParams(): MatchSearchParams {
+    return {
       keyword: keyword.trim() || undefined,
       organizations: selectedOrgs.length ? selectedOrgs : undefined,
       noticeTypes: selectedTypes.length ? selectedTypes : undefined,
-      statuses: selectedStatuses.length ? selectedStatuses : undefined,
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOrgs, selectedTypes, selectedStatuses]);
+    };
+  }
 
-  // Auto-apply with 400ms debounce when keyword changes
+  // Auto-apply when dropdowns change
+  useEffect(() => {
+    if (!mounted.current) return;
+    onSearchRef.current(buildParams());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedOrgs, selectedTypes]);
+
+  // Debounced auto-apply for keyword
   useEffect(() => {
     if (!mounted.current) return;
     const timer = setTimeout(() => {
-      onSearchRef.current({
-        keyword: keyword.trim() || undefined,
-        organizations: selectedOrgs.length ? selectedOrgs : undefined,
-        noticeTypes: selectedTypes.length ? selectedTypes : undefined,
-        statuses: selectedStatuses.length ? selectedStatuses : undefined,
-      });
+      onSearchRef.current(buildParams());
     }, 400);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyword]);
 
-  // Must be the LAST useEffect — sets mounted=true after all initial effects have skipped
   useEffect(() => {
     mounted.current = true;
   }, []);
@@ -71,26 +68,39 @@ export default function MatchesSearchBar({ params, organizations, noticeTypes, o
     setKeyword("");
     setSelectedOrgs([]);
     setSelectedTypes([]);
-    setSelectedStatuses([]);
-    // The dropdown effect above will fire and call onSearch({}) automatically
+    onViewFilterChange("all");
   }
 
-  // Keep Search button for manual/keyboard trigger (e.g. pressing Enter mid-debounce)
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSearchRef.current({
-      keyword: keyword.trim() || undefined,
-      organizations: selectedOrgs.length ? selectedOrgs : undefined,
-      noticeTypes: selectedTypes.length ? selectedTypes : undefined,
-      statuses: selectedStatuses.length ? selectedStatuses : undefined,
-    });
+    onSearchRef.current(buildParams());
   }
 
   const orgOptions: DropdownOption[] = organizations.map((o) => ({ value: o, label: o }));
   const typeOptions: DropdownOption[] = noticeTypes.map((t) => ({ value: t, label: t }));
 
+  const VIEW_FILTERS: { value: ViewFilter; label: string }[] = [
+    { value: "all",        label: t("matchesTable.viewFilter.all") },
+    { value: "new",        label: t("matchesTable.viewFilter.new") },
+    { value: "interested", label: t("matchesTable.viewFilter.interested") },
+    { value: "ignored",    label: t("matchesTable.viewFilter.ignored") },
+  ];
+
   return (
     <form onSubmit={handleSubmit} className="pp-search-bar">
+      <div className="pp-view-filter">
+        {VIEW_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            className={`pp-view-pill${viewFilter === f.value ? " active" : ""}`}
+            onClick={() => onViewFilterChange(f.value)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       <div className="row g-3 align-items-end">
         <div className="col">
           <label htmlFor="m-keyword" className="form-label">{t("searchBar.search")}</label>
@@ -123,17 +133,6 @@ export default function MatchesSearchBar({ params, organizations, noticeTypes, o
             value={selectedTypes}
             onChange={setSelectedTypes}
             placeholder={t("searchBar.allTypes")}
-          />
-        </div>
-
-        <div className="col-md-2">
-          <label className="form-label">{t("searchBar.status")}</label>
-          <MultiSelectDropdown
-            id="m-statuses"
-            options={STATUS_OPTIONS}
-            value={selectedStatuses}
-            onChange={setSelectedStatuses}
-            placeholder={t("searchBar.allStatuses")}
           />
         </div>
 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { CompanyMatchDto } from "../types/company";
 import { categoryLabel } from "../utils/categoryMap";
@@ -11,6 +12,7 @@ interface Props {
   // single locale-resolved reason.
   bilingualReason?: boolean;
   onStatusChange: (matchId: number, status: "new" | "viewed" | "saved" | "dismissed") => void;
+  onAutoView?: (matchId: number) => void;
 }
 
 type SortCol = "matchScore" | "matchedAt" | "closingDate" | "organization";
@@ -36,7 +38,7 @@ function ScoreRing({ score }: { score: number }) {
   );
 }
 
-export default function MatchesTable({ matches, showReason, bilingualReason, onStatusChange }: Props) {
+export default function MatchesTable({ matches, showReason, bilingualReason, onStatusChange, onAutoView }: Props) {
   const { t, i18n } = useTranslation("tenders");
   const [sortCol, setSortCol] = useState<SortCol>("matchScore");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -67,6 +69,15 @@ export default function MatchesTable({ matches, showReason, bilingualReason, onS
     return sortDir === "asc" ? cmp : -cmp;
   });
 
+  function handleThumb(m: CompanyMatchDto, dir: "up" | "down") {
+    const undoTarget = m.viewedAt !== null ? "viewed" : "new";
+    if (dir === "up") {
+      onStatusChange(m.id, m.status === "saved" ? undoTarget : "saved");
+    } else {
+      onStatusChange(m.id, m.status === "dismissed" ? undoTarget : "dismissed");
+    }
+  }
+
   if (matches.length === 0) {
     return (
       <div className="pp-empty-state">
@@ -96,72 +107,83 @@ export default function MatchesTable({ matches, showReason, bilingualReason, onS
             <th role="button" onClick={() => toggleSort("closingDate")}>
               {t("matchesTable.headers.closing")}{sortIcon("closingDate")}
             </th>
-            <th>{t("matchesTable.headers.status")}</th>
-            <th style={{ width: "70px" }}>{t("matchesTable.headers.actions")}</th>
+            <th style={{ width: "80px" }}>{t("matchesTable.headers.actions")}</th>
           </tr>
         </thead>
         <tbody>
-          {sorted.map((m) => (
-            <tr key={m.id}>
-              <td>
-                <ScoreRing score={m.matchScore} />
-              </td>
-              <td>
-                <a href={`/tenders/${m.tenderId}`} className="tender-title-link">
-                  {m.tenderTitle ?? m.noticeId ?? `#${m.tenderId}`}
-                </a>
-                {showReason && bilingualReason ? (
-                  <>
-                    {m.matchReasonEn && (
-                      <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)", marginTop: ".2rem" }}>
-                        <strong>EN:</strong> {m.matchReasonEn}
-                      </div>
-                    )}
-                    {m.matchReasonFr && (
-                      <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)", marginTop: ".2rem" }}>
-                        <strong>FR:</strong> {m.matchReasonFr}
-                      </div>
-                    )}
-                  </>
-                ) : showReason && m.matchReason && (
-                  <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)", marginTop: ".2rem" }}>
-                    {m.matchReason}
+          {sorted.map((m) => {
+            const rowClass =
+              m.viewedAt === null ? "match-row-new" :
+              m.status === "dismissed" ? "match-row-dismissed" : "";
+            return (
+              <tr key={m.id} className={rowClass}>
+                <td>
+                  <ScoreRing score={m.matchScore} />
+                </td>
+                <td>
+                  <Link
+                    to={`/tenders/${m.tenderId}`}
+                    className="tender-title-link"
+                    onClick={() => {
+                      if (m.viewedAt === null) onAutoView?.(m.id);
+                    }}
+                  >
+                    {m.tenderTitle ?? m.noticeId ?? `#${m.tenderId}`}
+                  </Link>
+                  {showReason && bilingualReason ? (
+                    <>
+                      {m.matchReasonEn && (
+                        <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)", marginTop: ".2rem" }}>
+                          <strong>EN:</strong> {m.matchReasonEn}
+                        </div>
+                      )}
+                      {m.matchReasonFr && (
+                        <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)", marginTop: ".2rem" }}>
+                          <strong>FR:</strong> {m.matchReasonFr}
+                        </div>
+                      )}
+                    </>
+                  ) : showReason && m.matchReason && (
+                    <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)", marginTop: ".2rem" }}>
+                      {m.matchReason}
+                    </div>
+                  )}
+                </td>
+                <td style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
+                  {decodeHtml(m.buyingOrganization) ?? "—"}
+                </td>
+                <td>
+                  <span className="pp-badge pp-badge-blue">{categoryLabel(m.procurementCategory)}</span>
+                </td>
+                <td style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
+                  {new Date(m.matchedAt).toLocaleDateString(i18n.language)}
+                </td>
+                <td style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
+                  {m.closingDate ? new Date(m.closingDate).toLocaleDateString(i18n.language) : "—"}
+                </td>
+                <td style={{ overflow: "visible" }}>
+                  <div className="pp-thumb-wrap">
+                    <button
+                      className={`pp-thumb-btn${m.status === "saved" ? " active-up" : ""}`}
+                      data-tooltip={m.status === "saved" ? t("matchesTable.thumbs.undoSave") : t("matchesTable.thumbs.save")}
+                      aria-label={m.status === "saved" ? t("matchesTable.thumbs.undoSave") : t("matchesTable.thumbs.save")}
+                      onClick={() => handleThumb(m, "up")}
+                    >
+                      👍
+                    </button>
+                    <button
+                      className={`pp-thumb-btn${m.status === "dismissed" ? " active-down" : ""}`}
+                      data-tooltip={m.status === "dismissed" ? t("matchesTable.thumbs.undoDismiss") : t("matchesTable.thumbs.dismiss")}
+                      aria-label={m.status === "dismissed" ? t("matchesTable.thumbs.undoDismiss") : t("matchesTable.thumbs.dismiss")}
+                      onClick={() => handleThumb(m, "down")}
+                    >
+                      👎
+                    </button>
                   </div>
-                )}
-              </td>
-              <td style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
-                {decodeHtml(m.buyingOrganization) ?? "—"}
-              </td>
-              <td>
-                <span className="pp-badge pp-badge-blue">{categoryLabel(m.procurementCategory)}</span>
-              </td>
-              <td style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
-                {new Date(m.matchedAt).toLocaleDateString(i18n.language)}
-              </td>
-              <td style={{ fontSize: ".85rem", color: "var(--pp-text-secondary)" }}>
-                {m.closingDate ? new Date(m.closingDate).toLocaleDateString(i18n.language) : "—"}
-              </td>
-              <td>
-                <span className={`pp-match-status ${m.status}`}>{t(`matchesTable.statuses.${m.status}`)}</span>
-              </td>
-              <td>
-                <div className="dropdown">
-                  <button className="pp-btn pp-btn-ghost pp-btn-sm" data-bs-toggle="dropdown">
-                    ⋯
-                  </button>
-                  <ul className="dropdown-menu">
-                    {(["new", "viewed", "saved", "dismissed"] as const).map((s) => (
-                      <li key={s}>
-                        <button className="dropdown-item" onClick={() => onStatusChange(m.id, s)}>
-                          {t(`matchesTable.statuses.${s}`)}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </td>
-            </tr>
-          ))}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
