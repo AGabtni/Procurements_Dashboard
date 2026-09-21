@@ -237,7 +237,7 @@ export default function MyCompanyPage() {
       loadMatches(matchPage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, matchSearch, viewFilter, matchPage, i18n.language]);
+  }, [tab, matchSearch, viewFilter, matchPage, i18n.language, profile?.id]);
 
   // Reset to page 1 when search or filter changes
   useEffect(() => {
@@ -385,15 +385,41 @@ export default function MyCompanyPage() {
   }
 
   async function handleStatusChange(matchId: number, newStatus: "new" | "viewed" | "saved" | "dismissed") {
-    // Optimistic badge decrement when an unviewed match is actioned
     const match = matches.find((m) => m.id === matchId);
-    if (match?.viewedAt === null) {
+    if (!match) return;
+
+    // Server sets viewed_at when status becomes "viewed"; approximate it here
+    const newViewedAt = newStatus === "viewed" ? (match.viewedAt ?? new Date().toISOString()) : match.viewedAt;
+
+    // Optimistic badge decrement for previously-unviewed matches
+    if (match.viewedAt === null) {
       setStats((s) => s ? { ...s, newCount: Math.max(0, s.newCount - 1) } : s);
     }
+
+    // Determine visibility in the active filter after the status change
+    const visible = (() => {
+      switch (viewFilter) {
+        case "all":        return newStatus !== "dismissed";
+        case "new":        return newViewedAt === null && newStatus !== "dismissed";
+        case "interested": return newStatus === "saved";
+        case "ignored":    return newStatus === "dismissed";
+      }
+    })();
+
+    // Update in place or remove — no full list reload
+    setMatches((prev) =>
+      visible
+        ? prev.map((m) => m.id === matchId ? { ...m, status: newStatus, viewedAt: newViewedAt } : m)
+        : prev.filter((m) => m.id !== matchId)
+    );
+
     try {
       await updateMyMatchStatus(matchId, { status: newStatus });
-      await loadMatches();
+      // Refresh stats silently in the background
+      getMyMatchStats().then(setStats).catch(() => {});
     } catch (err) {
+      // Revert by reloading the full list
+      await loadMatches(matchPage);
       setError(resolveError(err, t, "errors.updateStatus"));
     }
   }
