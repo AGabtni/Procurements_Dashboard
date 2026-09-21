@@ -128,6 +128,8 @@ export interface MatchSearchParams {
   organizations?: string[];
   noticeTypes?: string[];
   statuses?: string[];
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
 }
 
 function buildMatchQuery(page: number, pageSize: number, filters?: MatchSearchParams, locale?: string): URLSearchParams {
@@ -139,6 +141,8 @@ function buildMatchQuery(page: number, pageSize: number, filters?: MatchSearchPa
   q.set("page", String(page));
   q.set("pageSize", String(pageSize));
   if (locale) q.set("locale", locale);
+  if (filters?.sortBy)  q.set("sortBy",  filters.sortBy);
+  if (filters?.sortDir) q.set("sortDir", filters.sortDir);
   return q;
 }
 

@@ -29,6 +29,7 @@ import type {
 } from "../types/company";
 import { CATEGORY_MAP } from "../utils/categoryMap";
 import MatchesTable from "../components/MatchesTable";
+import type { SortCol } from "../components/MatchesTable";
 import LockedMatches from "../components/LockedMatches";
 import { useAuth } from "../context/AuthContext";
 import Pagination from "../components/Pagination";
@@ -135,6 +136,8 @@ export default function MyCompanyPage() {
   const [matchesLoading, setMatchesLoading] = useState(false);
   const [viewFilter, setViewFilter] = useState<ViewFilter>("all");
   const [matchSearch, setMatchSearch] = useState<MatchSearchParams>({});
+  const [sortCol, setSortCol] = useState<SortCol>("matchScore");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [matchOrgs, setMatchOrgs] = useState<string[]>([]);
   const [matchNoticeTypes, setMatchNoticeTypes] = useState<string[]>([]);
   const [exportLoading, setExportLoading] = useState(false);
@@ -237,18 +240,18 @@ export default function MyCompanyPage() {
       loadMatches(matchPage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, matchSearch, viewFilter, matchPage, i18n.language, profile?.id]);
+  }, [tab, matchSearch, viewFilter, sortCol, sortDir, matchPage, i18n.language, profile?.id]);
 
-  // Reset to page 1 when search or filter changes
+  // Reset to page 1 when search, filter, or sort changes
   useEffect(() => {
     setMatchPage(1);
-  }, [matchSearch, viewFilter]);
+  }, [matchSearch, viewFilter, sortCol, sortDir]);
 
   async function loadMatches(page = 1) {
     setMatchesLoading(true);
     try {
       const [result, s] = await Promise.all([
-        getMyMatches(page, 25, { ...matchSearch, statuses: statusesFromFilter(viewFilter) }, i18n.language),
+        getMyMatches(page, 25, { ...matchSearch, statuses: statusesFromFilter(viewFilter), sortBy: sortCol, sortDir }, i18n.language),
         getMyMatchStats(),
       ]);
       setMatches(result.items);
@@ -422,6 +425,11 @@ export default function MyCompanyPage() {
       await loadMatches(matchPage);
       setError(resolveError(err, t, "errors.updateStatus"));
     }
+  }
+
+  function handleSort(col: SortCol) {
+    if (col === sortCol) setSortDir((d) => d === "asc" ? "desc" : "asc");
+    else { setSortCol(col); setSortDir("desc"); }
   }
 
   function handleAutoView(matchId: number) {
@@ -1045,7 +1053,7 @@ export default function MyCompanyPage() {
             <p className="text-muted">{t("matches.empty")}</p>
           ) : (
             <>
-              <MatchesTable matches={matches} showReason onStatusChange={handleStatusChange} onAutoView={handleAutoView} />
+              <MatchesTable matches={matches} showReason onStatusChange={handleStatusChange} onAutoView={handleAutoView} sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
               <Pagination
                 page={matchPage}
                 totalPages={matchTotalPages}

@@ -37,6 +37,7 @@ import type { UserDto } from "../types/auth";
 import { CATEGORY_MAP } from "../utils/categoryMap";
 import TagInput from "../components/TagInput";
 import MatchesTable from "../components/MatchesTable";
+import type { SortCol } from "../components/MatchesTable";
 import Pagination from "../components/Pagination";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import type { DropdownOption } from "../components/MultiSelectDropdown";
@@ -95,6 +96,8 @@ export default function AdminCompaniesPage() {
   const [matchesLoading, setMatchesLoading] = useState(false);
   const [matchSearch, setMatchSearch] = useState<MatchSearchParams>({});
   const [adminViewFilter, setAdminViewFilter] = useState<ViewFilter>("all");
+  const [adminSortCol, setAdminSortCol] = useState<SortCol>("matchScore");
+  const [adminSortDir, setAdminSortDir] = useState<"asc" | "desc">("desc");
   const [matchOrgs, setMatchOrgs] = useState<string[]>([]);
   const [matchNoticeTypes, setMatchNoticeTypes] = useState<string[]>([]);
   const [exportLoading, setExportLoading] = useState(false);
@@ -433,7 +436,7 @@ export default function AdminCompaniesPage() {
     if (view === "detail" && detailTab === "matches" && selectedProfile) {
       loadDetailMatches(matchPage);
     }
-  }, [detailTab, matchSearch, adminViewFilter, selectedProfile?.id, matchPage]);
+  }, [detailTab, matchSearch, adminViewFilter, adminSortCol, adminSortDir, selectedProfile?.id, matchPage]);
 
   // Reset to page 1 when search or company changes
   useEffect(() => {
@@ -445,7 +448,7 @@ export default function AdminCompaniesPage() {
     setMatchesLoading(true);
     try {
       const [result, s] = await Promise.all([
-        getMatches(selectedProfile.id, page, 25, { ...matchSearch, statuses: statusesFromFilter(adminViewFilter) }),
+        getMatches(selectedProfile.id, page, 25, { ...matchSearch, statuses: statusesFromFilter(adminViewFilter), sortBy: adminSortCol, sortDir: adminSortDir }),
         getMatchStats(selectedProfile.id),
       ]);
       setMatches(result.items);
@@ -1166,7 +1169,7 @@ export default function AdminCompaniesPage() {
             <p className="text-muted">No matches found.</p>
           ) : (
             <>
-              <MatchesTable matches={matches} showReason bilingualReason onStatusChange={handleStatusChange} />
+              <MatchesTable matches={matches} showReason bilingualReason onStatusChange={handleStatusChange} sortCol={adminSortCol} sortDir={adminSortDir} onSort={(col) => { if (col === adminSortCol) setAdminSortDir((d) => d === "asc" ? "desc" : "asc"); else { setAdminSortCol(col); setAdminSortDir("desc"); } }} />
               <Pagination
                 page={matchPage}
                 totalPages={matchTotalPages}

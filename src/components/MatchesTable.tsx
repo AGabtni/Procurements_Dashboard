@@ -1,9 +1,10 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { CompanyMatchDto } from "../types/company";
 import { categoryLabel } from "../utils/categoryMap";
 import { decodeHtml } from "../utils/html";
+
+export type SortCol = "matchScore" | "matchedAt" | "closingDate" | "organization";
 
 interface Props {
   matches: CompanyMatchDto[];
@@ -13,9 +14,10 @@ interface Props {
   bilingualReason?: boolean;
   onStatusChange: (matchId: number, status: "new" | "viewed" | "saved" | "dismissed") => void;
   onAutoView?: (matchId: number) => void;
+  sortCol: SortCol;
+  sortDir: "asc" | "desc";
+  onSort: (col: SortCol) => void;
 }
-
-type SortCol = "matchScore" | "matchedAt" | "closingDate" | "organization";
 
 function ScoreRing({ score }: { score: number }) {
   const r = 18;
@@ -38,36 +40,13 @@ function ScoreRing({ score }: { score: number }) {
   );
 }
 
-export default function MatchesTable({ matches, showReason, bilingualReason, onStatusChange, onAutoView }: Props) {
+export default function MatchesTable({ matches, showReason, bilingualReason, onStatusChange, onAutoView, sortCol, sortDir, onSort }: Props) {
   const { t, i18n } = useTranslation("tenders");
-  const [sortCol, setSortCol] = useState<SortCol>("matchScore");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-
-  function toggleSort(col: SortCol) {
-    if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else { setSortCol(col); setSortDir("desc"); }
-  }
 
   const sortIcon = (col: SortCol) =>
     sortCol === col
       ? <span className="ms-1">{sortDir === "asc" ? "▲" : "▼"}</span>
       : <span className="ms-1" style={{ opacity: 0.3 }}>⇅</span>;
-
-  const sorted = [...matches].sort((a, b) => {
-    let cmp: number;
-    if (sortCol === "matchScore") cmp = a.matchScore - b.matchScore;
-    else if (sortCol === "organization")
-      cmp = (a.buyingOrganization ?? "").trim().localeCompare(
-        (b.buyingOrganization ?? "").trim(),
-        "en",
-        { sensitivity: "base" }
-      ); else {
-      const aVal = sortCol === "matchedAt" ? a.matchedAt : (a.closingDate ?? "");
-      const bVal = sortCol === "matchedAt" ? b.matchedAt : (b.closingDate ?? "");
-      cmp = aVal.localeCompare(bVal);
-    }
-    return sortDir === "asc" ? cmp : -cmp;
-  });
 
   function handleThumb(m: CompanyMatchDto, dir: "up" | "down") {
     const undoTarget = m.viewedAt !== null ? "viewed" : "new";
@@ -93,25 +72,25 @@ export default function MatchesTable({ matches, showReason, bilingualReason, onS
       <table className="pp-table">
         <thead>
           <tr>
-            <th role="button" onClick={() => toggleSort("matchScore")} style={{ width: "70px" }}>
+            <th role="button" onClick={() => onSort("matchScore")} style={{ width: "70px" }}>
               {t("matchesTable.headers.score")}{sortIcon("matchScore")}
             </th>
             <th style={{ width: "35%" }}>{t("matchesTable.headers.tender")}</th>
-            <th role="button" onClick={() => toggleSort("organization")} style={{ width: "18%" }}>
+            <th role="button" onClick={() => onSort("organization")} style={{ width: "18%" }}>
               {t("matchesTable.headers.organization")}{sortIcon("organization")}
             </th>
             <th style={{ width: "10%" }}>{t("matchesTable.headers.category")}</th>
-            <th role="button" onClick={() => toggleSort("matchedAt")}>
+            <th role="button" onClick={() => onSort("matchedAt")}>
               {t("matchesTable.headers.matched")}{sortIcon("matchedAt")}
             </th>
-            <th role="button" onClick={() => toggleSort("closingDate")}>
+            <th role="button" onClick={() => onSort("closingDate")}>
               {t("matchesTable.headers.closing")}{sortIcon("closingDate")}
             </th>
             <th style={{ width: "80px" }}>{t("matchesTable.headers.actions")}</th>
           </tr>
         </thead>
         <tbody>
-          {sorted.map((m) => {
+          {matches.map((m) => {
             const rowClass =
               m.viewedAt === null ? "match-row-new" :
               m.status === "dismissed" ? "match-row-dismissed" : "";
