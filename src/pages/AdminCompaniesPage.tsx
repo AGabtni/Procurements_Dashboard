@@ -4,6 +4,8 @@ import {
 } from "../api/companyApi";
 import type { MatchSearchParams } from "../api/companyApi";
 import MatchesSearchBar from "../components/MatchesSearchBar";
+import type { ViewFilter } from "../components/MatchesSearchBar";
+import { statusesFromFilter } from "../components/MatchesSearchBar";
 import { createPortal } from "react-dom";
 import {
   getAllProfiles,
@@ -92,6 +94,7 @@ export default function AdminCompaniesPage() {
   const [stats, setStats] = useState<MatchStatsDto | null>(null);
   const [matchesLoading, setMatchesLoading] = useState(false);
   const [matchSearch, setMatchSearch] = useState<MatchSearchParams>({});
+  const [adminViewFilter, setAdminViewFilter] = useState<ViewFilter>("all");
   const [matchOrgs, setMatchOrgs] = useState<string[]>([]);
   const [matchNoticeTypes, setMatchNoticeTypes] = useState<string[]>([]);
   const [exportLoading, setExportLoading] = useState(false);
@@ -430,19 +433,19 @@ export default function AdminCompaniesPage() {
     if (view === "detail" && detailTab === "matches" && selectedProfile) {
       loadDetailMatches(matchPage);
     }
-  }, [detailTab, matchSearch, selectedProfile?.id, matchPage]);
+  }, [detailTab, matchSearch, adminViewFilter, selectedProfile?.id, matchPage]);
 
   // Reset to page 1 when search or company changes
   useEffect(() => {
     setMatchPage(1);
-  }, [matchSearch, selectedProfile?.id]);
+  }, [matchSearch, adminViewFilter, selectedProfile?.id]);
 
   async function loadDetailMatches(page = 1) {
     if (!selectedProfile) return;
     setMatchesLoading(true);
     try {
       const [result, s] = await Promise.all([
-        getMatches(selectedProfile.id, page, 25, matchSearch),
+        getMatches(selectedProfile.id, page, 25, { ...matchSearch, statuses: statusesFromFilter(adminViewFilter) }),
         getMatchStats(selectedProfile.id),
       ]);
       setMatches(result.items);
@@ -469,7 +472,7 @@ export default function AdminCompaniesPage() {
     if (!selectedProfile) return;
     setExportLoading(true);
     try {
-      const result = await getMatches(selectedProfile.id, 1, 1000, matchSearch);
+      const result = await getMatches(selectedProfile.id, 1, 1000, { ...matchSearch, statuses: statusesFromFilter(adminViewFilter) });
       const rows = result.items;
       if (rows.length === 0) return;
       const esc = (v: unknown) => {
@@ -1154,6 +1157,8 @@ export default function AdminCompaniesPage() {
             organizations={matchOrgs}
             noticeTypes={matchNoticeTypes}
             onSearch={(p) => setMatchSearch(p)}
+            viewFilter={adminViewFilter}
+            onViewFilterChange={setAdminViewFilter}
           />
           {matchesLoading ? (
             <div className="text-center py-3"><div className="spinner-border spinner-border-sm" /></div>
