@@ -31,6 +31,13 @@
     "organization": "Organization",
     "allOrganizations": "All organizations",
     "allTypes": "All types",
+    "province": "Province",
+    "allProvinces": "All provinces",
+    "provinceGroups": {
+      "canada": "Canada",
+      "us": "United States",
+      "federal": "Federal / National"
+    },
     "status": "Status",
     "allStatuses": "All statuses",
     "statuses": {

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { TenderSearchParams } from "../types/tender";
 import { categoryLabel } from "../utils/categoryMap";
+import ProvinceDropdown from "./ProvinceDropdown";
 
 interface Props {
   params: TenderSearchParams;
@@ -15,6 +16,7 @@ export default function SearchBar({ params, categories, noticeTypes, onSearch }:
   const [keyword, setKeyword] = useState(params.keyword ?? "");
   const [category, setCategory] = useState(params.category ?? "");
   const [noticeType, setNoticeType] = useState(params.noticeType ?? "");
+  const [provinces, setProvinces] = useState<string[]>(params.provinces ?? []);
   const [openOnly, setOpenOnly] = useState(params.openOnly !== false);
 
   // Keep stable refs so effects always call the latest version
@@ -33,6 +35,7 @@ export default function SearchBar({ params, categories, noticeTypes, onSearch }:
       keyword: keyword.trim() || undefined,
       category: category || undefined,
       noticeType: noticeType || undefined,
+      provinces: provinces.length ? provinces : undefined,
       openOnly,
       page: 1,
     };
@@ -43,7 +46,7 @@ export default function SearchBar({ params, categories, noticeTypes, onSearch }:
     if (!mounted.current) return;
     onSearchRef.current(buildParams());
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, noticeType, openOnly]);
+  }, [category, noticeType, provinces, openOnly]);
 
   // Auto-apply with 400ms debounce when keyword changes
   useEffect(() => {
@@ -63,6 +66,7 @@ export default function SearchBar({ params, categories, noticeTypes, onSearch }:
     setKeyword("");
     setCategory("");
     setNoticeType("");
+    setProvinces([]);
     setOpenOnly(true);
     // The select/checkbox effect fires automatically and calls onSearch
   }
@@ -119,6 +123,15 @@ export default function SearchBar({ params, categories, noticeTypes, onSearch }:
               <option key={nt} value={nt}>{nt}</option>
             ))}
           </select>
+        </div>
+
+        <div className="col-md-2">
+          <label className="form-label">{t("searchBar.province")}</label>
+          <ProvinceDropdown
+            id="province"
+            value={provinces}
+            onChange={setProvinces}
+          />
         </div>
 
         <div className="col-md-2">

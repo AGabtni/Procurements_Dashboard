@@ -140,6 +140,7 @@ export default function MyCompanyPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [matchOrgs, setMatchOrgs] = useState<string[]>([]);
   const [matchNoticeTypes, setMatchNoticeTypes] = useState<string[]>([]);
+  const [matchProvinces, setMatchProvinces] = useState<string[]>([]);
   const [exportLoading, setExportLoading] = useState(false);
 
   // Matching trigger
@@ -228,7 +229,7 @@ export default function MyCompanyPage() {
   useEffect(() => {
     if (tab === "matches" && profile) {
       getMyMatchFilters()
-        .then((f) => { setMatchOrgs(f.organizations); setMatchNoticeTypes(f.noticeTypes); })
+        .then((f) => { setMatchOrgs(f.organizations); setMatchNoticeTypes(f.noticeTypes); setMatchProvinces(f.provinces ?? []); })
         .catch(() => {});
     }
   }, [tab, profile]);
@@ -1052,6 +1053,7 @@ export default function MyCompanyPage() {
             params={matchSearch}
             organizations={matchOrgs}
             noticeTypes={matchNoticeTypes}
+            availableProvinces={matchProvinces}
             onSearch={(p) => setMatchSearch(p)}
             viewFilter={viewFilter}
             onViewFilterChange={setViewFilter}

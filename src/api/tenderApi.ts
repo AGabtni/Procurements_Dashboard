@@ -42,6 +42,7 @@ export async function searchTenders(
   if (params.category) query.set("category", params.category);
   if (params.organization) query.set("organization", params.organization);
   if (params.noticeType) query.set("noticeType", params.noticeType);
+  (params.provinces ?? []).forEach((p) => query.append("provinces", p));
   if (params.openOnly !== undefined)
     query.set("openOnly", String(params.openOnly));
   if (params.page) query.set("page", String(params.page));

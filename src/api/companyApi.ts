@@ -121,6 +121,7 @@ export async function updateMyPreferences(
 export interface MatchFiltersDto {
   organizations: string[];
   noticeTypes: string[];
+  provinces: string[];
 }
 
 export interface MatchSearchParams {
@@ -132,6 +133,7 @@ export interface MatchSearchParams {
   sortDir?: "asc" | "desc";
   expiredOnly?: boolean;
   openedOnly?: boolean;
+  provinces?: string[];
 }
 
 function buildMatchQuery(page: number, pageSize: number, filters?: MatchSearchParams, locale?: string): URLSearchParams {
@@ -147,6 +149,7 @@ function buildMatchQuery(page: number, pageSize: number, filters?: MatchSearchPa
   if (filters?.sortDir)   q.set("sortDir",    filters.sortDir);
   if (filters?.expiredOnly) q.set("expiredOnly", "true");
   if (filters?.openedOnly)  q.set("openedOnly",  "true");
+  (filters?.provinces ?? []).forEach((p) => q.append("provinces", p));
   return q;
 }
 

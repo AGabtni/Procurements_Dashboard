@@ -9,6 +9,7 @@ export interface TenderListDto {
   noticeType: string | null;
   procurementMethod: string | null;
   hasDocuments: boolean | null;
+  province: string | null;
 }
 
 export interface TenderDetailDto {
@@ -66,6 +67,7 @@ export interface TenderSearchParams {
   category?: string;
   organization?: string;
   noticeType?: string;
+  provinces?: string[];
   openOnly?: boolean;
   page?: number;
   pageSize?: number;

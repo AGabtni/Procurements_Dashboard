@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import MultiSelectDropdown from "./MultiSelectDropdown";
 import type { DropdownOption } from "./MultiSelectDropdown";
 import type { MatchSearchParams } from "../api/companyApi";
+import ProvinceDropdown from "./ProvinceDropdown";
 
 export type { MatchSearchParams };
 
@@ -21,16 +22,18 @@ interface Props {
   params: MatchSearchParams;
   organizations: string[];
   noticeTypes: string[];
+  availableProvinces?: string[];
   onSearch: (params: MatchSearchParams) => void;
   viewFilter: ViewFilter;
   onViewFilterChange: (f: ViewFilter) => void;
 }
 
-export default function MatchesSearchBar({ params, organizations, noticeTypes, onSearch, viewFilter, onViewFilterChange }: Props) {
+export default function MatchesSearchBar({ params, organizations, noticeTypes, availableProvinces, onSearch, viewFilter, onViewFilterChange }: Props) {
   const { t } = useTranslation("tenders");
   const [keyword, setKeyword] = useState(params.keyword ?? "");
   const [selectedOrgs, setSelectedOrgs] = useState<string[]>(params.organizations ?? []);
   const [selectedTypes, setSelectedTypes] = useState<string[]>(params.noticeTypes ?? []);
+  const [selectedProvinces, setSelectedProvinces] = useState<string[]>(params.provinces ?? []);
 
   const onSearchRef = useRef(onSearch);
   onSearchRef.current = onSearch;
@@ -42,6 +45,7 @@ export default function MatchesSearchBar({ params, organizations, noticeTypes, o
       keyword: keyword.trim() || undefined,
       organizations: selectedOrgs.length ? selectedOrgs : undefined,
       noticeTypes: selectedTypes.length ? selectedTypes : undefined,
+      provinces: selectedProvinces.length ? selectedProvinces : undefined,
     };
   }
 
@@ -50,7 +54,7 @@ export default function MatchesSearchBar({ params, organizations, noticeTypes, o
     if (!mounted.current) return;
     onSearchRef.current(buildParams());
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOrgs, selectedTypes]);
+  }, [selectedOrgs, selectedTypes, selectedProvinces]);
 
   // Debounced auto-apply for keyword
   useEffect(() => {
@@ -70,6 +74,7 @@ export default function MatchesSearchBar({ params, organizations, noticeTypes, o
     setKeyword("");
     setSelectedOrgs([]);
     setSelectedTypes([]);
+    setSelectedProvinces([]);
     onViewFilterChange("all");
   }
 
@@ -136,6 +141,16 @@ export default function MatchesSearchBar({ params, organizations, noticeTypes, o
             value={selectedTypes}
             onChange={setSelectedTypes}
             placeholder={t("searchBar.allTypes")}
+          />
+        </div>
+
+        <div className="col-md-2">
+          <label className="form-label">{t("searchBar.province")}</label>
+          <ProvinceDropdown
+            id="m-provinces"
+            value={selectedProvinces}
+            onChange={setSelectedProvinces}
+            availableValues={availableProvinces}
           />
         </div>
 
