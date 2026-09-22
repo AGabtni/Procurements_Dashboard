@@ -81,6 +81,7 @@ export interface MatchStatsDto {
   viewedCount: number;
   savedCount: number;
   dismissedCount: number;
+  expiredCount: number;
   averageScore: number;
   highScoreCount: number;
 }

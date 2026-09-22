@@ -251,7 +251,14 @@ export default function MyCompanyPage() {
     setMatchesLoading(true);
     try {
       const [result, s] = await Promise.all([
-        getMyMatches(page, 25, { ...matchSearch, statuses: statusesFromFilter(viewFilter), sortBy: sortCol, sortDir }, i18n.language),
+        getMyMatches(page, 25, {
+          ...matchSearch,
+          statuses: viewFilter !== "expired" && viewFilter !== "viewed" ? statusesFromFilter(viewFilter) : undefined,
+          sortBy: sortCol,
+          sortDir,
+          expiredOnly: viewFilter === "expired",
+          openedOnly: viewFilter === "viewed",
+        }, i18n.language),
         getMyMatchStats(),
       ]);
       setMatches(result.items);
@@ -404,8 +411,10 @@ export default function MyCompanyPage() {
       switch (viewFilter) {
         case "all":        return newStatus !== "dismissed";
         case "new":        return newViewedAt === null && newStatus !== "dismissed";
+        case "viewed":     return newViewedAt !== null; // stays if viewedAt is set
         case "interested": return newStatus === "saved";
         case "ignored":    return newStatus === "dismissed";
+        case "expired":    return true; // status changes don't affect expiry
       }
     })();
 
@@ -998,12 +1007,13 @@ export default function MyCompanyPage() {
                   { label: t("matches.stats.total"),     value: stats.totalMatches,  icon: "📊", color: "blue",  filter: "all"        },
                   { label: t("matches.stats.new"),       value: stats.newCount,       icon: "✨", color: "green", filter: "new"        },
                   { label: t("matches.stats.saved"),     value: stats.savedCount,     icon: "👍", color: "amber", filter: "interested" },
-                  { label: t("matches.stats.viewed"),    value: stats.viewedCount,    icon: "👁", color: "teal",  filter: null         },
+                  { label: t("matches.stats.viewed"),    value: stats.viewedCount,    icon: "👁", color: "teal",  filter: "viewed"     },
+                  { label: t("matches.stats.expired"),   value: stats.expiredCount,   icon: "⏰", color: "red",   filter: "expired"    },
                   { label: t("matches.stats.avgScore"),  value: stats.averageScore,   icon: "📈", color: "blue",  filter: null         },
                   { label: t("matches.stats.highScore"), value: stats.highScoreCount, icon: "🎯", color: "green", filter: null         },
                 ] as { label: string; value: number; icon: string; color: string; filter: ViewFilter | null }[]
               ).map(({ label, value, icon, color, filter }) => (
-                <div key={label} className="col-md-2 pp-animate-in">
+                <div key={label} className="col pp-animate-in">
                   <div
                     className="pp-stat-card"
                     style={{

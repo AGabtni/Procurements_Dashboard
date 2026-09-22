@@ -6,13 +6,15 @@ import type { MatchSearchParams } from "../api/companyApi";
 
 export type { MatchSearchParams };
 
-export type ViewFilter = "all" | "new" | "interested" | "ignored";
+export type ViewFilter = "all" | "new" | "interested" | "ignored" | "expired" | "viewed";
 
 export function statusesFromFilter(f: ViewFilter): string[] {
   if (f === "new")        return ["new"];
+  if (f === "viewed")     return []; // openedOnly=true handles this server-side
   if (f === "interested") return ["saved"];
   if (f === "ignored")    return ["dismissed"];
   return ["new", "viewed", "saved"];
+  // "expired" uses no status filter — expiredOnly=true is set separately
 }
 
 interface Props {
@@ -84,6 +86,7 @@ export default function MatchesSearchBar({ params, organizations, noticeTypes, o
     { value: "new",        label: t("matchesTable.viewFilter.new") },
     { value: "interested", label: t("matchesTable.viewFilter.interested") },
     { value: "ignored",    label: t("matchesTable.viewFilter.ignored") },
+    { value: "expired",    label: t("matchesTable.viewFilter.expired") },
   ];
 
   return (

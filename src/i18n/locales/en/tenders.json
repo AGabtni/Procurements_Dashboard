@@ -85,7 +85,8 @@
       "all": "All",
       "new": "New",
       "interested": "Interested",
-      "ignored": "Ignored"
+      "ignored": "Ignored",
+      "expired": "Expired"
     }
   },
   "detail": {
