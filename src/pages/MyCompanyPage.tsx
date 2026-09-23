@@ -136,8 +136,14 @@ export default function MyCompanyPage() {
   const [matchesLoading, setMatchesLoading] = useState(false);
   const [viewFilter, setViewFilter] = useState<ViewFilter>("all");
   const [matchSearch, setMatchSearch] = useState<MatchSearchParams>({});
-  const [sortCol, setSortCol] = useState<SortCol>("matchScore");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const validSortCols: SortCol[] = ["matchScore", "matchedAt", "closingDate", "organization"];
+  const [sortCol, setSortCol] = useState<SortCol>(() => {
+    const p = searchParams.get("sortBy") as SortCol;
+    return validSortCols.includes(p) ? p : "matchScore";
+  });
+  const [sortDir, setSortDir] = useState<"asc" | "desc">(() =>
+    searchParams.get("sortDir") === "asc" ? "asc" : "desc"
+  );
   const [matchOrgs, setMatchOrgs] = useState<string[]>([]);
   const [matchNoticeTypes, setMatchNoticeTypes] = useState<string[]>([]);
   const [matchProvinces, setMatchProvinces] = useState<string[]>([]);

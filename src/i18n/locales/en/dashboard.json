@@ -30,8 +30,12 @@
     "teaserBody": "Stop manually searching. Get the right tenders delivered to you automatically."
   },
   "closingSoon": {
-    "title": "⏰ Closing Soon",
-    "viewAll": "View all →",
+    "title": "⏰ Tenders Closing This Week",
+    "titleMatches": "⏰ Your Matches — Closing Soon",
+    "viewAll": "Browse tenders →",
+    "viewAllMatches": "View all matches →",
+    "moreMatches_one": "+ {{count}} more match closing soon →",
+    "moreMatches_other": "+ {{count}} more matches closing soon →",
     "emptyTitle": "No urgent deadlines",
     "emptyBody": "No tenders closing within the next 7 days."
   },

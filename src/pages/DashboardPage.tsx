@@ -69,6 +69,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<MatchStatsDto | null>(null);
   const [recentMatches, setRecentMatches] = useState<CompanyMatchDto[]>([]);
   const [closingSoon, setClosingSoon] = useState<TenderListDto[]>([]);
+  const [matchesClosingSoon, setMatchesClosingSoon] = useState<CompanyMatchDto[]>([]);
   const [recentlyViewed, setRecentlyViewed] = useState<TenderListDto[]>([]);
   const [newToday, setNewToday] = useState(0);
   const [closingThisWeek, setClosingThisWeek] = useState(0);
@@ -76,6 +77,7 @@ export default function DashboardPage() {
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
+    setMatchesClosingSoon([]);
     try {
       // Load profile if logged in
       let userProfile: CompanyProfileDto | null = null;
@@ -140,6 +142,22 @@ export default function DashboardPage() {
         await Promise.allSettled([
           getMyMatchStats().then(setStats).catch(() => null),
           getMyMatches(1, 5, undefined, i18n.language).then((r) => setRecentMatches(r.items)).catch(() => {}),
+          // Matches closing within 7 days — only meaningful when a profile exists
+          userProfile
+            ? getMyMatches(1, 10, { sortBy: "closingDate", sortDir: "asc" }, i18n.language)
+                .then((r) => {
+                  const t0 = Date.now();
+                  const wk = 7 * 86400000;
+                  setMatchesClosingSoon(
+                    r.items.filter((m) => {
+                      if (!m.closingDate) return false;
+                      const diff = new Date(m.closingDate).getTime() - t0;
+                      return diff >= 0 && diff <= wk;
+                    })
+                  );
+                })
+                .catch(() => {})
+            : Promise.resolve(),
         ]);
       }
     } finally {
@@ -330,57 +348,102 @@ export default function DashboardPage() {
         </div>
 
         {/* Closing Soon (right) */}
-        <div className="col-lg-6">
-          <div className="pp-card h-100 pp-animate-in">
-            <div className="pp-card-header">
-              <span>{t("closingSoon.title")}</span>
-              <Link to="/tenders" className="pp-btn pp-btn-ghost pp-btn-sm">
-                {t("closingSoon.viewAll")}
-              </Link>
-            </div>
-            <div className="pp-card-body p-0">
-              {closingSoon.length === 0 ? (
-                <div className="pp-empty-state" style={{ padding: "2rem 1.5rem" }}>
-                  <div className="empty-icon">✅</div>
-                  <h3>{t("closingSoon.emptyTitle")}</h3>
-                  <p>{t("closingSoon.emptyBody")}</p>
-                </div>
-              ) : (
-                closingSoon.map((t2) => (
+        {(() => {
+          const showMatchMode = matchesClosingSoon.length > 0 && user?.subscriptionStatus !== "expired";
+          return (
+            <div className="col-lg-6">
+              <div className="pp-card h-100 pp-animate-in">
+                <div className="pp-card-header">
+                  <span>{showMatchMode ? t("closingSoon.titleMatches") : t("closingSoon.title")}</span>
                   <Link
-                    key={t2.id}
-                    to={`/tenders/${t2.id}`}
-                    className="pp-doc-item"
-                    style={{ textDecoration: "none", color: "inherit" }}
+                    to={showMatchMode ? "/my-company?tab=matches&sortBy=closingDate&sortDir=asc" : "/tenders"}
+                    className="pp-btn pp-btn-ghost pp-btn-sm"
                   >
-                    <div className="d-flex align-items-center gap-3" style={{ minWidth: 0 }}>
-                      <div
-                        className="doc-icon"
-                        style={{
-                          background: "var(--pp-urgent-light)",
-                          color: "var(--pp-urgent)",
-                        }}
-                      >
-                        📋
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div className="pp-truncate-title">
-                          {t2.title ?? t("misc.untitled")}
-                        </div>
-                        <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)" }}>
-                          {t2.buyingOrganization ?? t("misc.dash")}
-                        </div>
-                      </div>
-                    </div>
-                    <span className={`pp-badge ${closingBadgeClass(t2.closingDate)}`}>
-                      {closingLabel(t2.closingDate, t)}
-                    </span>
+                    {showMatchMode ? t("closingSoon.viewAllMatches") : t("closingSoon.viewAll")}
                   </Link>
-                ))
-              )}
+                </div>
+                <div className="pp-card-body p-0">
+                  {showMatchMode ? (
+                    <>
+                      {matchesClosingSoon.slice(0, 5).map((m) => (
+                        <Link
+                          key={m.id}
+                          to={`/tenders/${m.tenderId}`}
+                          className="pp-doc-item"
+                          style={{ textDecoration: "none", color: "inherit" }}
+                        >
+                          <div className="d-flex align-items-center gap-3" style={{ minWidth: 0 }}>
+                            <ScoreRing score={m.matchScore} />
+                            <div style={{ minWidth: 0 }}>
+                              <div className="pp-truncate-title">
+                                {m.tenderTitle ?? t("misc.untitled")}
+                              </div>
+                              <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)" }}>
+                                {m.buyingOrganization ?? t("misc.dash")}
+                              </div>
+                            </div>
+                          </div>
+                          <span className={`pp-badge ${closingBadgeClass(m.closingDate)}`}>
+                            {closingLabel(m.closingDate, t)}
+                          </span>
+                        </Link>
+                      ))}
+                      {matchesClosingSoon.length > 5 && (
+                        <div style={{ padding: "0.6rem 1rem", borderTop: "1px solid var(--pp-border)" }}>
+                          <Link
+                            to="/my-company?tab=matches&sortBy=closingDate&sortDir=asc"
+                            className="pp-btn pp-btn-ghost pp-btn-sm"
+                            style={{ width: "100%", justifyContent: "center" }}
+                          >
+                            {t("closingSoon.moreMatches", { count: matchesClosingSoon.length - 5 })}
+                          </Link>
+                        </div>
+                      )}
+                    </>
+                  ) : closingSoon.length === 0 ? (
+                    <div className="pp-empty-state" style={{ padding: "2rem 1.5rem" }}>
+                      <div className="empty-icon">✅</div>
+                      <h3>{t("closingSoon.emptyTitle")}</h3>
+                      <p>{t("closingSoon.emptyBody")}</p>
+                    </div>
+                  ) : (
+                    closingSoon.map((t2) => (
+                      <Link
+                        key={t2.id}
+                        to={`/tenders/${t2.id}`}
+                        className="pp-doc-item"
+                        style={{ textDecoration: "none", color: "inherit" }}
+                      >
+                        <div className="d-flex align-items-center gap-3" style={{ minWidth: 0 }}>
+                          <div
+                            className="doc-icon"
+                            style={{
+                              background: "var(--pp-urgent-light)",
+                              color: "var(--pp-urgent)",
+                            }}
+                          >
+                            📋
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <div className="pp-truncate-title">
+                              {t2.title ?? t("misc.untitled")}
+                            </div>
+                            <div style={{ fontSize: ".78rem", color: "var(--pp-text-muted)" }}>
+                              {t2.buyingOrganization ?? t("misc.dash")}
+                            </div>
+                          </div>
+                        </div>
+                        <span className={`pp-badge ${closingBadgeClass(t2.closingDate)}`}>
+                          {closingLabel(t2.closingDate, t)}
+                        </span>
+                      </Link>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
       </div>
 
       {/* Recently Viewed */}

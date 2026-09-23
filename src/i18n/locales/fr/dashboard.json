@@ -30,8 +30,12 @@
     "teaserBody": "Cessez de chercher manuellement. Recevez automatiquement les bons appels d'offres."
   },
   "closingSoon": {
-    "title": "⏰ Fermeture imminente",
-    "viewAll": "Voir tout →",
+    "title": "⏰ Appels d'offres — Fermeture imminente",
+    "titleMatches": "⏰ Vos correspondances — Fermeture imminente",
+    "viewAll": "Parcourir les appels →",
+    "viewAllMatches": "Voir toutes les correspondances →",
+    "moreMatches_one": "+ {{count}} autre correspondance imminente →",
+    "moreMatches_other": "+ {{count}} autres correspondances imminentes →",
     "emptyTitle": "Aucune échéance urgente",
     "emptyBody": "Aucun appel d'offres ne se termine dans les 7 prochains jours."
   },
