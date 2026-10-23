@@ -6,12 +6,30 @@ import { useAuth } from "../context/AuthContext";
 import { SUPPORTED_LOCALES, normalizeLocale, type SupportedLocale } from "../i18n";
 import { resolveError } from "../utils/resolveError";
 
+const EST_OFFSET_HOURS = 5;
+
+function utcHourToEstHour(utcHour: number): number {
+  return (utcHour - EST_OFFSET_HOURS + 24) % 24;
+}
+
+function estHourToUtcHour(estHour: number): number {
+  return (estHour + EST_OFFSET_HOURS) % 24;
+}
+
+function formatHourLabel(hour24: number): string {
+  const suffix = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  return `${hour12}:00 ${suffix}`;
+}
+
 export default function SettingsPage() {
   const { user, setLocale, setCommsLocale } = useAuth();
   const { t } = useTranslation(["settings", "common"]);
   const [settings, setSettings] = useState<SettingsDto | null>(null);
   const [email, setEmail] = useState("");
   const [notifications, setNotifications] = useState(false);
+  const [notifyExpiry, setNotifyExpiry] = useState(false);
+  const [notifyHourEst, setNotifyHourEst] = useState(3);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sendingConfirm, setSendingConfirm] = useState(false);
@@ -35,6 +53,8 @@ export default function SettingsPage() {
       setSettings(s);
       setEmail(s.email);
       setNotifications(s.notificationsEnabled);
+      setNotifyExpiry(s.notifyExpiryEnabled);
+      setNotifyHourEst(utcHourToEstHour(s.notifyHour));
     } catch {
       setMessage({ type: "danger", text: t("messages.loadFailed") });
     } finally {
@@ -50,8 +70,11 @@ export default function SettingsPage() {
       const updated = await updateSettings({
         email: email !== settings?.email ? email : undefined,
         notificationsEnabled: notifications,
+        notifyExpiryEnabled: notifyExpiry,
+        notifyHour: estHourToUtcHour(notifyHourEst),
       });
       setSettings(updated);
+      setNotifyHourEst(utcHourToEstHour(updated.notifyHour));
       setMessage({ type: "success", text: email !== settings?.email
         ? t("messages.savedEmailConfirm")
         : t("messages.saved") });
@@ -233,6 +256,43 @@ export default function SettingsPage() {
               <p className="form-text mt-2 mb-3">
                 {t("notifications.toggleHelp")}
               </p>
+
+              <div className="form-check form-switch mb-1">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="notifyExpiryEnabled"
+                  checked={notifyExpiry}
+                  onChange={(e) => setNotifyExpiry(e.target.checked)}
+                />
+                <label className="form-check-label" htmlFor="notifyExpiryEnabled">
+                  {t("notifications.expiryToggleLabel")}
+                </label>
+              </div>
+              <p className="form-text mt-1 mb-3">
+                {t("notifications.expiryToggleHelp")}
+              </p>
+
+              <div className="mb-3">
+                <label className="form-label" htmlFor="notifyHour">
+                  {t("notifications.notifyHourLabel")}
+                </label>
+                <select
+                  className="form-select"
+                  id="notifyHour"
+                  value={notifyHourEst}
+                  onChange={(e) => setNotifyHourEst(Number(e.target.value))}
+                  style={{ maxWidth: 200 }}
+                >
+                  {Array.from({ length: 24 }, (_, h) => h).map((h) => (
+                    <option key={h} value={h}>
+                      {formatHourLabel(h)}
+                    </option>
+                  ))}
+                </select>
+                <div className="form-text">{t("notifications.notifyHourHelp")}</div>
+              </div>
+
               <div className="mb-1">
                 <label className="form-label">{t("language.commsLabel")}</label>
                 <select

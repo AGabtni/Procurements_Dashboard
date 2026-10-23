@@ -29,8 +29,12 @@
   },
   "notifications": {
     "sectionTitle": "Notifications",
-    "toggleLabel": "Notifications courriel pour les nouveaux appels d'offres",
-    "toggleHelp": "Lorsque cette option est activée, vous recevrez un courriel dès que de nouveaux appels d'offres sont trouvés pour votre entreprise."
+    "toggleLabel": "Notifications de nouveaux appels d'offres",
+    "toggleHelp": "Recevez un courriel lorsque de nouveaux appels d'offres correspondent à votre entreprise.",
+    "expiryToggleLabel": "Alertes de fermeture imminente",
+    "expiryToggleHelp": "Recevez un résumé quotidien de tous les appels d'offres correspondants qui ferment dans les 7 prochains jours.",
+    "notifyHourLabel": "Envoyer le résumé quotidien à partir de (EST)",
+    "notifyHourHelp": "Choisissez votre heure préférée en EST. Le résumé est envoyé à la première vérification à partir de cette heure."
   },
   "account": {
     "sectionTitle": "Compte",

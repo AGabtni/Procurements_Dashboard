@@ -47,9 +47,13 @@ export interface SettingsDto {
   email: string;
   emailConfirmed: boolean;
   notificationsEnabled: boolean;
+  notifyExpiryEnabled: boolean;
+  notifyHour: number;
 }
 
 export interface UpdateSettingsRequest {
   email?: string;
   notificationsEnabled?: boolean;
+  notifyExpiryEnabled?: boolean;
+  notifyHour?: number;
 }

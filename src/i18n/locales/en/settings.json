@@ -29,8 +29,12 @@
   },
   "notifications": {
     "sectionTitle": "Notifications",
-    "toggleLabel": "Email notifications for new matches",
-    "toggleHelp": "When enabled, you'll receive an email when new tender matches are found for your company."
+    "toggleLabel": "New match notifications",
+    "toggleHelp": "Receive an email when new tender matches are found for your company.",
+    "expiryToggleLabel": "Closing-deadline alerts",
+    "expiryToggleHelp": "Receive one daily digest listing every matched tender closing in the next 7 days.",
+    "notifyHourLabel": "Send daily digest after (EST)",
+    "notifyHourHelp": "Choose your preferred EST hour. We store it in UTC and send on the first check at or after that time."
   },
   "account": {
     "sectionTitle": "Account",
