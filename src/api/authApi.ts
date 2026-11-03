@@ -1,4 +1,4 @@
-import type { LoginRequest, RegisterRequest, AuthResponse, SettingsDto, UpdateSettingsRequest, UserDto } from "../types/auth";
+import type { LoginRequest, RegisterRequest, AuthResponse, SettingsDto, UpdateSettingsRequest, UserDto, ResetPasswordRequest, ForgotPasswordRequest } from "../types/auth";
 import { ApiError } from "./apiError";
 
 // Turn a failed response (whose JSON body may have already been read) into an
@@ -95,6 +95,34 @@ export async function confirmEmail(token: string): Promise<void> {
     throw bodyError(res.status, body);
   }
 }
+
+
+export async function sendResetPasswordEmail(request: ForgotPasswordRequest): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw bodyError(res.status, body);
+  }
+}
+
+export async function resetPassword(request: ResetPasswordRequest): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request)
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw bodyError(res.status, body);
+  }
+}
+
 
 // ── Admin: User Management ──
 

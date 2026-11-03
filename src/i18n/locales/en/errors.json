@@ -21,5 +21,14 @@
   "profileExists": "You already have a company profile.",
   "descriptionTooShort": "The description must be at least 150 characters.",
   "industryRequired": "Select at least one industry.",
-  "invalidStatus": "Invalid status value."
+  "invalidStatus": "Invalid status value.",
+
+  "invalidPasswordResetToken": "This password reset link is invalid. Please request a new one.",
+  "passwordResetTokenExpired": "This password reset link has expired. Please request a new one.",
+  "resetTokenRequired": "A reset token is required.",
+  "newPasswordRequired": "A new password is required.",
+
+  "tooManyRequests": "Too many attempts. Please wait a few minutes and try again."
+
+
 }

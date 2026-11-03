@@ -21,5 +21,12 @@
   "profileExists": "Vous avez déjà un profil d'entreprise.",
   "descriptionTooShort": "La description doit contenir au moins 150 caractères.",
   "industryRequired": "Sélectionnez au moins une industrie.",
-  "invalidStatus": "Valeur de statut invalide."
+  "invalidStatus": "Valeur de statut invalide.",
+
+  "invalidPasswordResetToken": "Ce lien de réinitialisation est invalide. Veuillez en demander un nouveau.",
+  "passwordResetTokenExpired": "Ce lien de réinitialisation a expiré. Veuillez en demander un nouveau.",
+  "resetTokenRequired": "Un jeton de réinitialisation est requis.",
+  "newPasswordRequired": "Un nouveau mot de passe est requis.",
+
+  "tooManyRequests": "Trop de tentatives. Veuillez patienter quelques minutes et réessayer."
 }
