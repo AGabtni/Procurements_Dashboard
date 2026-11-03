@@ -75,6 +75,10 @@ export default function LoginPage() {
           {t("login.noAccount")}{" "}
           <Link to="/register" style={{ fontWeight: 600 }}>{t("login.signUpLink")}</Link>
         </p>
+        <p className="text-center mt-3 mb-0" style={{ fontSize: ".9rem" }}>
+          {t("forgotPassword.passwordForgotten")}{" "}
+          <Link to="/forgot-password" style={{ fontWeight: 600 }}>{t("forgotPassword.resetPasswordLink")}</Link>
+        </p>
       </div>
     </div>
   );
